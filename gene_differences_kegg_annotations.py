@@ -1,14 +1,12 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import parse_midas_data
+matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
 
-import diversity_utils
-import gene_diversity_utils
+from utils import diversity_utils, gene_diversity_utils, stats_utils
+from parsers import parse_patric, parse_midas_data
 
-import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -16,7 +14,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from numpy.random import randint
-import parse_patric
 import pandas
 
 ################################################################################
@@ -82,7 +79,7 @@ final_line_number = 0
 
 while final_line_number >= 0:    
     sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples,chunk_size=chunk_size,initial_line_number=final_line_number)
+    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples, chunk_size=chunk_size, initial_line_number=final_line_number)
     sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
 #
     # Calculate fixation matrix
@@ -103,12 +100,12 @@ sys.stderr.write("Done!\n")
 
 # Load gene coverage information for species_name
 sys.stderr.write("Loading pangenome data for %s...\n" % species_name)
-gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name,allowed_samples=snp_samples,convert_centroid_names=False)
+gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name, allowed_samples=snp_samples, convert_centroid_names=False)
 sys.stderr.write("Done!\n")
 
-prevalence_idxs = (parse_midas_data.calculate_unique_samples(subject_sample_map, gene_samples))*(marker_coverages>=min_coverage)
+prevalence_idxs = (parse_midas_data.calculate_unique_samples(subject_sample_map, gene_samples)) * (marker_coverages >= min_coverage)
     
-prevalences = gene_diversity_utils.calculate_fractional_gene_prevalences(gene_depth_matrix[:,prevalence_idxs], marker_coverages[prevalence_idxs])
+prevalences = gene_diversity_utils.calculate_fractional_gene_prevalences(gene_depth_matrix[:, prevalence_idxs], marker_coverages[prevalence_idxs])
 
 pangenome_prevalences = numpy.array(prevalences,copy=True)
 pangenome_prevalences.sort()
@@ -133,7 +130,7 @@ snp_sample_idx_map = parse_midas_data.calculate_sample_idx_map(desired_samples, 
 gene_sample_idx_map = parse_midas_data.calculate_sample_idx_map(desired_samples, gene_samples)
     
 
-same_sample_snp_idxs  = parse_midas_data.apply_sample_index_map_to_indices(snp_sample_idx_map,  desired_same_sample_idxs)  
+same_sample_snp_idxs  = parse_midas_data.apply_sample_index_map_to_indices(snp_sample_idx_map, desired_same_sample_idxs)
 same_sample_gene_idxs = parse_midas_data.apply_sample_index_map_to_indices(gene_sample_idx_map, desired_same_sample_idxs)  
 
 
@@ -154,7 +151,7 @@ typical_diff_subject_gene_opportunities = numpy.median(gene_opportunity_matrix[d
 # Load kegg information 
 ##############################################
 # load the kegg information for this species
-kegg_ids=parse_patric.load_kegg_annotations(gene_names)
+kegg_ids= parse_patric.load_kegg_annotations(gene_names)
 
 
 #######################################################################
@@ -261,7 +258,7 @@ ax.set_ylabel("Kegg pathway")
 ax.set_yticks(pos + (width / 2))
 ax.set_yticklabels(df['variable'].tolist())
 
-pylab.savefig('%s/%s_kegg_gene_changes_within.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight') 
+pylab.savefig('%s/%s_kegg_gene_changes_within.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
 
 
 # repeat for between
@@ -279,7 +276,7 @@ ax.set_ylabel("Kegg pathway")
 ax.set_yticks(pos + (width / 2))
 ax.set_yticklabels(df['variable'].tolist())
 
-pylab.savefig('%s/%s_kegg_gene_changes_between.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight') 
+pylab.savefig('%s/%s_kegg_gene_changes_between.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
 
 
 
@@ -303,7 +300,7 @@ pylab.title('Between host')
 plt.hist(gene_count_between_host_changes.values(), normed=False, bins=100)
 plt.ylabel('Number of genes');
 
-pylab.savefig('%s/%s_frequency_of_gene_change.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+pylab.savefig('%s/%s_frequency_of_gene_change.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
 
 
 ###########################################
@@ -337,13 +334,13 @@ pylab.ylim(0,100)
 pylab.xlim(0,210) 
 plt.hist(max_CNV_value_between, normed=False, bins=100)
 
-pylab.savefig('%s/%s_CNV_distribution.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+pylab.savefig('%s/%s_CNV_distribution.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
 
 #######################################################################################################################
 # print the list of within-host gene changes. Outside of python, try blasting these genes to other species' genomes   #
 #######################################################################################################################
 
-outFN=('%s/%s_within_host_gene_changes.txt' % (parse_midas_data.analysis_directory,species_name))
+outFN=('%s/%s_within_host_gene_changes.txt' % (parse_midas_data.analysis_directory, species_name))
 outFile=open(outFN,'w')
 
 for gene in gene_count_within_host_changes:

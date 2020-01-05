@@ -1,7 +1,7 @@
-import parse_midas_data
+from parsers import parse_midas_data
 import sys
 
-file = open(parse_midas_data.scripts_directory+"manual_clade_definitions.txt","r")
+file = open(parse_midas_data.scripts_directory + "manual_clade_definitions.txt", "r")
     
 line = file.readline().strip()
     
@@ -34,6 +34,6 @@ while line!="":
     
 file.close()
 
-output_file = open('%s/clade_assignments.txt' % (parse_midas_data.analysis_directory),"w")
+output_file = open('%s/clade_assignments.txt' % (parse_midas_data.analysis_directory), "w")
 output_file.write("\n".join(output_strs))
 output_file.close()

@@ -1,18 +1,14 @@
 import matplotlib  
 matplotlib.use('Agg') 
 import config
-import parse_midas_data
-import parse_HMP_data
-
 
 import pylab
 import sys
 import numpy
 
-import diversity_utils
-import gene_diversity_utils
+from utils import diversity_utils, gene_diversity_utils, stats_utils
+from parsers import parse_HMP_data, parse_midas_data
 
-import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -130,7 +126,7 @@ final_line_number = 0
 while final_line_number >= 0:
     
     sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples,allowed_genes=core_genes,chunk_size=chunk_size,initial_line_number=final_line_number)
+    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples, allowed_genes=core_genes, chunk_size=chunk_size, initial_line_number=final_line_number)
     sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
     
     print len(dummy_samples), "dummy samples!"
@@ -228,7 +224,7 @@ singleton_axis.set_xlim([1e-04,1e-02])
 
 
 sys.stderr.write("Saving figure...\t")
-fig.savefig('%s/singleton_vs_dS%s.pdf' % (parse_midas_data.analysis_directory, other_species_str),bbox_inches='tight')
+fig.savefig('%s/singleton_vs_dS%s.pdf' % (parse_midas_data.analysis_directory, other_species_str), bbox_inches='tight')
 
 sys.stderr.write("Done!\n")
 

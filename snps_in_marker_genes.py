@@ -1,5 +1,5 @@
-import parse_midas_data
-import diversity_utils
+from utils import diversity_utils
+from parsers import parse_midas_data
 
 # read in the centroid fasta file:
 species_name='Bacteroides_vulgatus_57955' 
@@ -15,5 +15,5 @@ B_vul_fasta=centroid_fastas[B_vul_gene]
 B_dorei_fasta=centroid_fastas[B_dorei_gene]
 
 
-alignment=diversity_utils.find_snps_in_gene_pair(B_vul_fasta,B_dorei_fasta)
+alignment= diversity_utils.find_snps_in_gene_pair(B_vul_fasta, B_dorei_fasta)
 print alignment

@@ -3,7 +3,6 @@
 import matplotlib  
 matplotlib.use('Agg') 
 import config
-import parse_midas_data
 ###
 #
 # For today while the new data processes
@@ -11,17 +10,15 @@ import parse_midas_data
 import os
 #parse_midas_data.data_directory = os.path.expanduser("~/ben_nandita_hmp_data_062517/")
 #########################################
-import parse_HMP_data
 
 
 import pylab
 import sys
 import numpy
 
-import diversity_utils
-import gene_diversity_utils
+from utils import diversity_utils, gene_diversity_utils, stats_utils, sfs_utils
+from parsers import parse_HMP_data, parse_midas_data
 
-import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -29,8 +26,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from numpy.random import randint, choice
-
-import sfs_utils
 
 species_name = "Bacteroides_vulgatus_57955"
 
@@ -81,9 +76,9 @@ temporal_samples = diversity_utils.calculate_temporal_samples(species_name, min_
 haploid_samples = set(diversity_utils.calculate_haploid_samples(species_name, debug=debug))
 
 
-import sfs_utils
+import utils.sfs_utils
 sys.stderr.write("Loading SFSs for %s...\t" % species_name)
-samples, sfs_map = parse_midas_data.parse_within_sample_sfs(species_name, allowed_variant_types=set(['1D','2D','3D','4D'])) 
+samples, sfs_map = parse_midas_data.parse_within_sample_sfs(species_name, allowed_variant_types=set(['1D', '2D', '3D', '4D']))
 sys.stderr.write("Done!\n")
 
 same_sample_idxs, same_subject_idxs, diff_subject_idxs = parse_midas_data.calculate_ordered_subject_pairs(sample_order_map, temporal_samples)
@@ -115,8 +110,8 @@ for sample_pair_idx in xrange(0,len(same_subject_idxs[0])):
         ploidy_j = 'diploid'
     
     # Calculate SFS distributions    
-    dummy_fs, pfs_i = sfs_utils.calculate_binned_sfs_from_sfs_map(sfs_map[sample_i],bins=frequency_bins)
-    dummy_fs, pfs_j = sfs_utils.calculate_binned_sfs_from_sfs_map(sfs_map[sample_j],bins=frequency_bins)
+    dummy_fs, pfs_i = sfs_utils.calculate_binned_sfs_from_sfs_map(sfs_map[sample_i], bins=frequency_bins)
+    dummy_fs, pfs_j = sfs_utils.calculate_binned_sfs_from_sfs_map(sfs_map[sample_j], bins=frequency_bins)
     
     fs = frequency_bins[1:]-(frequency_bins[1]-frequency_bins[0])/2.0
 

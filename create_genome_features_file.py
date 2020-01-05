@@ -1,10 +1,8 @@
-import parse_midas_data
-import parse_patric
 import sys
 import numpy
 from numpy.random import normal
-import diversity_utils
-import stats_utils
+from utils import diversity_utils, parse_midas_data, stats_utils
+from parsers import parse_patric
 
 ################################################################################
 #
@@ -20,7 +18,7 @@ species_name = args.species_name
 ################################################################################
 
 # get a list of genome_ids:
-genome_ids=parse_midas_data.get_ref_genome_ids(species_name)
+genome_ids= parse_midas_data.get_ref_genome_ids(species_name)
 
 #write new genome features file:
 for genome_id in genome_ids:

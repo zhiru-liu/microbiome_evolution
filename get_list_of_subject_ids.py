@@ -1,6 +1,6 @@
 import os
 import sys
-import parse_midas_data
+from parsers import parse_midas_data
 
 outFile=open('/pollard/home/ngarud/BenNanditaProject/MIDAS_intermediate_files_hmp/subject_ids_hmp.txt','w')
 

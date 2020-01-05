@@ -1,14 +1,12 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import parse_midas_data
+matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
 
-import diversity_utils
-import gene_diversity_utils
+from utils import diversity_utils, gene_diversity_utils, stats_utils
+from parsers import parse_midas_data
 
-import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil

@@ -1,4 +1,4 @@
-import parse_midas_data
+from parsers import parse_midas_data
 
 subject_sample_map = parse_midas_data.parse_subject_sample_map()
 

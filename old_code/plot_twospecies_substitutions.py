@@ -1,14 +1,12 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import parse_midas_data
+matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
 
-import diversity_utils
-import gene_diversity_utils
+from utils import diversity_utils, gene_diversity_utils, stats_utils
+from parsers import parse_midas_data
 
-import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -82,7 +80,7 @@ final_line_number = 0
 while final_line_number >= 0:
     
     sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name_1, debug=debug, allowed_samples=first_snp_samples,chunk_size=chunk_size,initial_line_number=final_line_number)
+    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name_1, debug=debug, allowed_samples=first_snp_samples, chunk_size=chunk_size, initial_line_number=final_line_number)
     sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
     
     # Calculate fixation matrix
@@ -141,7 +139,7 @@ final_line_number = 0
 while final_line_number >= 0:
     
     sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name_2, debug=debug, allowed_samples=joint_snp_samples,chunk_size=chunk_size,initial_line_number=final_line_number)
+    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name_2, debug=debug, allowed_samples=joint_snp_samples, chunk_size=chunk_size, initial_line_number=final_line_number)
     sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
     
     # Calculate fixation matrix
@@ -195,7 +193,9 @@ pylab.plot(first_divergence_matrix[diff_subject_idxs], second_divergence_matrix[
 
 divergence_axis.legend(loc='upper right',frameon=False)
 
-fig.savefig('%s/%s_%s_twospecies_substitutions.pdf' % (parse_midas_data.analysis_directory,species_name_1, species_name_2),bbox_inches='tight')
-fig.savefig('%s/%s_%s_twospecies_substitutions.png' % (parse_midas_data.analysis_directory,species_name_1, species_name_2),bbox_inches='tight',dpi=300)
+fig.savefig('%s/%s_%s_twospecies_substitutions.pdf' % (
+    parse_midas_data.analysis_directory, species_name_1, species_name_2), bbox_inches='tight')
+fig.savefig('%s/%s_%s_twospecies_substitutions.png' % (
+    parse_midas_data.analysis_directory, species_name_1, species_name_2), bbox_inches='tight', dpi=300)
 
     

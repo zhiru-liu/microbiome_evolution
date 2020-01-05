@@ -3,7 +3,7 @@ matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
-import stats_utils
+from utils import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -13,7 +13,7 @@ import matplotlib.gridspec as gridspec
 from numpy.random import randint
 import pandas
 import os
-import parse_midas_data
+from parsers import parse_midas_data
 import pickle
 ################################################################################
 #
@@ -107,7 +107,7 @@ ax =df.plot(kind='barh', stacked=True, figsize=(6,10), title=species_name, width
 ax.set_xlabel("Number of orthologs")
 ax.set_ylabel("Gene")
 
-pylab.savefig('%s/%s_within_host_gene_orthologs.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight') 
+pylab.savefig('%s/%s_within_host_gene_orthologs.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
 
 
 ############################################
@@ -129,7 +129,8 @@ ax.set_ylabel("Species")
 ax.set_yticks(pos + (width / 2))
 ax.set_yticklabels(df['variable'].tolist())
 
-pylab.savefig('%s/%s_within_host_gene_orthologs_species_distribution.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight') 
+pylab.savefig('%s/%s_within_host_gene_orthologs_species_distribution.png' % (
+    parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
 
 ###########################################################################
 # Plot: histogram showing number of orthologs
@@ -147,7 +148,7 @@ ax.set_xlabel("Number of orthologs")
 ax.set_ylabel("Gene")
 
 
-pylab.savefig('%s/%s_random_gene_orthologs.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight') 
+pylab.savefig('%s/%s_random_gene_orthologs.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
 
 
 
@@ -170,7 +171,8 @@ ax.set_ylabel("Species")
 ax.set_yticks(pos + (width / 2))
 ax.set_yticklabels(df['variable'].tolist())
 
-pylab.savefig('%s/%s_random_gene_orthologs_species_distribution.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight') 
+pylab.savefig('%s/%s_random_gene_orthologs_species_distribution.png' % (
+    parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
 
 
 

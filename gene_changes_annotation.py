@@ -3,26 +3,19 @@
 import matplotlib  
 matplotlib.use('Agg') 
 import config
-import parse_midas_data
 import os
-import parse_HMP_data
-
 
 import pylab
 import sys
 import numpy
 import random
 
-import diversity_utils
-import gene_diversity_utils
-import sfs_utils
+from utils import diversity_utils, gene_diversity_utils, core_gene_utils, stats_utils, sfs_utils
+from parsers import parse_patric, parse_HMP_data, parse_midas_data
 import calculate_substitution_rates
 import calculate_temporal_changes
-import parse_patric
 import species_phylogeny_utils
-import core_gene_utils
 
-import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -67,9 +60,9 @@ else:
 
 
 if other_species_str=="":
-    outFile=open('%sgene_changes_shuffle_all_species.txt' % parse_midas_data.analysis_directory, 'w' )
+    outFile=open('%sgene_changes_shuffle_all_species.txt' % parse_midas_data.analysis_directory, 'w')
 else:
-    outFile=open('%sgene_changes_shuffle_%s.txt' % (parse_midas_data.analysis_directory, species_name) , 'w' )   
+    outFile=open('%sgene_changes_shuffle_%s.txt' % (parse_midas_data.analysis_directory, species_name), 'w')
 
 modification_difference_threshold = config.modification_difference_threshold
 min_coverage = config.min_median_coverage
@@ -98,7 +91,7 @@ all_data={}
 
 
 for species_name in good_species_list: 
-    dummy_samples, sfs_map = parse_midas_data.parse_within_sample_sfs(species_name, allowed_variant_types=set(['1D','2D','3D','4D'])) 
+    dummy_samples, sfs_map = parse_midas_data.parse_within_sample_sfs(species_name, allowed_variant_types=set(['1D', '2D', '3D', '4D']))
     #
     # data structures for storing information for pickling later on
     all_species_gene_changes={}
@@ -152,19 +145,19 @@ for species_name in good_species_list:
     sys.stderr.write("Done!\n")   
     #
     # get all genome ids for this species' pan genome:
-    genome_ids=parse_midas_data.get_ref_genome_ids(species_name)
+    genome_ids= parse_midas_data.get_ref_genome_ids(species_name)
     #
     # Load the non-shared genes (whitelisted genes):
     non_shared_genes = core_gene_utils.parse_non_shared_reference_genes(species_name)
     
     # load the gene descriptions for all genomes coresponding to this speceis:
-    gene_descriptions=parse_patric.load_patric_gene_descriptions(genome_ids, non_shared_genes)
+    gene_descriptions= parse_patric.load_patric_gene_descriptions(genome_ids, non_shared_genes)
    #
     # create gene categories (poor proxy for GO terms):
     gene_categories, gene_category_map = parse_patric.cluster_patric_gene_descriptions(gene_descriptions)
     #
     # load the kegg ids for all genomes corresponding to this species:
-    kegg_ids=parse_patric.load_kegg_annotations(genome_ids)    
+    kegg_ids= parse_patric.load_kegg_annotations(genome_ids)
     #
     # store null data in this to see how the actual data compares. 
     between_host_changes_gene_ids_null={} #dictionary which stores different trials (trial=key)
@@ -185,7 +178,7 @@ for species_name in good_species_list:
     ##################
     #
     # load all pangenome genes for the species after clustering at 95% identity
-    pangenome_gene_names, pangenome_new_species_names=parse_midas_data.load_pangenome_genes(species_name, non_shared_genes)
+    pangenome_gene_names, pangenome_new_species_names= parse_midas_data.load_pangenome_genes(species_name, non_shared_genes)
     #exclude any genes that are in the whitelisted set from pangenome_gene_names (the pangenome_new_species_names is not used):
     #
     #
@@ -195,7 +188,7 @@ for species_name in good_species_list:
     #
     # Load gene coverage information for species_name
     sys.stderr.write("Loading pangenome data for %s...\n" % species_name)
-    gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name,allowed_samples=snp_samples)
+    gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name, allowed_samples=snp_samples)
     sys.stderr.write("Done!\n")
     #
     # compute gene cnv for constructing a null based on which genes are present later on.
@@ -230,7 +223,7 @@ for species_name in good_species_list:
         j = diff_subject_gene_idxs[1][sample_pair_idx]
         if (marker_coverages[i]>min_coverage) and (marker_coverages[j]>min_coverage):
             if snp_substitution_rate[snp_i, snp_j] < clade_divergence_threshold:
-                gene_idxs = gene_diversity_utils.calculate_gene_differences_between_idxs(i,j, gene_reads_matrix, gene_depth_matrix, marker_coverages)
+                gene_idxs = gene_diversity_utils.calculate_gene_differences_between_idxs(i, j, gene_reads_matrix, gene_depth_matrix, marker_coverages)
                 between_host_gene_idxs.extend(gene_idxs) # collect all gene changes occurring between hosts. Use this for the null.
     #
     #
@@ -270,7 +263,7 @@ for species_name in good_species_list:
             # Calculate a more fine grained value!
             #
             dfs = numpy.array([0.6,0.7,0.8,0.9])
-            perrs = diversity_utils.calculate_fixation_error_rate(sfs_map, sample_i, sample_j,dfs=dfs) * snp_opportunity_matrix[i, j]
+            perrs = diversity_utils.calculate_fixation_error_rate(sfs_map, sample_i, sample_j, dfs=dfs) * snp_opportunity_matrix[i, j]
             #
             if (perrs<0.5).any():
                 # take most permissive one!

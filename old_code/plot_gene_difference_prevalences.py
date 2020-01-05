@@ -1,14 +1,12 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import parse_midas_data
+matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
 
-import diversity_utils
-import gene_diversity_utils
+from utils import diversity_utils, gene_diversity_utils, stats_utils
+from parsers import parse_midas_data
 
-import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -73,7 +71,7 @@ snp_samples = samples[(median_coverages>=min_coverage)*(pis<=1e-03)]
 
 # Load gene coverage information for species_name
 sys.stderr.write("Loading pangenome data for %s...\n" % species_name)
-gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name,allowed_samples=snp_samples)
+gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name, allowed_samples=snp_samples)
 sys.stderr.write("Done!\n")
         
 # Calculate matrix of number of genes that differ
@@ -83,9 +81,9 @@ gene_difference_matrix, gene_opportunity_matrix = gene_diversity_utils.calculate
 # Now need to make the gene samples and snp samples match up
 desired_samples = gene_samples[marker_coverages>min_coverage]   
 
-prevalence_idxs = (parse_midas_data.calculate_unique_samples(subject_sample_map, gene_samples))*(marker_coverages>=min_coverage)
+prevalence_idxs = (parse_midas_data.calculate_unique_samples(subject_sample_map, gene_samples)) * (marker_coverages >= min_coverage)
     
-prevalences = gene_diversity_utils.calculate_fractional_gene_prevalences(gene_depth_matrix[:,prevalence_idxs], marker_coverages[prevalence_idxs])
+prevalences = gene_diversity_utils.calculate_fractional_gene_prevalences(gene_depth_matrix[:, prevalence_idxs], marker_coverages[prevalence_idxs])
 
 pangenome_prevalences = numpy.array(prevalences,copy=True)
 pangenome_prevalences.sort()
@@ -97,7 +95,7 @@ desired_same_sample_idxs, desired_same_subject_idxs, desired_diff_subject_idxs =
 snp_sample_idx_map = parse_midas_data.calculate_sample_idx_map(desired_samples, snp_samples)
 gene_sample_idx_map = parse_midas_data.calculate_sample_idx_map(desired_samples, gene_samples)
     
-same_sample_snp_idxs  = parse_midas_data.apply_sample_index_map_to_indices(snp_sample_idx_map,  desired_same_sample_idxs)  
+same_sample_snp_idxs  = parse_midas_data.apply_sample_index_map_to_indices(snp_sample_idx_map, desired_same_sample_idxs)
 
 same_sample_gene_idxs = parse_midas_data.apply_sample_index_map_to_indices(gene_sample_idx_map, desired_same_sample_idxs)  
 
@@ -196,5 +194,5 @@ prevalence_axis.step(xs,ns*1.0/ns[0],'g-',label='Within host differences')
 
 prevalence_axis.legend(loc='upper right',frameon=False,fontsize=6)
 
-fig.savefig('%s/%s_gene_differences_prevalences.pdf' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
-fig.savefig('%s/%s_gene_differences_prevalences.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+fig.savefig('%s/%s_gene_differences_prevalences.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
+fig.savefig('%s/%s_gene_differences_prevalences.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)

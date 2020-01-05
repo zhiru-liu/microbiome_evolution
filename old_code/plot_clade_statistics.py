@@ -1,15 +1,12 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import parse_midas_data
-import parse_HMP_data
+matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
 
-import diversity_utils
-import gene_diversity_utils
+from utils import diversity_utils, gene_diversity_utils, stats_utils
+from parsers import parse_HMP_data, parse_midas_data
 
-import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -66,7 +63,7 @@ sys.stderr.write("Done! Core genome consists of %d genes\n" % len(core_genes))
  
  # Only plot samples above a certain depth threshold that are "haploids"
 snp_samples = diversity_utils.calculate_haploid_samples(species_name, debug=debug)
-snp_samples = snp_samples[ diversity_utils.parse_midas_data.calculate_unique_samples(subject_sample_map, snp_samples)]
+snp_samples = snp_samples[ utils.parse_midas_data.calculate_unique_samples(subject_sample_map, snp_samples)]
 
 # Analyze SNPs, looping over chunk sizes. 
 # Clunky, but necessary to limit memory usage on cluster
@@ -81,7 +78,7 @@ final_line_number = 0
 while final_line_number >= 0:
     
     sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_variant_types=allowed_variant_types, allowed_genes=core_genes, allowed_samples=snp_samples,chunk_size=chunk_size,initial_line_number=final_line_number)
+    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_variant_types=allowed_variant_types, allowed_genes=core_genes, allowed_samples=snp_samples, chunk_size=chunk_size, initial_line_number=final_line_number)
     sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
     
     # Calculate fixation matrix
@@ -117,11 +114,11 @@ largest_clade_samples = set(coarse_grained_samples[largest_clade_idxs])
 
 # Load gene coverage information for species_name
 sys.stderr.write("Loading pangenome data for %s...\n" % species_name)
-gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name,allowed_samples=snp_samples)
+gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name, allowed_samples=snp_samples)
 sys.stderr.write("Done!\n")
 
 desired_gene_sample_idxs = numpy.array([sample in largest_clade_samples for sample in gene_samples])
-gene_prevalences = gene_diversity_utils.calculate_fractional_gene_prevalences(gene_depth_matrix[:,desired_gene_sample_idxs], marker_coverages[desired_gene_sample_idxs])
+gene_prevalences = gene_diversity_utils.calculate_fractional_gene_prevalences(gene_depth_matrix[:, desired_gene_sample_idxs], marker_coverages[desired_gene_sample_idxs])
 
 gene_prevalence_map = {gene_name: prevalence for gene_name, prevalence in zip(gene_names, gene_prevalences)} 
 
@@ -185,7 +182,7 @@ if len(coarse_grained_samples)>2:
     while final_line_number >= 0:
     
         sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-        dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_variant_types=allowed_variant_types, allowed_samples=coarse_grained_samples,chunk_size=chunk_size,initial_line_number=final_line_number)
+        dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_variant_types=allowed_variant_types, allowed_samples=coarse_grained_samples, chunk_size=chunk_size, initial_line_number=final_line_number)
         sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
     
         # Calculate fixation matrix
@@ -483,8 +480,8 @@ if len(coarse_grained_samples)>2:
     pylab.ylabel('SNPs $\geq f$')
     pylab.legend(loc='upper right', frameon=False,fontsize=6)
     
-    pylab.savefig('%s/%s_phylogenetically_inconsistent_sfs.pdf' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
-    pylab.savefig('%s/%s_phylogenetically_inconsistent_sfs.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+    pylab.savefig('%s/%s_phylogenetically_inconsistent_sfs.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
+    pylab.savefig('%s/%s_phylogenetically_inconsistent_sfs.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
 
     
     pylab.figure(3,figsize=(3.42,2))

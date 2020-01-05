@@ -3,25 +3,19 @@
 import matplotlib  
 matplotlib.use('Agg') 
 import config
-import parse_midas_data
 import os
-import parse_HMP_data
-
 
 import pylab
 import sys
 import numpy
 import random
 
-import diversity_utils
-import gene_diversity_utils
-import sfs_utils
+from utils import diversity_utils, gene_diversity_utils, stats_utils, sfs_utils
+from parsers import parse_patric, parse_HMP_data, parse_midas_data
 import calculate_substitution_rates
 import calculate_temporal_changes
-import parse_patric
 import species_phylogeny_utils
 
-import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -116,7 +110,7 @@ for gene in all_data['all_species']['gene_changes'].keys():
                 all_data['all_species']['gene_changes'][gene][change_type][3]=expectation   
 
 # print the observed vs expected values of the genes in the all species gene changes:
-outFile_gene_change=open('%ssnp_changes_accross_species.txt' %  parse_midas_data.analysis_directory,'w')
+outFile_gene_change=open('%ssnp_changes_accross_species.txt' % parse_midas_data.analysis_directory, 'w')
 
 # store data for plotting cdf: (this says p-val, but actually expectations are being stored)
 p_val_arrays={}
@@ -228,7 +222,7 @@ for gene in common_genes.keys():
 sorted_genes = sorted(genes_sorted.items(), key=operator.itemgetter(1), reverse=True)
 
 
-outFile_keywords=open('%ssnp_changes_accross_species_keywords.txt' %  parse_midas_data.analysis_directory,'w')
+outFile_keywords=open('%ssnp_changes_accross_species_keywords.txt' % parse_midas_data.analysis_directory, 'w')
 
 #outFile_keywords.write('keyword\tnum_snps\texp_snps_between\texp_snps_present\texp_snps_pangenome\tgene_names\n')
 outFile_keywords.write('keyword\tnum_snps\texp_snps_between\texp_snps_present\tgene_names\n')

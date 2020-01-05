@@ -1,12 +1,10 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import parse_midas_data
+matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
-import diversity_utils
-import gene_diversity_utils
-import stats_utils
+from utils import diversity_utils, gene_diversity_utils, stats_utils
+from parsers import parse_midas_data
 import os
 
 
@@ -54,7 +52,7 @@ median_coverages = numpy.array([stats_utils.calculate_median_from_histogram(samp
 sample_coverage_map = {samples[i]: median_coverages[i] for i in xrange(0,len(samples))}
     
 # prune time meta data
-subject_sample_time_map = parse_midas_data.prune_subject_sample_time_map(subject_sample_time_map_all_samples,sample_coverage_map)
+subject_sample_time_map = parse_midas_data.prune_subject_sample_time_map(subject_sample_time_map_all_samples, sample_coverage_map)
    
 
 ###############################################################
@@ -105,7 +103,7 @@ final_line_number = 0
 while final_line_number >= 0:
     
     sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples,chunk_size=chunk_size,initial_line_number=final_line_number)
+    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples, chunk_size=chunk_size, initial_line_number=final_line_number)
     sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
     
     # Calculate fixation matrix
@@ -129,7 +127,7 @@ sys.stderr.write("Done!\n")
 
 # Load gene coverage information for species_name
 sys.stderr.write("Loading pangenome data for %s...\n" % species_name)
-gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name,allowed_samples=snp_samples)
+gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name, allowed_samples=snp_samples)
 sys.stderr.write("Done!\n")
 
 gene_hamming_matrix_gain, gene_hamming_matrix_loss, num_opportunities = gene_diversity_utils.calculate_coverage_based_gene_hamming_matrix_gain_loss(gene_depth_matrix, marker_coverages, min_log2_fold_change=4)
@@ -151,15 +149,15 @@ gene_sample_idx_map = parse_midas_data.calculate_sample_idx_map(desired_samples,
 time_pair_idxs, visno_snps_genes, day_snps_genes = parse_midas_data.calculate_time_pairs(subject_sample_time_map, desired_samples)
 
 # since the time_pair_idx are in terms of desired samples ordering,I need to convert the desired_samples idxs to the snp_sample and gene_sample orders. 
-time_pair_snp_idxs=parse_midas_data.apply_sample_index_map_to_indices(snp_sample_idx_map,  time_pair_idxs) #use these idxs to get the relevant fields from total_fixation_matrix
-time_pair_gene_idxs=parse_midas_data.apply_sample_index_map_to_indices(gene_sample_idx_map,  time_pair_idxs) # use these idxs to get the relevant fields from gene_hamming_matrix
+time_pair_snp_idxs= parse_midas_data.apply_sample_index_map_to_indices(snp_sample_idx_map, time_pair_idxs) #use these idxs to get the relevant fields from total_fixation_matrix
+time_pair_gene_idxs= parse_midas_data.apply_sample_index_map_to_indices(gene_sample_idx_map, time_pair_idxs) # use these idxs to get the relevant fields from gene_hamming_matrix
 
 
 #### time pair idxs where patients can have exactly 1 time point (so that points plotted are iid)
 
 time_pair_idxs_unique, visno_snps_genes_unique, day_snps_genes_unique = parse_midas_data.calculate_unique_time_pairs(subject_sample_time_map, desired_samples)
-time_pair_snp_idxs_unique=parse_midas_data.apply_sample_index_map_to_indices(snp_sample_idx_map,  time_pair_idxs_unique) 
-time_pair_gene_idxs_unique=parse_midas_data.apply_sample_index_map_to_indices(gene_sample_idx_map,  time_pair_idxs_unique) 
+time_pair_snp_idxs_unique= parse_midas_data.apply_sample_index_map_to_indices(snp_sample_idx_map, time_pair_idxs_unique)
+time_pair_gene_idxs_unique= parse_midas_data.apply_sample_index_map_to_indices(gene_sample_idx_map, time_pair_idxs_unique)
 
 
 ### different patient idx: 
@@ -199,7 +197,7 @@ pylab.semilogy(diff_subject_control_time_pt, fraction_snp_difference[snp_diff_su
 
 pylab.legend(['Between time points','Different subjects'],'upper right',prop={'size':6})
     
-pylab.savefig('%s/%s_fixation_vs_days_%0.1f.png' % (parse_midas_data.analysis_directory, species_name, min_change),bbox_inches='tight', dpi=300)
+pylab.savefig('%s/%s_fixation_vs_days_%0.1f.png' % (parse_midas_data.analysis_directory, species_name, min_change), bbox_inches='tight', dpi=300)
 
 
 
@@ -224,7 +222,7 @@ pylab.loglog(fraction_snp_difference[time_pair_snp_idxs], gene_hamming_matrix_lo
 
 pylab.legend(['diff subjects differences', 'gains','losses'],'upper right',prop={'size':6})
 
-pylab.savefig('%s/%s_gene_gain_loss_vs_substitutions.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+pylab.savefig('%s/%s_gene_gain_loss_vs_substitutions.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
 
 ### redo plot with unique time pairs (so that every point is iid)
 pylab.figure() 
@@ -240,7 +238,7 @@ pylab.loglog(fraction_snp_difference[time_pair_snp_idxs_unique], gene_hamming_ma
 
 pylab.legend(['diff subjects differences', 'gains','losses'],'upper right',prop={'size':6})
 
-pylab.savefig('%s/%s_gene_gain_loss_vs_substitutions_unique.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+pylab.savefig('%s/%s_gene_gain_loss_vs_substitutions_unique.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
 
 
 
@@ -263,7 +261,7 @@ pylab.semilogy(jitter_day_snps_genes, gene_hamming_matrix_loss[time_pair_gene_id
 
 pylab.legend(['diff subjects differences', 'gains','losses'],'upper right',prop={'size':6})
 
-pylab.savefig('%s/%s_gene_gain_loss_vs_days.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+pylab.savefig('%s/%s_gene_gain_loss_vs_days.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
 
 
 ### redo plot with unique time pairs (so that every point is iid)
@@ -283,7 +281,7 @@ pylab.semilogy(jitter_day_snps_genes_unique, gene_hamming_matrix_loss[time_pair_
 
 pylab.legend(['diff subjects differences', 'gains','losses'],'upper right',prop={'size':6})
 
-pylab.savefig('%s/%s_gene_gain_loss_vs_days_unique.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+pylab.savefig('%s/%s_gene_gain_loss_vs_days_unique.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
 
 
 
@@ -306,7 +304,7 @@ pylab.plot([1e-14,1e05], [1e-14,1e05], ls="--", c=".3")
 
 pylab.legend(['diff subjects', 'within subject'],'upper right',prop={'size':6})
 
-pylab.savefig('%s/%s_gene_gain_vs_loss_unique.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+pylab.savefig('%s/%s_gene_gain_vs_loss_unique.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
 
 
 
@@ -331,4 +329,4 @@ pylab.semilogy((high_cov_pis[snp_same_subject_idxs[0]] + high_cov_pis[snp_same_s
 
 pylab.legend(['Between time points','Any pair of subjects'],'upper right',prop={'size':6})
     
-pylab.savefig('%s/%s_time_piS_vs_fixation_%0.1f.png' % (parse_midas_data.analysis_directory, species_name, min_change),bbox_inches='tight', dpi=300)
+pylab.savefig('%s/%s_time_piS_vs_fixation_%0.1f.png' % (parse_midas_data.analysis_directory, species_name, min_change), bbox_inches='tight', dpi=300)

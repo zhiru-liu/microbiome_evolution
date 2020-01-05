@@ -1,11 +1,10 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import parse_midas_data
+matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
-import diversity_utils
-import stats_utils
+from utils import diversity_utils, stats_utils
+from parsers import parse_midas_data
 
 ################################################################################
 #
@@ -76,11 +75,11 @@ high_coverage_same_sample_idxs, high_coverage_same_subject_idxs, high_coverage_d
  
 sample_idx_map = parse_midas_data.calculate_sample_idx_map(high_coverage_samples, samples)
 
-same_sample_idxs  = parse_midas_data.apply_sample_index_map_to_indices(sample_idx_map,  high_coverage_same_sample_idxs)    
+same_sample_idxs  = parse_midas_data.apply_sample_index_map_to_indices(sample_idx_map, high_coverage_same_sample_idxs)
 #
-same_subject_idxs  = parse_midas_data.apply_sample_index_map_to_indices(sample_idx_map,  high_coverage_same_subject_idxs)    
+same_subject_idxs  = parse_midas_data.apply_sample_index_map_to_indices(sample_idx_map, high_coverage_same_subject_idxs)
 #
-diff_subject_idxs  = parse_midas_data.apply_sample_index_map_to_indices(sample_idx_map,  high_coverage_diff_subject_idxs)    
+diff_subject_idxs  = parse_midas_data.apply_sample_index_map_to_indices(sample_idx_map, high_coverage_diff_subject_idxs)
 
 
 # Calculate which pairs of idxs belong to the same sample, which to the same subject
@@ -89,11 +88,11 @@ high_coverage_low_pi_same_sample_idxs, high_coverage_low_pi_same_subject_idxs, h
  
 low_pi_sample_idx_map = parse_midas_data.calculate_sample_idx_map(high_coverage_low_pi_samples, samples)
 
-low_pi_same_sample_idxs  = parse_midas_data.apply_sample_index_map_to_indices(low_pi_sample_idx_map,  high_coverage_low_pi_same_sample_idxs)    
+low_pi_same_sample_idxs  = parse_midas_data.apply_sample_index_map_to_indices(low_pi_sample_idx_map, high_coverage_low_pi_same_sample_idxs)
 #
-low_pi_same_subject_idxs  = parse_midas_data.apply_sample_index_map_to_indices(low_pi_sample_idx_map,  high_coverage_low_pi_same_subject_idxs)    
+low_pi_same_subject_idxs  = parse_midas_data.apply_sample_index_map_to_indices(low_pi_sample_idx_map, high_coverage_low_pi_same_subject_idxs)
 #
-low_pi_diff_subject_idxs  = parse_midas_data.apply_sample_index_map_to_indices(low_pi_sample_idx_map,  high_coverage_low_pi_diff_subject_idxs)    
+low_pi_diff_subject_idxs  = parse_midas_data.apply_sample_index_map_to_indices(low_pi_sample_idx_map, high_coverage_low_pi_diff_subject_idxs)
 
         
 fst_matrix_syn = numpy.clip(pi_matrix_syn-avg_pi_matrix_syn,0,1)
@@ -119,8 +118,8 @@ pylab.semilogx(pi_matrix_syn[same_subject_idxs], (pi_matrix_non/pi_matrix_syn)[s
 
 pylab.semilogx(pi_matrix_syn[same_sample_idxs], (pi_matrix_non/pi_matrix_syn)[same_sample_idxs],'b.')
 
-pylab.savefig('%s/%s_pNpS_vs_pi.pdf' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
-pylab.savefig('%s/%s_pNpS_vs_pi.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
+pylab.savefig('%s/%s_pNpS_vs_pi.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
+pylab.savefig('%s/%s_pNpS_vs_pi.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
 
 # Similar to pN/pS vs piS, 
 # but only call "fixed differences" as differences
@@ -135,8 +134,8 @@ pylab.semilogx(persite_fixation_matrix_syn[low_pi_diff_subject_idxs], (persite_f
 
 pylab.semilogx(persite_fixation_matrix_syn[low_pi_same_subject_idxs], (persite_fixation_matrix_non*1.0/(persite_fixation_matrix_non+persite_fixation_matrix_syn))[low_pi_same_subject_idxs],'g.')
 
-pylab.savefig('%s/%s_dNdS_vs_dS.pdf' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
-pylab.savefig('%s/%s_dNdS_vs_dS.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
+pylab.savefig('%s/%s_dNdS_vs_dS.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
+pylab.savefig('%s/%s_dNdS_vs_dS.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
 
     
 pylab.figure()
@@ -167,7 +166,7 @@ pylab.loglog(avg_pi_matrix_syn[same_subject_idxs], fst_matrix_syn[same_subject_i
 pylab.loglog([1e-06,1e-01],[1e-06,1e-01],'k:')
 pylab.xlim([1e-06,1e-01])
 pylab.ylim([1e-06,1e-01])
-pylab.savefig('%s/%s_fst_vs_pi.pdf' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
+pylab.savefig('%s/%s_fst_vs_pi.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
     
     
 pylab.figure()
@@ -184,8 +183,8 @@ pylab.loglog([1e-06,1e-01],[1e-06,1e-01],'k:')
 pylab.xlim([1e-06,1e-01])
 pylab.ylim([1e-06,1e-01])
 pylab.legend(loc='lower right',frameon=False)
-pylab.savefig('%s/%s_pi_between_vs_within.pdf' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
-pylab.savefig('%s/%s_pi_between_vs_within.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight', dpi=300)
+pylab.savefig('%s/%s_pi_between_vs_within.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
+pylab.savefig('%s/%s_pi_between_vs_within.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
     
 pylab.figure()
 pylab.xlabel('Within-sample $\\pi_s$ (avg)')
@@ -202,8 +201,8 @@ pylab.xlim([1e-06,1e-01])
 pylab.ylim([3e-02,1e04])
 pylab.semilogx([1e-06,1e-01],[3e-01,3e-01],'k:')
     
-pylab.savefig('%s/%s_fixation_vs_pi_%0.1f.pdf' % (parse_midas_data.analysis_directory, species_name, min_change),bbox_inches='tight')
-pylab.savefig('%s/%s_fixation_vs_pi_%0.1f.png' % (parse_midas_data.analysis_directory, species_name, min_change),bbox_inches='tight', dpi=300)
+pylab.savefig('%s/%s_fixation_vs_pi_%0.1f.pdf' % (parse_midas_data.analysis_directory, species_name, min_change), bbox_inches='tight')
+pylab.savefig('%s/%s_fixation_vs_pi_%0.1f.png' % (parse_midas_data.analysis_directory, species_name, min_change), bbox_inches='tight', dpi=300)
 
 pylab.figure()
 pylab.xlabel('Median coverage')

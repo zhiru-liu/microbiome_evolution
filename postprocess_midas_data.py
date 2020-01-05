@@ -2,7 +2,7 @@
 ### This script runs the necessary post-processing of the MIDAS output so that we can start analyzing
 import os
 import sys
-import parse_midas_data
+from parsers import parse_midas_data
 
 ########################################################################################
 #

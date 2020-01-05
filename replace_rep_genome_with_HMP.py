@@ -1,18 +1,16 @@
-import parse_midas_data
-import parse_patric
 import sys
 import numpy
 from numpy.random import normal
-import diversity_utils
-import stats_utils
+from utils import diversity_utils, stats_utils
+from parsers import parse_patric, parse_midas_data
 import os
 import shutil
 
 # iterate through the genome_metadata file from patric to identify HMP genomes.
-HMP_genomes=parse_patric.get_HMP_reference_genomes()
+HMP_genomes= parse_patric.get_HMP_reference_genomes()
 
 # get a list of genome_ids:
-genome_ids=parse_midas_data.genome_ids_dictionary()
+genome_ids= parse_midas_data.genome_ids_dictionary()
 
 # cluster each genome in HMP_genomes according to their species ID
 # aggregate the representive genome flag to see if at least one HMP representative genome is being used as the reference genome. 

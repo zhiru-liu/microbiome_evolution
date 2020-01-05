@@ -1,6 +1,4 @@
-import sample_utils
 import config
-import parse_midas_data
 import os.path
 import os
 import pylab
@@ -8,11 +6,9 @@ import sys
 import numpy
 import gzip
 
-import diversity_utils
-import gene_diversity_utils
+from utils import diversity_utils, clade_utils, gene_diversity_utils, sample_utils, stats_utils
+from parsers import parse_midas_data
 import calculate_substitution_rates
-import clade_utils
-import stats_utils
 from math import log10,ceil,fabs
 from numpy.random import randint, choice
 
@@ -268,7 +264,7 @@ if __name__=='__main__':
         while final_line_number >= 0:
     
             sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-            snp_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug,         allowed_variant_types=allowed_variant_types, allowed_samples=snp_samples,allowed_genes=core_genes, chunk_size=chunk_size,initial_line_number=final_line_number)
+            snp_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_variant_types=allowed_variant_types, allowed_samples=snp_samples, allowed_genes=core_genes, chunk_size=chunk_size, initial_line_number=final_line_number)
             sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
     
             largest_clade_idxs = numpy.array([sample in largest_clade_set for sample in snp_samples])

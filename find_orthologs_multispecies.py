@@ -3,7 +3,7 @@ matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
-import stats_utils
+from utils import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -13,7 +13,7 @@ import matplotlib.gridspec as gridspec
 from numpy.random import randint
 import pandas
 import os
-import parse_midas_data
+from parsers import parse_midas_data
 import pickle
 
 species_names = parse_midas_data.parse_good_species_list() 
@@ -46,6 +46,6 @@ pylab.title('Number of genes with a 100% match to an off-target species')
 
 pylab.plot(num_genes_with_match_within_host, num_genes_with_match_random, "ro")
 pylab.plot([0,800],[0,800] , 'k-')
-pylab.savefig('%s/within_vs_random_gene_orthologs.png' % (parse_midas_data.analysis_directory),bbox_inches='tight') 
+pylab.savefig('%s/within_vs_random_gene_orthologs.png' % (parse_midas_data.analysis_directory), bbox_inches='tight')
 
 

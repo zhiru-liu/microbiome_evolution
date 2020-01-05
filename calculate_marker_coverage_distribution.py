@@ -1,13 +1,14 @@
 import sys
 import bz2
 import numpy
-import stats_utils
+from utils import stats_utils
 
-import parse_midas_data
+from parsers import parse_midas_data
+
 if len(sys.argv) > 1:
     species_name=sys.argv[1]
 else:
-    species_name=parse_midas_data.debug_species_name
+    species_name= parse_midas_data.debug_species_name
 
 sys.stderr.write("Calculating marker gene coverage distribution for %s...\n" % species_name)
 
@@ -29,10 +30,10 @@ allowed_variant_types = set(["1D","2D","3D","4D"]) # use all types of sites to i
 marker_genes = parse_midas_data.load_marker_genes(species_name)
 
 # read depth information straight from snps_depth.txt. No preprocessing
-depth_file = bz2.BZ2File("%ssnps/%s/snps_depth.txt.bz2" % (parse_midas_data.data_directory, species_name),"r")
+depth_file = bz2.BZ2File("%ssnps/%s/snps_depth.txt.bz2" % (parse_midas_data.data_directory, species_name), "r")
 
 # To get information about which gene it is in
-info_file = bz2.BZ2File("%ssnps/%s/snps_info.txt.bz2" % (parse_midas_data.data_directory, species_name),"r")
+info_file = bz2.BZ2File("%ssnps/%s/snps_info.txt.bz2" % (parse_midas_data.data_directory, species_name), "r")
     
 depth_line = depth_file.readline() # header
 info_line = info_file.readline()
@@ -95,7 +96,8 @@ for gene_name in marker_coverages.keys():
 # Now write output!
         
 # First write genome-wide coverage distribution
-output_file = bz2.BZ2File("%ssnps/%s/marker_coverage_distribution.txt.bz2" % (parse_midas_data.data_directory, species_name),"w")
+output_file = bz2.BZ2File("%ssnps/%s/marker_coverage_distribution.txt.bz2" % (
+    parse_midas_data.data_directory, species_name), "w")
 output_file.write("SampleID,GeneID\tD,n(D) ...")
 for sample_idx in xrange(0,len(samples)):
     sample=samples[sample_idx]

@@ -1,14 +1,12 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import parse_midas_data
+matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
 
-import diversity_utils
-import gene_diversity_utils
+from utils import diversity_utils, gene_diversity_utils, stats_utils
+from parsers import parse_midas_data
 
-import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -87,7 +85,7 @@ final_line_number = 0
 while final_line_number >= 0:
     
     sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples,chunk_size=chunk_size,initial_line_number=final_line_number)
+    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples, chunk_size=chunk_size, initial_line_number=final_line_number)
     sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
     
     # Calculate fixation matrix
@@ -115,7 +113,7 @@ sys.stderr.write("Done!\n")
 
 # Load gene coverage information for species_name
 sys.stderr.write("Loading pangenome data for %s...\n" % species_name)
-gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name,allowed_samples=snp_samples)
+gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name, allowed_samples=snp_samples)
 sys.stderr.write("Done!\n")
         
 # Calculate matrix of number of genes that differ
@@ -133,7 +131,7 @@ snp_sample_idx_map = parse_midas_data.calculate_sample_idx_map(desired_samples, 
 gene_sample_idx_map = parse_midas_data.calculate_sample_idx_map(desired_samples, gene_samples)
     
 
-same_sample_snp_idxs  = parse_midas_data.apply_sample_index_map_to_indices(snp_sample_idx_map,  desired_same_sample_idxs)  
+same_sample_snp_idxs  = parse_midas_data.apply_sample_index_map_to_indices(snp_sample_idx_map, desired_same_sample_idxs)
 same_sample_gene_idxs = parse_midas_data.apply_sample_index_map_to_indices(gene_sample_idx_map, desired_same_sample_idxs)  
 
 
@@ -173,7 +171,7 @@ for sample_pair_idx in xrange(0,len(same_subject_snp_idxs[0])):
         pi_idx = j2
 
     # Calculate max pi between two samples
-    plower,pupper = stats_utils.calculate_poisson_rate_interval(total_pis[pi_idx], total_pi_opportunities[pi_idx],alpha)
+    plower,pupper = stats_utils.calculate_poisson_rate_interval(total_pis[pi_idx], total_pi_opportunities[pi_idx], alpha)
     pmid = total_pis[pi_idx]*1.0/total_pi_opportunities[pi_idx]
     
     same_subject_pi_plowers.append(plower)
@@ -181,7 +179,7 @@ for sample_pair_idx in xrange(0,len(same_subject_snp_idxs[0])):
     same_subject_pi_puppers.append(pupper)
     
     # Calculate SNP changes
-    plower,pupper = stats_utils.calculate_poisson_rate_interval(snp_difference_matrix[i,j], snp_opportunity_matrix[i,j],alpha)
+    plower,pupper = stats_utils.calculate_poisson_rate_interval(snp_difference_matrix[i, j], snp_opportunity_matrix[i, j], alpha)
     
     pmid = snp_difference_matrix[i,j]*1.0/snp_opportunity_matrix[i,j]
     
@@ -190,7 +188,7 @@ for sample_pair_idx in xrange(0,len(same_subject_snp_idxs[0])):
     same_subject_snp_puppers.append(pupper)
      
     # Calculate polymorphism changes
-    plower,pupper = stats_utils.calculate_poisson_rate_interval(polymorphism_difference_matrix[i,j], polymorphism_opportunity_matrix[i,j],alpha)
+    plower,pupper = stats_utils.calculate_poisson_rate_interval(polymorphism_difference_matrix[i, j], polymorphism_opportunity_matrix[i, j], alpha)
     
     pmid = polymorphism_difference_matrix[i,j]*1.0/polymorphism_opportunity_matrix[i,j]
     
@@ -202,7 +200,7 @@ for sample_pair_idx in xrange(0,len(same_subject_snp_idxs[0])):
     j = same_subject_gene_idxs[1][sample_pair_idx]
     
     
-    plower,pupper = stats_utils.calculate_poisson_rate_interval(gene_difference_matrix[i,j], gene_opportunity_matrix[i,j])
+    plower,pupper = stats_utils.calculate_poisson_rate_interval(gene_difference_matrix[i, j], gene_opportunity_matrix[i, j])
     pmid = gene_difference_matrix[i,j]*1.0/gene_opportunity_matrix[i,j]
     
     same_subject_gene_plowers.append(plower)
@@ -246,7 +244,7 @@ for sample_pair_idx in xrange(0,len(diff_subject_snp_idxs[0])):
         pi_idx = j2
 
     # Calculate max pi between two samples
-    plower,pupper = stats_utils.calculate_poisson_rate_interval(total_pis[pi_idx], total_pi_opportunities[pi_idx],alpha)
+    plower,pupper = stats_utils.calculate_poisson_rate_interval(total_pis[pi_idx], total_pi_opportunities[pi_idx], alpha)
     pmid = total_pis[pi_idx]*1.0/total_pi_opportunities[pi_idx]
     
     diff_subject_pi_plowers.append(plower)
@@ -254,7 +252,7 @@ for sample_pair_idx in xrange(0,len(diff_subject_snp_idxs[0])):
     diff_subject_pi_puppers.append(pupper)
     
     # Calculate SNP changes
-    plower,pupper = stats_utils.calculate_poisson_rate_interval(snp_difference_matrix[i,j], snp_opportunity_matrix[i,j],alpha)
+    plower,pupper = stats_utils.calculate_poisson_rate_interval(snp_difference_matrix[i, j], snp_opportunity_matrix[i, j], alpha)
     
     pmid = snp_difference_matrix[i,j]*1.0/snp_opportunity_matrix[i,j]
     
@@ -263,7 +261,7 @@ for sample_pair_idx in xrange(0,len(diff_subject_snp_idxs[0])):
     diff_subject_snp_puppers.append(pupper)
      
     # Calculate polymorphism changes
-    plower,pupper = stats_utils.calculate_poisson_rate_interval(polymorphism_difference_matrix[i,j], polymorphism_opportunity_matrix[i,j],alpha)
+    plower,pupper = stats_utils.calculate_poisson_rate_interval(polymorphism_difference_matrix[i, j], polymorphism_opportunity_matrix[i, j], alpha)
     
     pmid = polymorphism_difference_matrix[i,j]*1.0/polymorphism_opportunity_matrix[i,j]
     
@@ -274,7 +272,7 @@ for sample_pair_idx in xrange(0,len(diff_subject_snp_idxs[0])):
     i = diff_subject_gene_idxs[0][sample_pair_idx]
     j = diff_subject_gene_idxs[1][sample_pair_idx]
     
-    plower,pupper = stats_utils.calculate_poisson_rate_interval(gene_difference_matrix[i,j], gene_opportunity_matrix[i,j])
+    plower,pupper = stats_utils.calculate_poisson_rate_interval(gene_difference_matrix[i, j], gene_opportunity_matrix[i, j])
     pmid = gene_difference_matrix[i,j]*1.0/gene_opportunity_matrix[i,j]
     
     diff_subject_gene_plowers.append(plower)
@@ -333,7 +331,7 @@ polymorphism_axis.plot( numpy.clip(same_subject_pi_pmids, 1e-07, 1e09), numpy.cl
 
 #snp_axis.legend(loc='lower left',frameon=False)
 
-fig.savefig('%s/%s_fixations_snps_vs_pi.pdf' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
-fig.savefig('%s/%s_fixations_snps_vs_pi.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+fig.savefig('%s/%s_fixations_snps_vs_pi.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
+fig.savefig('%s/%s_fixations_snps_vs_pi.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
 
     

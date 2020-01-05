@@ -1,6 +1,6 @@
 import os
 import sys
-import parse_midas_data
+from parsers import parse_midas_data
 import argparse
 
 parser = argparse.ArgumentParser()

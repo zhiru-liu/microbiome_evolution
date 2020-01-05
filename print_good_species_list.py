@@ -3,7 +3,7 @@
 ### Maybe we'll add a cluster specific version later. 
 import os
 import sys
-import parse_midas_data
+from parsers import parse_midas_data
 
 if len(sys.argv) < 2:
     sys.stderr.write("Usage: python print_good_species_list.py [num|names]\n")

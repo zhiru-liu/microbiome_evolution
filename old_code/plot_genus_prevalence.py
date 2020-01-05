@@ -1,11 +1,10 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import parse_midas_data
+matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
-import diversity_utils
-import stats_utils
+from utils import diversity_utils, stats_utils
+from parsers import parse_midas_data
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -202,7 +201,7 @@ for species_name in species_names:
     
 legend_axis.legend(loc='upper center',frameon=False,fontsize=5,numpoints=1,ncol=1,handlelength=1)   
 
-pylab.savefig('%s/%s_genus_dNdS_vs_dS.pdf' % (parse_midas_data.analysis_directory,genus_name),bbox_inches='tight')
-pylab.savefig('%s/%s_genus_dNdS_vs_dS.png' % (parse_midas_data.analysis_directory,genus_name),bbox_inches='tight')
+pylab.savefig('%s/%s_genus_dNdS_vs_dS.pdf' % (parse_midas_data.analysis_directory, genus_name), bbox_inches='tight')
+pylab.savefig('%s/%s_genus_dNdS_vs_dS.png' % (parse_midas_data.analysis_directory, genus_name), bbox_inches='tight')
 
     

@@ -1,4 +1,5 @@
-import parse_midas_data
+from parsers import parse_midas_data
+
 
 def get_genus_name(species_name):
     return species_name.split("_")[0]
@@ -8,7 +9,7 @@ def get_taxonomy_map():
     species_genome_map = {}
     genome_species_map = {}
     
-    file = open("%sspecies_info.txt" % parse_midas_data.midas_directory,"r")
+    file = open("%sspecies_info.txt" % parse_midas_data.midas_directory, "r")
     file.readline() # header
     for line in file:
         items = line.split()
@@ -20,7 +21,7 @@ def get_taxonomy_map():
     
     species_taxonomy_map = {}
     
-    file = open("%sgenome_taxonomy.txt" % parse_midas_data.midas_directory,"r")
+    file = open("%sgenome_taxonomy.txt" % parse_midas_data.midas_directory, "r")
     file.readline() # header
     for line in file:
         items =  line.split("\t")
@@ -142,7 +143,7 @@ def old_sort_phylogenetically(species):
     
     # Load the species tree from the midas directory
     from Bio import Phylo
-    newick_filename = parse_midas_data.midas_directory+"/species_tree.newick"
+    newick_filename = parse_midas_data.midas_directory + "/species_tree.newick"
     tree = Phylo.read(newick_filename, 'newick')
     ordered_species_ids = [term.name for term in tree.get_terminals()]
 

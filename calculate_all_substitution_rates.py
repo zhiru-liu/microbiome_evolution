@@ -1,19 +1,14 @@
-import sample_utils 
 import config
-import parse_midas_data
 import os.path
 import pylab
 import sys
 import numpy
 
-import diversity_utils
-import gene_diversity_utils
+from utils import diversity_utils, gene_diversity_utils, core_gene_utils, sample_utils, stats_utils
+from parsers import parse_midas_data
 
-import stats_utils
 from math import log10,ceil
 from numpy.random import randint
-
-import core_gene_utils
 
 intermediate_filename = '%ssubstitution_rates.txt' % (parse_midas_data.data_directory)
     
@@ -204,7 +199,7 @@ if __name__=='__main__':
         while final_line_number >= 0:
     
             sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-            dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples, chunk_size=chunk_size,initial_line_number=final_line_number)
+            dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples, chunk_size=chunk_size, initial_line_number=final_line_number)
             sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
             
             # Calculate fixation matrix
@@ -275,7 +270,7 @@ if __name__=='__main__':
         # Now calculate gene differences
         # Load gene coverage information for species_name
         sys.stderr.write("Loading pangenome data for %s...\n" % species_name)
-        gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages,     gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name,allowed_samples=snp_samples, disallowed_genes=shared_pangenome_genes)
+        gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages,     gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name, allowed_samples=snp_samples, disallowed_genes=shared_pangenome_genes)
         sys.stderr.write("Done! Loaded %d genes\n" % len(gene_names))
 
         gene_sample_list = list(gene_samples)

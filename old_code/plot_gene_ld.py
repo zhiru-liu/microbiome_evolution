@@ -1,11 +1,11 @@
 import matplotlib  
 matplotlib.use('Agg') 
 import os
-import parse_midas_data
 import pylab
 import sys
 import numpy
-import diversity_utils
+from utils import diversity_utils
+from parsers import parse_midas_data
 from numpy.random import choice
 species_name=sys.argv[1]
 

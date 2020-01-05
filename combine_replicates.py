@@ -1,6 +1,7 @@
 import sys
-import parse_midas_data
-species=sys.argv[1]  
+from parsers import parse_midas_data
+
+species=sys.argv[1]
 
 # load HMP sample data
 subject_sample_map = parse_midas_data.parse_subject_sample_map()

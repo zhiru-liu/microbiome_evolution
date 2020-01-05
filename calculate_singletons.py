@@ -1,19 +1,15 @@
-import sample_utils
 import config
-import parse_midas_data
 import os.path
 import pylab
 import sys
 import numpy
 
-import diversity_utils
-import gene_diversity_utils
+from utils import diversity_utils, gene_diversity_utils, core_gene_utils, sample_utils, stats_utils
+from parsers import parse_midas_data
 
-import stats_utils
 from math import log10,ceil
 from numpy.random import randint
 
-import core_gene_utils
 import gzip
 
 singleton_directory = '%ssingleton_rates/' % (parse_midas_data.data_directory)
@@ -200,7 +196,7 @@ if __name__=='__main__':
         while final_line_number >= 0:
     
             sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-            dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples, chunk_size=chunk_size,initial_line_number=final_line_number, allowed_genes=non_shared_genes)
+            dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples, chunk_size=chunk_size, initial_line_number=final_line_number, allowed_genes=non_shared_genes)
             sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
             
             # Calculate fixation matrix

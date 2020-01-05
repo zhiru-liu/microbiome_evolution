@@ -1,6 +1,6 @@
 import os
 import sys
-import parse_midas_data
+from parsers import parse_midas_data
 
 subject_sample_time_map = parse_midas_data.parse_subject_sample_time_map()
 

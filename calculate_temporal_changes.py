@@ -1,18 +1,13 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import sample_utils
+matplotlib.use('Agg')
 import config
-import parse_midas_data
 import os.path
 import pylab
 import sys
 import numpy
-import sfs_utils
-        
 
-import diversity_utils
-import gene_diversity_utils
-import core_gene_utils
+from utils import diversity_utils, gene_diversity_utils, core_gene_utils, sample_utils, stats_utils, sfs_utils
+from parsers import parse_midas_data
 import gzip
 import os
 
@@ -22,7 +17,6 @@ intermediate_filename_template = '%s%s.txt.gz'
 min_coverage = config.min_median_coverage
 min_sample_size = 2
 
-import stats_utils
 from math import log10,ceil
 from numpy.random import randint
 
@@ -229,7 +223,7 @@ if __name__=='__main__':
         sample_coverage_map = parse_midas_data.parse_sample_coverage_map(species_name)
 
         sys.stderr.write("Loading SFSs for %s...\t" % species_name)
-        samples, sfs_map = parse_midas_data.parse_within_sample_sfs(species_name, allowed_variant_types=set(['1D','2D','3D','4D'])) 
+        samples, sfs_map = parse_midas_data.parse_within_sample_sfs(species_name, allowed_variant_types=set(['1D', '2D', '3D', '4D']))
         sys.stderr.write("Done!\n")
 
 
@@ -259,7 +253,7 @@ if __name__=='__main__':
         # Now calculate gene differences
         # Load gene coverage information for species_name
         sys.stderr.write("Loading pangenome data for %s...\n" % species_name)
-        gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name,allowed_samples=snp_samples, disallowed_genes=shared_pangenome_genes)
+        gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name, allowed_samples=snp_samples, disallowed_genes=shared_pangenome_genes)
         sys.stderr.write("Done!\n")
     
         snp_samples = gene_samples
@@ -300,7 +294,7 @@ if __name__=='__main__':
         while final_line_number >= 0:
     
             sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-            dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples, chunk_size=chunk_size,initial_line_number=final_line_number,allowed_genes=non_shared_genes)
+            dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples, chunk_size=chunk_size, initial_line_number=final_line_number, allowed_genes=non_shared_genes)
             sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
             
             # Calculate private snvs
@@ -372,7 +366,7 @@ if __name__=='__main__':
             snp_perrs[sample_pair] = perr
             tracked_private_snp_perrs[sample_pair] = perr
     
-            gene_changes[sample_pair].extend( gene_diversity_utils.calculate_gene_differences_between(i, j, gene_reads_matrix, gene_depth_matrix, marker_coverages) )
+            gene_changes[sample_pair].extend(gene_diversity_utils.calculate_gene_differences_between(i, j, gene_reads_matrix, gene_depth_matrix, marker_coverages))
             
             gene_perr = gene_diversity_utils.calculate_gene_error_rate(i, j, gene_reads_matrix, gene_depth_matrix, marker_coverages)[0]
             

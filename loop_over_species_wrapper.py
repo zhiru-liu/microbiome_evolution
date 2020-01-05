@@ -4,7 +4,7 @@
 ### Maybe we'll add a cluster specific version later. 
 import os
 import sys
-import parse_midas_data
+from parsers import parse_midas_data
 
 if len(sys.argv) < 3:
     sys.stderr.write("Usage: python loop_over_species_wrapper.py all|debug|species command...\n")

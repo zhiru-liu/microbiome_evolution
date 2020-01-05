@@ -1,4 +1,4 @@
-import parse_midas_data
+from parsers import parse_midas_data
 import pylab
 import sys
 import numpy

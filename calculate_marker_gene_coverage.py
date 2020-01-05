@@ -1,12 +1,12 @@
 import sys
 import bz2
 import numpy
-import parse_midas_data
+from parsers import parse_midas_data
 
 if len(sys.argv) > 1:
     species_name=sys.argv[1]
 else:
-    species_name=parse_midas_data.debug_species_name
+    species_name= parse_midas_data.debug_species_name
 
 sys.stderr.write("Calculating marker gene coverage for %s...\n" % species_name)
 
@@ -16,7 +16,7 @@ sys.stderr.write("Calculating marker gene coverage for %s...\n" % species_name)
 #
 #####
 
-depth_file = bz2.BZ2File("%ssnps/%s/snps_depth.txt.bz2" % (parse_midas_data.data_directory, species_name),"r")
+depth_file = bz2.BZ2File("%ssnps/%s/snps_depth.txt.bz2" % (parse_midas_data.data_directory, species_name), "r")
     
 # get list of samples to use
 depth_line = depth_file.readline()
@@ -24,9 +24,10 @@ depth_items = depth_line.split()
 output_samples = depth_items[1:]
 depth_file.close()
     
-coverage_file = bz2.BZ2File("%sspecies/coverage.txt.bz2" % (parse_midas_data.data_directory),"r")
+coverage_file = bz2.BZ2File("%sspecies/coverage.txt.bz2" % (parse_midas_data.data_directory), "r")
 
-output_coverage_file = bz2.BZ2File("%ssnps/%s/marker_coverage.txt.bz2" % (parse_midas_data.data_directory, species_name),"w")
+output_coverage_file = bz2.BZ2File("%ssnps/%s/marker_coverage.txt.bz2" % (
+    parse_midas_data.data_directory, species_name), "w")
 
 # get header line
 line = coverage_file.readline()

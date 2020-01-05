@@ -1,12 +1,10 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import parse_midas_data
-import parse_patric
+matplotlib.use('Agg')
 import sys
 import numpy
 from numpy.random import normal
-import diversity_utils
-import stats_utils
+from utils import diversity_utils, stats_utils
+from parsers import parse_patric, parse_midas_data
 import pylab
 import os
 
@@ -50,7 +48,7 @@ sample_coverage_histograms, samples = parse_midas_data.parse_coverage_distributi
 marker_genes = parse_midas_data.load_marker_genes(species_name)
 
 # load the centroid gene map (maps from the centroid to the ref genome)
-centroid_gene_map=parse_midas_data.load_centroid_gene_map(species_name)
+centroid_gene_map= parse_midas_data.load_centroid_gene_map(species_name)
 
 # invert the centroid gene map:
 centroid_gene_map_inverted={}
@@ -59,7 +57,7 @@ for key in centroid_gene_map:
     centroid_gene_map_inverted[value]=key
 
 # load the complete centroid gene map
-complete_centroid_gene_map=parse_midas_data.load_complete_centroid_gene_map(species_name)
+complete_centroid_gene_map= parse_midas_data.load_complete_centroid_gene_map(species_name)
 
 
  
@@ -72,7 +70,7 @@ for gene in marker_genes:
     # find all the genes in the 95% centroid
     all_genes_in_centroid=complete_centroid_gene_map[centroid_gene]
     # load gene coverage for each gene in the 95% cluster. Each of these genes is its own 99% cluster
-    marker_gene_reads=parse_midas_data.parse_99_percent_genes(species_name, samples, all_genes_in_centroid)
+    marker_gene_reads= parse_midas_data.parse_99_percent_genes(species_name, samples, all_genes_in_centroid)
     # store all the data for each marker gene in a dictionary for later use
     marker_genes_dictionary[gene]=marker_gene_reads
     # also initialize a dicationary to concatenate all the data for each ref genome across marker genes
@@ -116,4 +114,4 @@ im=ax.imshow(ref_genome_numpy_array,interpolation='none', origin='low', cmap='je
 pylab.colorbar(im)
 ax.set(yticks=numpy.arange(len(ref_genome_dictionary.keys()))+0.5,yticklabels=ref_genome_dictionary.keys(), xticks=numpy.arange(len(marker_genes)))
 ax.set_xticklabels(marker_genes, rotation=90)
-pylab.savefig('%s/%s_marker_gene_reads.png' % (parse_midas_data.analysis_directory,species_name),Bbox='tight')
+pylab.savefig('%s/%s_marker_gene_reads.png' % (parse_midas_data.analysis_directory, species_name), Bbox='tight')

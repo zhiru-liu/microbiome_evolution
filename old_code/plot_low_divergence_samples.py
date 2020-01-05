@@ -1,14 +1,12 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import parse_midas_data
+matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
 
-import diversity_utils
-import gene_diversity_utils
+from utils import diversity_utils, gene_diversity_utils, stats_utils
+from parsers import parse_midas_data
 
-import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -88,7 +86,7 @@ final_line_number = 0
 while final_line_number >= 0:
     
     sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples,chunk_size=chunk_size,initial_line_number=final_line_number)
+    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples, chunk_size=chunk_size, initial_line_number=final_line_number)
     sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
     
     # Calculate fixation matrix
@@ -139,8 +137,8 @@ dendrogram(
     leaf_rotation=90.,  # rotates the x axis labels
     leaf_font_size=8.,  # font size for the x axis labels
 )
-pylab.savefig('%s/%s_full_dendrogram.pdf' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
-pylab.savefig('%s/%s_full_dendrogram.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+pylab.savefig('%s/%s_full_dendrogram.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
+pylab.savefig('%s/%s_full_dendrogram.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
 
 # Make a zoomed dendrogram
 pylab.figure(2, figsize=(15, 5))
@@ -153,8 +151,8 @@ dendrogram(
     leaf_font_size=8.,  # font size for the x axis labels
 )
 pylab.ylim([0,5e-04])
-pylab.savefig('%s/%s_zoomed_dendrogram.pdf' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
-pylab.savefig('%s/%s_zoomed_dendrogram.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+pylab.savefig('%s/%s_zoomed_dendrogram.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
+pylab.savefig('%s/%s_zoomed_dendrogram.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
 
 
 low_divergence_idxs = numpy.logical_or(cluster_idxss[0][0],cluster_idxss[0][1])
@@ -180,7 +178,7 @@ if len(low_divergence_samples)>2:
     while final_line_number >= 0:
     
         sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-        dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=low_divergence_samples,chunk_size=chunk_size,initial_line_number=final_line_number)
+        dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=low_divergence_samples, chunk_size=chunk_size, initial_line_number=final_line_number)
         sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
     
         # Calculate fixation matrix
@@ -230,8 +228,8 @@ if len(low_divergence_samples)>2:
         leaf_font_size=8.,  # font size for the x axis labels
     )
 
-    pylab.savefig('%s/%s_low_divergence_samples.pdf' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
-    pylab.savefig('%s/%s_low_divergence_samples.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+    pylab.savefig('%s/%s_low_divergence_samples.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
+    pylab.savefig('%s/%s_low_divergence_samples.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
 
 else:
     

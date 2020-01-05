@@ -1,4 +1,4 @@
-import parse_midas_data
+from parsers import parse_midas_data
 import pylab
 import sys
 import numpy
@@ -39,7 +39,7 @@ allowed_variant_type_list = ['1D','2D','3D','4D']
 allowed_variant_types = set(allowed_variant_type_list)  
 
 # Open post-processed MIDAS output
-snp_file =  bz2.BZ2File("%ssnps/%s/annotated_snps.txt.bz2" % (parse_midas_data.data_directory, species_name),"r")
+snp_file =  bz2.BZ2File("%ssnps/%s/annotated_snps.txt.bz2" % (parse_midas_data.data_directory, species_name), "r")
     
 line = snp_file.readline() # header
 items = line.split()[1:]
@@ -126,7 +126,7 @@ sys.stderr.write("Done!\n")
 # Write to disk!
 sys.stderr.write("Writing output...\n")
 # First write (filtered) genome-wide coverage distribution
-output_file = bz2.BZ2File("%ssnps/%s/within_sample_sfs.txt.bz2" % (parse_midas_data.data_directory, species_name),"w")
+output_file = bz2.BZ2File("%ssnps/%s/within_sample_sfs.txt.bz2" % (parse_midas_data.data_directory, species_name), "w")
 output_file.write("\t".join(["SampleID", "variant_type", "D,A,count,reverse_count", "..."]))
 for sample_idx in xrange(0,len(samples)):
     sample = samples[sample_idx]

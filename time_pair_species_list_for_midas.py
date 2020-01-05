@@ -1,10 +1,8 @@
-import parse_midas_data
-import parse_patric
 import sys
 import numpy
 from numpy.random import normal
-import diversity_utils
-import stats_utils
+from utils import diversity_utils, stats_utils
+from parsers import parse_patric, parse_midas_data
 import os
 
 subject_sample_time_map = parse_midas_data.parse_subject_sample_time_map()
@@ -24,7 +22,7 @@ for subject_id in subject_sample_time_map:
             dir='MIDAS_1.2.2_output'
             fastq_dir='joined_fastq_files_hmp_combine_tech_reps'
         inFN=os.path.expanduser('~/BenNanditaProject/MIDAS_intermediate_files_hmp/' + dir + '/%s/species/species_profile.txt') %sample_id
-        species_list=parse_midas_data.parse_intermediate_species_file(sample_id, inFN)
+        species_list= parse_midas_data.parse_intermediate_species_file(sample_id, inFN)
         species_lists.append(species_list)
 
         # for each sample, I want to rename the snps and gene directories so that I don't overwrite the old db output.

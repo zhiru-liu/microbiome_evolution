@@ -1,13 +1,11 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import parse_midas_data
+matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
 from numpy.random import normal
-import diversity_utils
-import gene_diversity_utils
-import stats_utils
+from utils import diversity_utils, gene_diversity_utils, stats_utils
+from parsers import parse_midas_data
 import os
 
 
@@ -72,7 +70,7 @@ median_coverages = numpy.array([stats_utils.calculate_median_from_histogram(samp
 sample_coverage_map = {samples[i]: median_coverages[i] for i in xrange(0,len(samples))}
     
 # prune time meta data so that the highest coverage sample is retained for those subjects with >1 sample per time pt
-subject_sample_time_map = parse_midas_data.prune_subject_sample_time_map(subject_sample_time_map_all_samples,sample_coverage_map)
+subject_sample_time_map = parse_midas_data.prune_subject_sample_time_map(subject_sample_time_map_all_samples, sample_coverage_map)
 
 
 ###############################################################
@@ -106,7 +104,7 @@ sys.stderr.write("Done!\n")
 ###################################################################                    
 
 sys.stderr.write("Calculate within person SFS...\n")
-sample_freqs, passed_sites = diversity_utils.calculate_sample_freqs(allele_counts_map, passed_sites_map, variant_type='4D',fold=True)
+sample_freqs, passed_sites = diversity_utils.calculate_sample_freqs(allele_counts_map, passed_sites_map, variant_type='4D', fold=True)
 
 sfss= []
 bins = numpy.linspace(0.04,0.95,21)
@@ -151,7 +149,7 @@ for j in range(0,len(pis)):
     pylab.axhline(y=0.001, color='r', linestyle='-')
     plot_no+=1
 
-pylab.savefig('%s/%s_1D_sfs_polarized.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
+pylab.savefig('%s/%s_1D_sfs_polarized.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
 
 
 
@@ -170,7 +168,7 @@ pylab.title('Descriptive statistics of SFS vs piS')
 pylab.plot(pis, num_bins_surpassing_threshold, "b.")
 pylab.axvline(x=0.001, color='r', linestyle='-')
 #pylab.plot([0,500],[0,500] , 'k-')
-pylab.savefig('%s/descriptive_statistics_sfs_vs_piS.png' % (parse_midas_data.analysis_directory),bbox_inches='tight') 
+pylab.savefig('%s/descriptive_statistics_sfs_vs_piS.png' % (parse_midas_data.analysis_directory), bbox_inches='tight')
 
 
 ##################################################################
@@ -192,5 +190,5 @@ pylab.ylabel("Tajima's D")
 pylab.title("Tajima's D vs piS")
 pylab.plot(pis, TajD, "b.")
 pylab.axvline(x=0.001, color='r', linestyle='-')
-pylab.savefig('%s/TajD_vs_piS.png' % (parse_midas_data.analysis_directory),bbox_inches='tight') 
+pylab.savefig('%s/TajD_vs_piS.png' % (parse_midas_data.analysis_directory), bbox_inches='tight')
     

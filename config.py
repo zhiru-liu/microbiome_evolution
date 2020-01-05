@@ -6,13 +6,13 @@
 import os.path 
 from math import log10
 
-data_directory = os.path.expanduser("~/ben_nandita_hmp_data_091118/")
+data_directory = os.path.expanduser("/Volumes/externalhd/garud_etal_2019_data/")
 #data_directory = os.path.expanduser("~/ben_nandita_hmp_data_071518/")
 #data_directory = os.path.expanduser("~/ben_nandita_hmp_data/")
-analysis_directory = os.path.expanduser("~/ben_nandita_hmp_analysis/")
-scripts_directory = os.path.expanduser("~/ben_nandita_hmp_scripts/")
+analysis_directory = os.path.expanduser("/Volumes/externalhd/zhiru_outputs/")
+scripts_directory = os.path.expanduser("/Volumes/externalhd/garud_etal_2019_scripts/")
 patric_directory = os.path.expanduser("~/patric_db/")
-midas_directory = os.path.expanduser("~/midas_db/")
+midas_directory = os.path.expanduser("/Volumes/externalhd/midas_db/")
 
 # We use this one to debug because it was the first one we looked at
 debug_species_name = 'Bacteroides_uniformis_57318'
@@ -64,7 +64,7 @@ within_host_min_haploid_sample_size = 10
 between_low_divergence_threshold = 2e-04
 
 # Comment this out
-from parse_HMP_data import *
+from parsers.parse_HMP_data import *
 # and uncomment this
 #from parse_simulated_data import *
 # for isolate data

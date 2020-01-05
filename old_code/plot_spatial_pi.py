@@ -1,10 +1,11 @@
 import matplotlib
 matplotlib.use('Agg')
-import parse_midas_data
 import pylab
 import sys
 import numpy
-import diversity_utils
+from utils import diversity_utils
+from parsers import parse_midas_data
+
 species_name=sys.argv[1]
 
 # Load subject and sample metadata
@@ -26,7 +27,7 @@ for gene_name in passed_sites_map.keys():
     passed_sites = passed_sites_map[gene_name]['4D']['sites']
     passed_pairs = (passed_sites>0.5)
     passed_pairs[numpy.diag_indices_from(passed_pairs)] = False
-    pi_matrix, avg_pi_matrix = diversity_utils.calculate_pi_matrix(allele_counts_map, passed_sites_map, variant_type='4D',allowed_genes=set([gene_name]))
+    pi_matrix, avg_pi_matrix = diversity_utils.calculate_pi_matrix(allele_counts_map, passed_sites_map, variant_type='4D', allowed_genes=set([gene_name]))
     total_pairs = passed_pairs.sum()
         
     if total_pairs<0.5:
@@ -40,7 +41,7 @@ for gene_name in passed_sites_map.keys():
     passed_sites = passed_sites_map[gene_name]['1D']['sites']
     passed_pairs = (passed_sites>0.5)
     passed_pairs[numpy.diag_indices_from(passed_pairs)] = False
-    pi_matrix, avg_pi_matrix = diversity_utils.calculate_pi_matrix(allele_counts_map, passed_sites_map, variant_type='1D',allowed_genes=set([gene_name]))
+    pi_matrix, avg_pi_matrix = diversity_utils.calculate_pi_matrix(allele_counts_map, passed_sites_map, variant_type='1D', allowed_genes=set([gene_name]))
     total_pairs = passed_pairs.sum()
     avg_pi = (pi_matrix*passed_pairs).sum()/(total_pairs+(total_pairs<0.5))
         
@@ -63,14 +64,14 @@ pylab.plot(xvalues, pi_syns, 'b.-', label='Synonymous (4D)')
 pylab.plot(xvalues, pi_nons, 'r.-', label='Nonsynonymous (1D)')
 pylab.semilogy(xvalues, numpy.ones_like(xvalues)*1e-02,'k:')
 pylab.legend(loc='upper right',frameon=False)
-pylab.savefig('%s/%s_gene_pi.pdf' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
+pylab.savefig('%s/%s_gene_pi.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
 #pylab.savefig('%s/%s_gene_pi.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
     
 pylab.figure()
 pylab.loglog(pi_syns, pi_nons,'b.',alpha=0.5)
 pylab.xlabel('Gene $\\pi_s$')
 pylab.ylabel('Gene $\\pi_n$')
-pylab.savefig('%s/%s_gene_pN_vs_pS.pdf' % (parse_midas_data.analysis_directory, species_name) ,bbox_inches='tight')
-pylab.savefig('%s/%s_gene_pN_vs_pS.png' % (parse_midas_data.analysis_directory, species_name) ,bbox_inches='tight')
+pylab.savefig('%s/%s_gene_pN_vs_pS.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
+pylab.savefig('%s/%s_gene_pN_vs_pS.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
     
     

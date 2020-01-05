@@ -1,14 +1,12 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import parse_midas_data
+matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
 
-import diversity_utils
-import gene_diversity_utils
+from utils import diversity_utils, gene_diversity_utils, stats_utils
+from parsers import parse_midas_data
 
-import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -99,7 +97,7 @@ final_line_number = 0
 while final_line_number >= 0:
     
     sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples,chunk_size=chunk_size,initial_line_number=final_line_number)
+    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples, chunk_size=chunk_size, initial_line_number=final_line_number)
     sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
     
     # Calculate fixation matrix
@@ -176,7 +174,7 @@ if len(low_divergence_samples)>2:
     while final_line_number >= 0:
     
         sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-        dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=low_divergence_samples,chunk_size=chunk_size,initial_line_number=final_line_number)
+        dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=low_divergence_samples, chunk_size=chunk_size, initial_line_number=final_line_number)
         sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
     
         # Calculate fixation matrix
@@ -229,7 +227,7 @@ pca_axis.set_yticklabels([])
 low_divergence_pca_axis.set_xticklabels([])
 low_divergence_pca_axis.set_yticklabels([])
 
-fig.savefig('%s/%s_pca.pdf' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
-fig.savefig('%s/%s_pca.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+fig.savefig('%s/%s_pca.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
+fig.savefig('%s/%s_pca.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
 
     

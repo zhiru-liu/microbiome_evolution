@@ -1,14 +1,12 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import parse_midas_data
+matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
 
-import diversity_utils
-import gene_diversity_utils
+from utils import diversity_utils, gene_diversity_utils, stats_utils
+from parsers import parse_midas_data
 
-import stats_utils
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -87,7 +85,7 @@ final_line_number = 0
 while final_line_number >= 0:
     
     sys.stderr.write("Loading chunk starting @ %d...\n" % final_line_number)
-    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples,chunk_size=chunk_size,initial_line_number=final_line_number)
+    dummy_samples, allele_counts_map, passed_sites_map, final_line_number = parse_midas_data.parse_snps(species_name, debug=debug, allowed_samples=snp_samples, chunk_size=chunk_size, initial_line_number=final_line_number)
     sys.stderr.write("Done! Loaded %d genes\n" % len(allele_counts_map.keys()))
     
     # Calculate fixation matrix
@@ -108,12 +106,12 @@ sys.stderr.write("Done!\n")
 
 # Load gene coverage information for species_name
 sys.stderr.write("Loading pangenome data for %s...\n" % species_name)
-gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name,allowed_samples=snp_samples)
+gene_samples, gene_names, gene_presence_matrix, gene_depth_matrix, marker_coverages, gene_reads_matrix = parse_midas_data.parse_pangenome_data(species_name, allowed_samples=snp_samples)
 sys.stderr.write("Done!\n")
 
-prevalence_idxs = (parse_midas_data.calculate_unique_samples(subject_sample_map, gene_samples))*(marker_coverages>=min_coverage)
+prevalence_idxs = (parse_midas_data.calculate_unique_samples(subject_sample_map, gene_samples)) * (marker_coverages >= min_coverage)
     
-prevalences = gene_diversity_utils.calculate_fractional_gene_prevalences(gene_depth_matrix[:,prevalence_idxs], marker_coverages[prevalence_idxs])
+prevalences = gene_diversity_utils.calculate_fractional_gene_prevalences(gene_depth_matrix[:, prevalence_idxs], marker_coverages[prevalence_idxs])
 
 pangenome_prevalences = numpy.array(prevalences,copy=True)
 pangenome_prevalences.sort()
@@ -135,7 +133,7 @@ snp_sample_idx_map = parse_midas_data.calculate_sample_idx_map(desired_samples, 
 gene_sample_idx_map = parse_midas_data.calculate_sample_idx_map(desired_samples, gene_samples)
     
 
-same_sample_snp_idxs  = parse_midas_data.apply_sample_index_map_to_indices(snp_sample_idx_map,  desired_same_sample_idxs)  
+same_sample_snp_idxs  = parse_midas_data.apply_sample_index_map_to_indices(snp_sample_idx_map, desired_same_sample_idxs)
 same_sample_gene_idxs = parse_midas_data.apply_sample_index_map_to_indices(gene_sample_idx_map, desired_same_sample_idxs)  
 
 
@@ -168,7 +166,7 @@ for sample_pair_idx in xrange(0,len(same_subject_snp_idxs[0])):
     snp_i = same_subject_snp_idxs[0][sample_pair_idx]
     snp_j = same_subject_snp_idxs[1][sample_pair_idx]
 #    
-    plower,pupper = stats_utils.calculate_poisson_rate_interval(snp_difference_matrix[snp_i, snp_j], snp_opportunity_matrix[snp_i, snp_j],alpha)
+    plower,pupper = stats_utils.calculate_poisson_rate_interval(snp_difference_matrix[snp_i, snp_j], snp_opportunity_matrix[snp_i, snp_j], alpha)
 #    
     same_subject_snp_plowers.append(plower)
     same_subject_snp_puppers.append(pupper)
@@ -186,7 +184,7 @@ for sample_pair_idx in xrange(0,len(same_subject_snp_idxs[0])):
 #            
             within_host_gene_idx_map[gene_idx]+=1
 #
-    plower,pupper = stats_utils.calculate_poisson_rate_interval(gene_difference_matrix[i,j], gene_opportunity_matrix[i,j])
+    plower,pupper = stats_utils.calculate_poisson_rate_interval(gene_difference_matrix[i, j], gene_opportunity_matrix[i, j])
 #    
     same_subject_gene_plowers.append(plower)
     same_subject_gene_puppers.append(pupper)
@@ -210,7 +208,7 @@ for sample_pair_idx in xrange(0,len(diff_subject_snp_idxs[0])):
     snp_i = diff_subject_snp_idxs[0][sample_pair_idx]
     snp_j = diff_subject_snp_idxs[1][sample_pair_idx]
     
-    plower,pupper = stats_utils.calculate_poisson_rate_interval(snp_difference_matrix[snp_i,snp_j], snp_opportunity_matrix[snp_i, snp_j])
+    plower,pupper = stats_utils.calculate_poisson_rate_interval(snp_difference_matrix[snp_i, snp_j], snp_opportunity_matrix[snp_i, snp_j])
     
     diff_subject_snp_plowers.append(plower)
     diff_subject_snp_puppers.append(pupper)
@@ -232,7 +230,7 @@ for sample_pair_idx in xrange(0,len(diff_subject_snp_idxs[0])):
             
             low_divergence_between_host_gene_idx_map[gene_idx]+=1
             
-    plower,pupper = stats_utils.calculate_poisson_rate_interval(gene_difference_matrix[i,j], gene_opportunity_matrix[i,j],alpha)
+    plower,pupper = stats_utils.calculate_poisson_rate_interval(gene_difference_matrix[i, j], gene_opportunity_matrix[i, j], alpha)
     
     diff_subject_gene_plowers.append(plower)
     diff_subject_gene_puppers.append(pupper)
@@ -386,8 +384,8 @@ gene_axis.set_xticks([])
 #labels[0].set_text('0')
 #snp_axis.set_yticklabels(labels)
 
-fig.savefig('%s/%s_ordered_gene_differences_vs_substitutions.pdf' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
-fig.savefig('%s/%s_ordered_gene_differences_vs_substitutions.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+fig.savefig('%s/%s_ordered_gene_differences_vs_substitutions.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
+fig.savefig('%s/%s_ordered_gene_differences_vs_substitutions.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
 
 ###################
 #
@@ -421,7 +419,7 @@ if len(low_divergence_between_host_gene_prevalences) > 0:
     print low_divergence_between_host_gene_prevalences
     print low_divergence_between_host_gene_prevalences.mean()
     print len(low_divergence_between_host_gene_prevalences), len(between_host_gene_prevalences)
-    xs, ns =     stats_utils.calculate_unnormalized_survival_from_vector( low_divergence_between_host_gene_prevalences)
+    xs, ns =     stats_utils.calculate_unnormalized_survival_from_vector(low_divergence_between_host_gene_prevalences)
     prevalence_axis.step(xs,ns*1.0/ns[0],'r-',label=('d<%g' % low_divergence_threshold), alpha=0.5)
 
 xs, ns = stats_utils.calculate_unnormalized_survival_from_vector(within_host_gene_prevalences)
@@ -431,7 +429,7 @@ prevalence_axis.step(xs,ns*1.0/ns[0],'g-',label='Within host differences')
 
 prevalence_axis.legend(loc='upper right',frameon=False,fontsize=6)
 
-prevalence_fig.savefig('%s/%s_gene_differences_prevalences.pdf' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight')
-prevalence_fig.savefig('%s/%s_gene_differences_prevalences.png' % (parse_midas_data.analysis_directory,species_name),bbox_inches='tight',dpi=300)
+prevalence_fig.savefig('%s/%s_gene_differences_prevalences.pdf' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight')
+prevalence_fig.savefig('%s/%s_gene_differences_prevalences.png' % (parse_midas_data.analysis_directory, species_name), bbox_inches='tight', dpi=300)
     
     
