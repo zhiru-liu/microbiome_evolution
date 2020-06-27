@@ -64,6 +64,24 @@ def parse_core_genes(desired_species_name="", core_gene_filename=default_core_ge
     return core_genes
 
 
+def parse_gene_lengths(desired_species_name):
+    """
+    Written by zhiru. Return a dictionary of gene_name -> (Total length, num 4D sites)
+    """
+    gene_len_filename = "%sgene_locations/%s.txt" % (config.data_directory, desired_species_name)
+    if not os.path.exists(gene_len_filename):
+        # if haven't parsed this species, do so
+        from parsers.parse_midas_data import parse_and_save_gene_locations
+        parse_and_save_gene_locations(desired_species_name)
+    gene_file = open(gene_len_filename, 'r')
+    gene_file.readline()
+    gene_length_dict = dict()
+    for line in gene_file:
+        items = line.split(',')
+        gene_length_dict[items[0]] = (int(items[-2]), int(items[-1]))
+    return gene_length_dict
+
+
 def get_sorted_core_genes(desired_species_name):
     """
     Return an array of core genes sorted by the id, hence by location

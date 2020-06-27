@@ -116,8 +116,12 @@ def get_gene_snp_vector(gene_snp_map, all_core_genes):
     :return: an array of gene snp counts
     """
     gene_snp_vector = np.zeros(len(all_core_genes))
-    for gene in gene_snp_map:
-        gene_snp_vector[np.where(all_core_genes == gene)[0]] = gene_snp_map[gene]
+    for i in xrange(len(all_core_genes)):
+        if all_core_genes[i] in gene_snp_map:
+            gene_snp_vector[i] = gene_snp_map[all_core_genes[i]]
+        else:
+            # redundant
+            gene_snp_vector[i] = 0
     return gene_snp_vector
 
 

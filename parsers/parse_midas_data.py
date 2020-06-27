@@ -657,6 +657,59 @@ def parse_snps(species_name, debug=False, allowed_samples=[], allowed_genes=[], 
 
     return desired_samples, allele_counts_map, passed_sites_map, final_line_number
 
+
+def parse_and_save_gene_locations(species_name):
+    # Open post-processed MIDAS output
+    snp_file = bz2.BZ2File("%ssnps/%s/snps_info.txt.bz2" % (data_directory, species_name), "r")
+    gene_file = open("%sgene_locations/%s.txt" % (data_directory, species_name), 'w')
+    # skip the sample header
+    _ = snp_file.readline()
+    # write the header for gene file
+    gene_file.write("gene_name,ref_id,start_location,end_location,length,num_4D\n")
+    current_gene = None
+    start_loc = 0
+    end_loc = 0
+    num_4D = 0
+    for line in snp_file:
+        items = line.split()
+        # Load information about site
+        info_items = items[0].split("|")
+        location = long(info_items[1])
+        ref_id = info_items[0]
+        if len(items) < 7:
+            # None coding site
+            if current_gene is not None:
+                # save the previous gene
+                leng = end_loc - start_loc + 1
+                gene_file.write("%s,%s,%s,%s,%s,%s\n" % (current_gene, ref_id, start_loc, end_loc, leng, num_4D))
+                current_gene = None
+            else:
+                continue
+        else:
+            gene_name = items[-3]
+            variant_type = items[-4]
+            if current_gene is not None and current_gene != gene_name:
+                # save the previous gene and start a new gene
+                leng = end_loc - start_loc + 1
+                gene_file.write("%s,%s,%s,%s,%s,%s\n" % (current_gene, ref_id, start_loc, end_loc, leng, num_4D))
+                current_gene = gene_name
+                start_loc = location
+                num_4D = 0
+            if current_gene is None:
+                # Start a new gene
+                current_gene = gene_name
+                start_loc = location
+                num_4D = 0
+            if variant_type == '4D':
+                num_4D += 1
+            end_loc = location
+    if current_gene is not None:
+        # save the last gene
+        leng = end_loc - start_loc + 1
+        gene_file.write("%s,%s,%s,%s,%s\n" % (current_gene, ref_id, start_loc, end_loc, leng))
+    gene_file.close()
+
+
 ###############################################################################
 #
 # Calculates within-sample synonymous pi directly from annotated_snps.txt.bz2. 
