@@ -77,13 +77,12 @@ def _if_relative_SNP(AD1, AD2):
     # If sample 1 and sample 2 have different polarization on this site, the site is a relative SNP
     # Assuming the samples are QP samples, which means a SNP usually has A/D > 80%
     if_SNP1 = AD1[0] > AD1[1]
-    # Note that if the coverage is zero, AD[0]=AD[1]=0, and we assume it to not be a SNP
     if_SNP2 = AD2[0] > AD2[1]
     return if_SNP1 != if_SNP2
 
 
-def _if_one_missing(AD1, AD2):
-    if (AD1[0] + AD1[1] == 0) != (AD2[0] + AD2[1] == 0):
+def _if_missing(AD1, AD2):
+    if (AD1[0] + AD1[1] == 0) or (AD2[0] + AD2[1] == 0):
         return True
     else:
         return False
@@ -98,14 +97,15 @@ def get_two_sample_SNP_genes(sample_idx, allele_counts_map, allowed_variant_type
     for gene in allele_counts_map:
         for variant in allowed_variant_types:
             snp_count = 0
-            one_missing_count = 0
+            missing_count = 0
             for snp in allele_counts_map[gene][variant]['alleles']:
+                if _if_missing(snp[sample_idx[0]], snp[sample_idx[1]]):
+                    missing_count += 1
+                    continue
                 if _if_relative_SNP(snp[sample_idx[0]], snp[sample_idx[1]]):
                     snp_count += 1
-                    if _if_one_missing(snp[sample_idx[0]], snp[sample_idx[1]]):
-                        one_missing_count += 1
             gene_SNP_map[gene] = snp_count
-            gene_missing_map[gene] = one_missing_count
+            gene_missing_map[gene] = missing_count
     return gene_SNP_map, gene_missing_map
 
 
@@ -170,6 +170,8 @@ def smoothen_and_find_peaks(signal, max_peak, polynomial_degree=3, prominence_ra
     # The window size must be an odd integer
     window_size = int(np.sqrt(len(signal)))
     window_size = window_size + 1 if (window_size % 2 == 0) else window_size
+    if window_size <= polynomial_degree:
+        raise ValueError("Signal too short")
     smooth_signal = savgol_filter(signal, window_size, polynomial_degree)
     peak_idx = find_peaks(smooth_signal, prominence=prominence_ratio * max_peak)[0]
     peak_widths_results = peak_widths(smooth_signal, peak_idx, rel_height=1)
@@ -193,12 +195,18 @@ def find_single_peak_freq_cutoff(sample, sfs_map):
     between_line = between_sites * 1.0 / total_sites / ((fs > 0.2) * (fs < 0.5)).sum()
     pmax = np.max([pfs[(fs > 0.1) * (fs < 0.95)].max(), between_line])
 
-    peak_idx, peak_width_results = smoothen_and_find_peaks(pfs, pmax)
+    try:
+        peak_idx, peak_width_results = smoothen_and_find_peaks(pfs, pmax)
+    except ValueError:
+        print("Sample {} SFS bin too few: {}".format(sample, len(pfs)))
+        return None
+
     if len(peak_idx) != 1:
         # Multiple peaks or no peak
         return None
     right_freq = fs[int(peak_width_results[3][0])]
     # Check the height of the separation point
+    # the peak need to be pronounced enough
     if pfs[int(peak_width_results[3][0])] < 0.2 * pfs[peak_idx]:
         return right_freq
     else:

@@ -1,0 +1,46 @@
+{
+    "Dialister_invisus_61905": [
+        5000, 
+        null
+    ], 
+    "Barnesiella_intestinihominis_62208": [
+        10000, 
+        null
+    ], 
+    "Bacteroides_fragilis_54507": [
+        5000, 
+        null
+    ], 
+    "Prevotella_copri_61740": [
+        6000, 
+        12000
+    ], 
+    "Bacteroides_eggerthii_54457": [
+        4000, 
+        null
+    ], 
+    "Bacteroides_thetaiotaomicron_56941": [
+        5000, 
+        15000
+    ], 
+    "Bacteroides_xylanisolvens_57185": [
+        1000, 
+        null
+    ], 
+    "Bacteroides_uniformis_57318": [
+        1000, 
+        2500
+    ], 
+    "Bacteroides_caccae_53434": [
+        3000, 
+        null
+    ], 
+    "Bacteroidales_bacterium_58650": [
+        4000, 
+        null
+    ], 
+    "Bacteroides_vulgatus_57955": [
+        1250, 
+        5000
+    ]
+}
