@@ -90,6 +90,9 @@ def compute_one_species(species_name):
     all_genes = get_core_gene_vector(species_name)
     data_dir = os.path.join(config.analysis_directory,
                             "between_hosts_checkpoints/")
+    if os.path.exists("{}{}/all_runs_map.pickle".format(data_dir, species_name)):
+        print('{} already processed'.format(species_name))
+        return
     global allele_counts_map, found_samples, passed_sites_map
     allele_counts_map = pickle.load(
         open("{}{}/allele_counts_map.pickle".format(data_dir, species_name), 'rb'))
@@ -127,19 +130,32 @@ def compute_one_species(species_name):
 
 
 if __name__ == "__main__":
-    '''
-    desired_species = ['Bacteroides_caccae_53434',
-                       'Bacteroides_thetaiotaomicron_56941',
-                       'Bacteroides_xylanisolvens_57185',
-                       'Bacteroidales_bacterium_58650',
-                       'Bacteroides_eggerthii_54457',
-                       'Dialister_invisus_61905']
-
     desired_species = ['Bacteroides_vulgatus_57955',
                        'Bacteroides_uniformis_57318',
-                       'Barnesiella_intestinihominis_62208']
-                       '''
-    desired_species = ['Bacteroides_fragilis_54507']
+                       'Bacteroides_stercoris_56735',
+                       'Bacteroides_caccae_53434',
+                       'Bacteroides_ovatus_58035',
+                       'Bacteroides_thetaiotaomicron_56941',
+                       'Bacteroides_xylanisolvens_57185',
+                       'Bacteroides_massiliensis_44749',
+                       'Bacteroides_cellulosilyticus_58046',
+                       'Bacteroides_fragilis_54507',
+                       'Bacteroides_eggerthii_54457',
+                       'Bacteroides_coprocola_61586',
+                       'Prevotella_copri_61740',
+                       'Barnesiella_intestinihominis_62208',
+                       'Alistipes_putredinis_61533',
+                       'Alistipes_shahii_62199',
+                       'Alistipes_finegoldii_56071',
+                       'Bacteroidales_bacterium_58650',
+                       'Ruminococcus_bromii_62047',
+                       'Eubacterium_siraeum_57634',
+                       'Coprococcus_sp_62244',
+                       'Roseburia_intestinalis_56239',
+                       'Roseburia_inulinivorans_61943',
+                       'Dialister_invisus_61905',
+                       'Escherichia_coli_58110',
+                       'Faecalibacterium_cf_62236']
 
     for species in desired_species:
         compute_one_species(species)

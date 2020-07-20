@@ -12,19 +12,27 @@ import time
 def main(between_host):
     # Parse and save all the snps between QP hosts
     t0 = time.time()
-    intermediate_file_path = os.path.join(config.analysis_directory, 'within_hosts_checkpoints')
+    if between_host:
+        intermediate_file_path = os.path.join(config.analysis_directory, 'between_hosts_checkpoints')
+    else:
+        intermediate_file_path = os.path.join(config.analysis_directory, 'within_hosts_checkpoints')
+
     for species_name in desired_species:
         print("Start processing {}".format(species_name))
         core_genes = core_gene_utils.parse_core_genes(species_name)
-        desired_samples = get_desired_samples(species_name, between_host)
+        desired_samples = get_desired_samples(species_name, between_host=between_host)
         if desired_samples is None or len(desired_samples) == 0:
             print("{} has no qualified samples".format(species_name))
             continue
+        pickle_path = os.path.join(intermediate_file_path, species_name)
+        if not os.path.exists(pickle_path):
+            print('{} has not been processed'.format(species_name))
+            os.mkdir(pickle_path)
+        else:
+            print('{} already processed'.format(species_name))
+            continue
         found_samples, allele_counts_map, passed_sites_map, final_line_number = parse_snps(
             species_name, allowed_samples=desired_samples, allowed_genes=core_genes, allowed_variant_types=['4D'])
-        pickle_path = intermediate_file_path + species_name
-        if not os.path.exists(pickle_path):
-            os.mkdir(pickle_path)
         pickle.dump(allele_counts_map, open(
             pickle_path + '/allele_counts_map.pickle', 'wb'))
         pickle.dump(found_samples, open(
@@ -35,10 +43,10 @@ def main(between_host):
             species_name, (time.time() - t0) / 60))
 
 
-def get_desired_samples(species_name, between_hosts=False):
+def get_desired_samples(species_name, between_host=False):
     highcoverage_samples = set(
         diversity_utils.calculate_highcoverage_samples(species_name))
-    if between_hosts:
+    if between_host:
         QP_samples = set(
             diversity_utils.calculate_haploid_samples(species_name))
         return QP_samples & highcoverage_samples
@@ -50,17 +58,32 @@ def get_desired_samples(species_name, between_hosts=False):
         desired_samples = set([f.split('.')[0] for f in os.listdir(single_peak_dir) if not f.startswith('.')])
         return desired_samples & highcoverage_samples
 
-desired_species = ['Bacteroides_caccae_53434',
+desired_species = ['Bacteroides_vulgatus_57955',
+                   'Bacteroides_uniformis_57318',
+                   'Bacteroides_stercoris_56735',
+                   'Bacteroides_caccae_53434',
+                   'Bacteroides_ovatus_58035',
                    'Bacteroides_thetaiotaomicron_56941',
                    'Bacteroides_xylanisolvens_57185',
-                   'Prevotella_copri_61740',
-                   'Bacteroidales_bacterium_58650',
+                   'Bacteroides_massiliensis_44749',
+                   'Bacteroides_cellulosilyticus_58046',
+                   'Bacteroides_fragilis_54507',
                    'Bacteroides_eggerthii_54457',
-                   'Dialister_invisus_61905',
-                   'Bacteroides_vulgatus_57955',
-                   'Bacteroides_uniformis_57318',
+                   'Bacteroides_coprocola_61586',
+                   'Prevotella_copri_61740',
                    'Barnesiella_intestinihominis_62208',
-                   'Bacteroides_fragilis_54507']
+                   'Alistipes_putredinis_61533',
+                   'Alistipes_shahii_62199',
+                   'Alistipes_finegoldii_56071',
+                   'Bacteroidales_bacterium_58650',
+                   'Ruminococcus_bromii_62047',
+                   'Eubacterium_siraeum_57634',
+                   'Coprococcus_sp_62244',
+                   'Roseburia_intestinalis_56239',
+                   'Roseburia_inulinivorans_61943',
+                   'Dialister_invisus_61905',
+                   'Escherichia_coli_58110',
+                   'Faecalibacterium_cf_62236']
 
 if __name__ == "__main__":
     main(False)

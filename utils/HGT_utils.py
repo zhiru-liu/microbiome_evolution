@@ -46,21 +46,8 @@ def get_sample_allele_freq(sample_idx, allele_map, allowed_variant_types=['4D'])
     return filtered_df
 
 
-def find_single_host_relative_snps(sample_idx, found_samples, allele_map, sfs_map, allowed_variant_types=['4D']):
-    """
-    The sample must have a clear single peak in the SFS; in other word, the sample only contain two clear strains.
-    :param sample_idx: Index of the sample in the found_samples list
-    :param found_samples: A list of sample id as returned by parse_snps function
-    :param allele_map: allele counts map as returned by parse_snps function
-    :param sfs_map: The map returned by parse_midas_data.parse_within_sample_sfs, so that no need to compute sfs
-    :param allowed_variant_types:
-    :return: A map of {gene: snp counts}
-    """
+def _find_single_host_relative_snps_with_cutoff(sample_idx, found_samples, allele_map, cutoff):
     df = get_sample_allele_freq(sample_idx, allele_map)
-    cutoff = find_single_peak_freq_cutoff(found_samples[sample_idx], sfs_map)
-    if not cutoff:
-        print("Sample does not have single clean peak")
-        return None
     filtered_df = df[df['Major Freqs'] <= cutoff]
     gene_snp_map = {}
     for gene in filtered_df['Genes']:
@@ -69,6 +56,23 @@ def find_single_host_relative_snps(sample_idx, found_samples, allele_map, sfs_ma
         else:
             gene_snp_map[gene] = 1
     return gene_snp_map
+
+
+def find_single_host_relative_snps(sample_idx, found_samples, allele_map, sfs_map):
+    """
+    The sample must have a clear single peak in the SFS; in other word, the sample only contain two clear strains.
+    :param sample_idx: Index of the sample in the found_samples list
+    :param found_samples: A list of sample id as returned by parse_snps function
+    :param allele_map: allele counts map as returned by parse_snps function
+    :param sfs_map: The map returned by parse_midas_data.parse_within_sample_sfs, so that no need to compute sfs
+    :return: A map of {gene: snp counts}
+    """
+    cutoff = find_single_peak_freq_cutoff(found_samples[sample_idx], sfs_map)
+    if not cutoff:
+        print("Sample does not have single clean peak")
+        return None
+    else:
+        return _find_single_host_relative_snps_with_cutoff(sample_idx, found_samples, allele_map, cutoff)
 
 
 def _if_relative_SNP(AD1, AD2):
