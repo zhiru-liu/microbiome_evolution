@@ -163,6 +163,41 @@ def find_runs(gene_snp_vec):
     return counts, starts, ends
 
 
+def _cumulate_runs(runs_tuple, num_genes, run_len_threshold):
+    # runs tuple = (run sizes, starts, ends)
+    cumu_runs = np.zeros(num_genes)
+    starts = runs_tuple[1][runs_tuple[0] > run_len_threshold]
+    ends = runs_tuple[2][runs_tuple[0] > run_len_threshold]
+    for start, end in zip(starts, ends):
+        cumu_runs[start:end] += 1
+    return cumu_runs
+
+
+def cumulate_runs_by_thresholds(all_runs_map, snp_counts_map, cutoffs, num_blocks, run_len_thresholds):
+    """
+    Compute the cumulative number of qualified runs per block.
+
+    :param all_runs_map: {((i, j), (runs, starts, ends)), ...} as pickled by the script computing runs
+    :param snp_counts_map: pickled dict of form {((i, j), num_snps), ...}
+    :param cutoffs: cutoffs in number of snps that defined the within clade boundary
+    :param num_blocks: length of the snps vector; could be number of core genes for example
+    :param run_len_thresholds: a list of thresholds, runs longer than which would by cumulated
+    :return: A list of arrays of shape (num_blocks,)
+    """
+    final_cumu_runs = []
+    for threshold in run_len_thresholds:
+        cumu_runs = np.zeros(num_blocks)
+        lower = cutoffs[0]
+        upper = cutoffs[1]
+        for i, j in all_runs_map:
+            if (snp_counts_map[i, j] >= upper) or (snp_counts_map[i, j] <= lower):
+                continue
+            run_tuple = all_runs_map[i, j]
+            cumu_runs += _cumulate_runs(run_tuple, num_blocks, threshold)
+        final_cumu_runs.append(cumu_runs)
+    return final_cumu_runs
+
+
 def smoothen_and_find_peaks(signal, max_peak, polynomial_degree=3, prominence_ratio=0.1):
     """
     :param signal: List of numbers interpreted as a time series signal

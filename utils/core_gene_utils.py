@@ -89,6 +89,8 @@ def get_sorted_core_genes(desired_species_name):
     :return: array of core genes
     """
     core_genes = parse_core_genes(desired_species_name)
+    # excluding all rna genes TODO: zhiru asks is this right?
+    core_genes = [gene for gene in core_genes if "rna" not in gene]
     all_genes = numpy.array(list(core_genes))
     gene_indices = numpy.array(list(map(lambda name: int(name.split('.')[-1]), all_genes)))
     all_genes = all_genes[numpy.argsort(gene_indices)]

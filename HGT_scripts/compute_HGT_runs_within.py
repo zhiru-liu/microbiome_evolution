@@ -29,6 +29,9 @@ def process_one_species(species_name):
     data_dir = os.path.join(config.analysis_directory,
                             "within_hosts_checkpoints/")
 
+    if os.path.exists("{}{}/all_runs_map.pickle".format(data_dir, species_name)):
+        print('{} already processed'.format(species_name))
+        return
     _, sfs_map = parse_midas_data.parse_within_sample_sfs(
             species_name, allowed_variant_types=set(['4D']))
     allele_counts_map = pickle.load(

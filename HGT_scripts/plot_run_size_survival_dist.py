@@ -83,6 +83,11 @@ def plot_for_one_species(ax, species_name, if_between_host, if_limit=True,
     base_dir = 'between_hosts_checkpoints' if if_between_host else 'within_hosts_checkpoints'
     checkpoint_path = os.path.join(
         config.analysis_directory, base_dir, species_name)
+
+    if not os.path.exists(checkpoint_path):
+        print('No data found for {}'.format(species_name))
+        return
+
     all_runs_dict = pickle.load(
         open(os.path.join(checkpoint_path, 'all_runs_map.pickle'), 'rb'))
     snp_counts = pickle.load(
@@ -116,10 +121,12 @@ def plot_for_one_species(ax, species_name, if_between_host, if_limit=True,
     ax.set_xlabel('Normalized site counts')
     ax.set_ylabel('Survival Probability')
     if if_limit:
-        ax.set_xlim((0, 15))
+        ax.set_xlim((0, 20))
 
     if subset:
-        pairs = random.sample(all_runs_dict.keys(), 1000)
+        all_pairs = all_runs_dict.keys()
+        num_to_plot = min(len(all_pairs), 1000)
+        pairs = random.sample(all_pairs, num_to_plot)
     else:
         pairs = all_runs_dict.keys()
     
@@ -145,7 +152,7 @@ def plot_for_one_species(ax, species_name, if_between_host, if_limit=True,
         histo = ax.hist(data, range=plot_range, normed=normalization, cumulative=-1, bins=50, histtype='step', log=True,
                     color=plot_color, alpha=plot_alpha)
         data_for_fit.append(histo)
-    return average_snp_count, int(np.mean(num_runs)), passed_sites_map, data_for_fit
+    return average_snp_count, int(np.nan_to_num(np.mean(num_runs))), passed_sites_map, data_for_fit
 
 
 def plot_only_between_or_within():
@@ -195,7 +202,7 @@ def plot_geometric_null(ax, normalization=False, num_runs=1000, num_reps=1000):
 
 
 def plot_simulated_null(ax, species_name, all_genes, passed_sites_map, normalization=False, num_simulations=100, num_reps=5):
-    num_samples = passed_sites_map[all_genes[0]]['4D']['sites'].shape[0]
+    num_samples = passed_sites_map[passed_sites_map.keys()[0]]['4D']['sites'].shape[0]
     sample_ids = [i for i in range(num_samples)]
     
     for i in range(num_simulations):
@@ -228,11 +235,15 @@ def plot_linear_fit(ax, data_for_fit):
     slope, intercept, r_value, p_value, std_err = stats.linregress(xs, ys)
     x_plot = np.linspace(0, 15, 100)
     ax.plot(x_plot, np.exp(x_plot * slope + intercept), label='Slope = %.2f' % slope, color=fit_color)
+    return slope, intercept, r_value, p_value, std_err
 
 
 def plot_both():
     t0 = time.time()
     base_dir = 'between_hosts_checkpoints'
+    fig_base_path = os.path.join(
+        config.analysis_directory, 'run_size_survival_distributions', 'test')
+    slope_file = open(os.path.join(fig_base_path, 'slopes.csv'), 'w')
 
     for species_name in os.listdir(os.path.join(config.analysis_directory, base_dir)):
         if species_name.startswith('.'):
@@ -261,7 +272,8 @@ def plot_both():
 
         plot_simulated_null(ax, species_name, all_genes, passed_sites, normalization=True)
 
-        plot_linear_fit(ax, data_for_fit)
+        fitted_params = plot_linear_fit(ax, data_for_fit)
+        slope_file.write("{},{}\n".format(species_name, fitted_params[0]))
 
         # additional x axis
         ax2 = ax.twiny()
@@ -281,8 +293,6 @@ def plot_both():
         ax3.set_ylabel('Expected counts')
         ax3.minorticks_off()
 
-        fig_base_path = os.path.join(
-            config.analysis_directory, 'run_size_survival_distributions', 'test')
         fig_path = os.path.join(fig_base_path, '{}.pdf'.format(species_name))
 
         # set labels
@@ -295,5 +305,6 @@ def plot_both():
 
         plt.savefig(fig_path)
         plt.close()
+    slope_file.close()
 
 plot_both()

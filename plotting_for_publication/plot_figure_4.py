@@ -2,13 +2,15 @@
 
 import matplotlib  
 matplotlib.use('Agg')
-import config
 import os.path
 import pylab
 import sys
+sys.path.append("..")
 import numpy
+import json
 from math import exp
 
+import config
 import species_phylogeny_utils
 from utils import diversity_utils, figure_utils, gene_diversity_utils, sample_utils, stats_utils, sfs_utils
 from parsers import parse_midas_data
@@ -71,8 +73,8 @@ if debug:
     good_species_list = good_species_list[0:2]
 
 sys.stderr.write("Loading sample metadata...\n")
-subject_sample_map = sample_utils.parse_subject_sample_map()
-sample_continent_map = sample_utils.parse_sample_continent_map()
+subject_sample_map = parse_midas_data.parse_subject_sample_map()
+sample_continent_map = parse_midas_data.parse_sample_continent_map()
 sys.stderr.write("Done!\n")
 
 ####################################################
@@ -374,7 +376,8 @@ def calculate_effective_NR(rsquared_ratio):
     return brentq(lambda x: normalized_neutral_rsquared(x)-rsquared_ratio, 0, 1e09)
      
  
- 
+# Zhiru: add this to save all the r by mu values
+rbymu_dict = dict()
     
 for species_idx in xrange(0,num_passed_species):
     species_name = passed_species[species_idx]
@@ -630,10 +633,13 @@ for species_idx in xrange(0,num_passed_species):
             # Old version
             # lstar = distances[numpy.fabs(rsquareds/rsquareds[idx_9]-0.25).argmin()]
             rbymu_4 = NRstar/lstar/pi*2
+
+            rbymu_dict[xticklabels[species_idx]] = (rbymu_4, rbymu_2)
         
             rbymu_axis.semilogy([species_idx,species_idx], [rbymu_4, rbymu_2],'-',color=color)
             rbymu_axis.semilogy([species_idx], [rbymu_4],'_',markersize=3,color=color) 
         
+json.dump(rbymu_dict, open('rbymu.json', 'w'), indent=4)
 
 sys.stderr.write("Saving figure...\t")
 fit_fig.savefig('%s/supplemental_ld_fits.pdf' % (parse_midas_data.analysis_directory), bbox_inches='tight')
