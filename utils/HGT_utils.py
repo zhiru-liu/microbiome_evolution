@@ -92,13 +92,17 @@ def _if_missing(AD1, AD2):
         return False
 
 
-def get_two_sample_SNP_genes(sample_idx, allele_counts_map, allowed_variant_types=['4D']):
+def get_two_sample_SNP_genes(sample_idx, allele_counts_map, desired_genes=None, allowed_variant_types=['4D']):
     if len(sample_idx) != 2:
         print("Please provide only two sample idx")
         return None
     gene_SNP_map = {}
     gene_missing_map = {}
+    if desired_genes is None:
+        desired_genes = allele_counts_map.keys()
     for gene in allele_counts_map:
+        if gene not in desired_genes:
+            continue
         for variant in allowed_variant_types:
             snp_count = 0
             missing_count = 0
@@ -111,6 +115,25 @@ def get_two_sample_SNP_genes(sample_idx, allele_counts_map, allowed_variant_type
             gene_SNP_map[gene] = snp_count
             gene_missing_map[gene] = missing_count
     return gene_SNP_map, gene_missing_map
+
+
+def get_pairwise_SNP_matrix_per_gene(num_samples, allele_counts_map, desired_gene, allowed_variant_types=['4D']):
+    """
+    Generate the pairwise SNP counts at a single gene
+    """
+    if desired_gene not in allele_counts_map:
+        raise ValueError
+    snp_matrix = np.zeros((num_samples, num_samples))
+    for variant in allowed_variant_types:
+        for snp in allele_counts_map[desired_gene][variant]['alleles']:
+            for i in range(num_samples):
+                for j in range(i+1, num_samples):
+                    if _if_missing(snp[i], snp[j]):
+                        continue
+                    if _if_relative_SNP(snp[i], snp[j]):
+                        snp_matrix[i, j] += 1
+                        snp_matrix[j, i] += 1
+    return snp_matrix
 
 
 def get_gene_snp_vector(gene_snp_map, all_core_genes):
