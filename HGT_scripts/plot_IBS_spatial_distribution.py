@@ -2,6 +2,7 @@ import sys
 import pickle
 import os
 import json
+import numpy as np
 import matplotlib.pyplot as plt
 sys.path.append("..")
 from utils import core_gene_utils, HGT_utils
@@ -20,7 +21,7 @@ def plot_one_species(species_name):
     upper = cutoffs[1] or max(counts)
     all_genes = core_gene_utils.get_sorted_core_genes(species_name)
 
-    threshold_list = [5, 10, 15]
+    threshold_list = [0, 5, 10, 15]
     final_cumu_runs = HGT_utils.cumulate_runs_by_thresholds(
             all_runs_dict, snp_counts_map, (lower, upper), len(all_genes), threshold_list)
 
@@ -35,6 +36,19 @@ def plot_one_species(species_name):
     ax.set_xlabel('Gene id')
     ax.set_ylabel('Num runs')
     fig.savefig(os.path.join(config.analysis_directory, 'IBS_locations', '{}.pdf'.format(species_name)), dpi=600)
+    plt.close()
+
+    fig = plt.figure()
+    ax = plt.gca()
+    ax.set_xlim([0, 1])
+    ax.set_xlabel('Ratio between thresholds')
+    ax.set_ylabel('Survival proba')
+    for i in range(1, 4):
+        _ = ax.hist(np.nan_to_num(final_cumu_runs[i] / final_cumu_runs[0]), cumulative=-1,
+                    bins=100, density=True, label="Threshold %d" % threshold_list[i])
+    ax.legend()
+    fig.savefig(os.path.join(config.analysis_directory, 'IBS_locations', 'empirical', 'ratios',
+                '{}.png'.format(species_name)), dpi=600)
     plt.close()
 
 

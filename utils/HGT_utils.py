@@ -192,7 +192,7 @@ def _cumulate_runs(runs_tuple, num_genes, run_len_threshold):
     starts = runs_tuple[1][runs_tuple[0] > run_len_threshold]
     ends = runs_tuple[2][runs_tuple[0] > run_len_threshold]
     for start, end in zip(starts, ends):
-        cumu_runs[start:end] += 1
+        cumu_runs[start:end + 1] += 1
     return cumu_runs
 
 

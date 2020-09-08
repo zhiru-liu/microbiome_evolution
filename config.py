@@ -6,13 +6,13 @@
 import os.path 
 from math import log10
 
-data_directory = os.path.expanduser("/Volumes/externalhd/garud_etal_2019_data/")
+data_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/")
 #data_directory = os.path.expanduser("~/ben_nandita_hmp_data_071518/")
 #data_directory = os.path.expanduser("~/ben_nandita_hmp_data/")
-analysis_directory = os.path.expanduser("/Volumes/externalhd/zhiru_outputs/")
+analysis_directory = os.path.expanduser("/Volumes/Botein/zhiru_analysis/")
 scripts_directory = os.path.expanduser("/Volumes/externalhd/garud_etal_2019_scripts/")
-patric_directory = os.path.expanduser("~/patric_db/")
-midas_directory = os.path.expanduser("/Volumes/externalhd/midas_db/")
+patric_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/patric_db/")
+midas_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/midas_db/")
 
 # We use this one to debug because it was the first one we looked at
 debug_species_name = 'Bacteroides_uniformis_57318'
