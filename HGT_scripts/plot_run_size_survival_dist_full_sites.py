@@ -13,33 +13,16 @@ from utils import core_gene_utils, diversity_utils, HGT_utils, parallel_utils
 import config
 
 
-def plot_for_one_species(ax, species_name, num_to_plot):
+def plot_for_one_species(ax, species_name, num_to_plot, normalization=True):
     # loading data
-    base_dir = os.path.join(config.analysis_directory, 'zarr_snps', species_name)
+    base_dir = os.path.join(config.data_directory, 'zarr_snps', species_name)
     if not os.path.exists(base_dir):
         print('No data found for {}'.format(species_name))
         return
 
-    alt_arr = da.from_zarr('{}/full_alt.zarr'.format(base_dir))
-    depth_arr = da.from_zarr('{}/full_depth.zarr'.format(base_dir))
-    rechunked_alt_arr = alt_arr.rechunk((1000000, 10))
-    rechunked_depth_arr = depth_arr.rechunk((1000000, 10))
-
-    # loading site info
-    res = parallel_utils.parse_snp_info(os.path.join(base_dir, 'site_info.txt'))
-    all_chromosomes = res[0]
-    all_gene_names = res[2]
-    all_variants = res[3]
-    all_pvalues = res[4]
-
+    dh = parallel_utils.DataHoarder(species_name)
     # filtering the arrays
-    core_genes = core_gene_utils.get_sorted_core_genes(species_name)
-    sample_mask = parallel_utils.get_QP_sample_mask(species_name)
-    general_mask = parallel_utils.get_general_site_mask(
-            all_gene_names, all_variants, all_pvalues, core_genes)
-    snp_arr, covered_arr = parallel_utils.get_filtered_snps(
-            rechunked_alt_arr, rechunked_depth_arr, general_mask, sample_mask)
-    good_chromo = all_chromosomes[general_mask] # will be used in contig-wise run computation
+    good_chromo = dh.chromosomes[dh.general_mask] # will be used in contig-wise run computation
 
     # load same clade snp cutoff
     # TODO eventually want to use only divergence
@@ -54,17 +37,21 @@ def plot_for_one_species(ax, species_name, num_to_plot):
 
     ax.set_xlabel('Normalized site counts')
     ax.set_ylabel('Survival Probability')
-    ax.set_xlim((0, 25))
+    if normalization:
+        ax.set_xlim((0, 25))
 
     i = 0
     while i < num_to_plot:
-        pair = random.sample(range(snp_arr.shape[1]), 2)
+        pair = random.sample(range(dh.snp_arr.shape[1]), 2)
         snp_vec, snp_mask = parallel_utils.get_two_QP_sample_snp_vector(
-                snp_arr, covered_arr, pair)
+                dh.snp_arr, dh.covered_arr, pair)
         snp_count = np.sum(snp_vec)
         if (snp_count < lower_cutoff) or (snp_count > upper_cutoff):
             continue
-        div = snp_count / float(len(snp_vec))
+        if normalization:
+            div = snp_count / float(len(snp_vec))
+        else:
+            div = 1
         runs = parallel_utils.compute_runs_all_chromosomes(snp_vec, good_chromo[snp_mask])
         # normalize by multiplying div
         data = runs * div
@@ -85,8 +72,8 @@ def main():
     t0 = time.time()
     base_dir = 'zarr_snps'
     fig_base_path = os.path.join(
-        config.analysis_directory, 'run_size_survival_distributions', 'test')
-    for species_name in os.listdir(os.path.join(config.analysis_directory, base_dir)):
+        config.analysis_directory, 'run_size_survival_distributions', 'no_normalization')
+    for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
         if species_name.startswith('.'):
             continue
 
@@ -96,8 +83,8 @@ def main():
         fig.set_size_inches(8, 6)
         ax = fig.gca()
 
-        plot_for_one_species(ax, species_name, 500)
-        plot_null(ax)
+        plot_for_one_species(ax, species_name, 500, normalization=False)
+        #plot_null(ax)
 
         fig_path = os.path.join(fig_base_path, '{}.pdf'.format(species_name))
         plt.savefig(fig_path)
