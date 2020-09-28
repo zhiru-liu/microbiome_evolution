@@ -64,7 +64,7 @@ within_host_min_haploid_sample_size = 10
 between_low_divergence_threshold = 2e-04
 
 # Comment this out
-from parsers.parse_HMP_data import *
+#from parsers.parse_HMP_data import *
 # and uncomment this
 #from parse_simulated_data import *
 # for isolate data

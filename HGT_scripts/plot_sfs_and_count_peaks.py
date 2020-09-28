@@ -33,12 +33,7 @@ def process_one_species(species_name):
             total_sites/((fs > 0.2)*(fs < 0.5)).sum()
         pmax = np.max([pfs[(fs > 0.1)*(fs < 0.95)].max(), between_line])
 
-        try:
-            peak_idx, _ = HGT_utils.smoothen_and_find_peaks(pfs, pmax)
-        except ValueError:
-            print("Sample {} SFS bin too few: {}".format(sample, len(pfs)))
-            peak_idx = []
-        # record the frequency peaks of samples
+        peak_idx, cutoff = HGT_utils._find_sfs_peaks_and_cutoff(fs, pfs, pmax)
 
         num_peaks = len(peak_idx)
 
@@ -50,7 +45,10 @@ def process_one_species(species_name):
         ax.bar((all_fs-df/2), all_pfs, width=df)
         ax.plot(fs[peak_idx]-df/2, pfs[peak_idx], 'rx', label='peaks detected')
         ax.set_xlabel('Major allele freq')
-        plt.legend()
+
+        if cutoff:
+            ax.axvspan(min(fs), cutoff, alpha=0.1, color='red', label='SNP sites')
+        ax.legend()
 
         path = os.path.join(config.analysis_directory, 'allele_freq',
                             species_name, str(num_peaks))
@@ -61,7 +59,9 @@ def process_one_species(species_name):
 
 
 def main():
-    for species_name in os.listdir(os.path.join(config.analysis_directory, 'between_hosts_checkpoints')):
+    for species_name in os.listdir(os.path.join(config.data_directory, 'zarr_snps')):
+        if species_name.startswith('.'):
+            continue
         process_one_species(species_name)
 
 if __name__ == "__main__":

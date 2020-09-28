@@ -1,7 +1,8 @@
-from parsers.parse_midas_data import parse_snps
-from utils import core_gene_utils, sfs_utils
+import os
 import pandas as pd
 import numpy as np
+from utils import sfs_utils
+import config
 from scipy.signal import find_peaks, savgol_filter, peak_widths
 
 
@@ -67,12 +68,23 @@ def find_single_host_relative_snps(sample_idx, found_samples, allele_map, sfs_ma
     :param sfs_map: The map returned by parse_midas_data.parse_within_sample_sfs, so that no need to compute sfs
     :return: A map of {gene: snp counts}
     """
-    cutoff = find_single_peak_freq_cutoff(found_samples[sample_idx], sfs_map)
+    _, cutoff = find_sfs_peaks_and_cutoff(found_samples[sample_idx], sfs_map)
     if not cutoff:
         print("Sample does not have single clean peak")
         return None
     else:
         return _find_single_host_relative_snps_with_cutoff(sample_idx, found_samples, allele_map, cutoff)
+
+
+def get_within_host_bad_samples(species_name):
+    blacklist_dir = os.path.join(config.analysis_directory, "within_blacklists")
+    filename = "{}.txt".format(species_name)
+    if filename in os.listdir(blacklist_dir):
+        with open(os.path.join(blacklist_dir, filename), 'r') as f:
+            bad_samples = f.read().splitlines()
+    else:
+        bad_samples = []
+    return bad_samples
 
 
 def _if_relative_SNP(AD1, AD2):
@@ -240,12 +252,13 @@ def smoothen_and_find_peaks(signal, max_peak, polynomial_degree=3, prominence_ra
     return peak_idx, peak_widths_results
 
 
-def find_single_peak_freq_cutoff(sample, sfs_map):
+def find_sfs_peaks_and_cutoff(sample, sfs_map):
     """
     Return the major allele frequency that clearly separates the two-strain peak from the main peak
     :param sample: The name of the sample
     :param sfs_map: The map returned by parse_midas_data.parse_within_sample_sfs
-    :return: The frequency that can be used as cutoff, if there's no clear separation, return None
+    :return: The list of peak_idx, and the frequency that can be used as cutoff,
+    if there's no clear separation, return None
     """
     fs, pfs = sfs_utils.calculate_binned_sfs_from_sfs_map(sfs_map[sample], folding='major')
     # For peak finding, only use the polymorphic sites
@@ -256,23 +269,31 @@ def find_single_peak_freq_cutoff(sample, sfs_map):
     within_sites, between_sites, total_sites = sfs_utils.calculate_polymorphism_rates_from_sfs_map(sfs_map[sample])
     between_line = between_sites * 1.0 / total_sites / ((fs > 0.2) * (fs < 0.5)).sum()
     pmax = np.max([pfs[(fs > 0.1) * (fs < 0.95)].max(), between_line])
+    return _find_sfs_peaks_and_cutoff(fs, pfs, pmax)
 
+
+def _find_sfs_peaks_and_cutoff(fs, pfs, pmax):
+    """
+    Helper function that takes an array of sfs values and the size of max peak,
+    and finds the peaks. If only single peak, will also return the location of
+    the cutoff that separates the peak with the major peak at 1
+    """
     try:
         peak_idx, peak_width_results = smoothen_and_find_peaks(pfs, pmax)
     except ValueError:
-        print("Sample {} SFS bin too few: {}".format(sample, len(pfs)))
-        return None
+        print("SFS bin too few: {}".format(len(pfs)))
+        peak_idx = []
 
     if len(peak_idx) != 1:
         # Multiple peaks or no peak
-        return None
+        return peak_idx, None
     right_freq = fs[int(peak_width_results[3][0])]
     # Check the height of the separation point
     # the peak need to be pronounced enough
     if pfs[int(peak_width_results[3][0])] < 0.2 * pfs[peak_idx]:
-        return right_freq
+        return peak_idx, right_freq
     else:
-        return None
+        return peak_idx, None
 
 
 def shuffling(num_genes, num_no_snp, num_exps):

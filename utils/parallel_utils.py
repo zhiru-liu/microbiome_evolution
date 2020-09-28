@@ -4,7 +4,8 @@ import numpy as np
 import time
 import os
 import bz2
-from utils import sample_utils, core_gene_utils, diversity_utils
+from utils import sample_utils, core_gene_utils, diversity_utils, HGT_utils
+from parsers import parse_midas_data
 import config
 
 
@@ -124,6 +125,25 @@ def get_QP_filtered_snps(alt_arr, depth_arr, site_mask, sample_mask):
     return polarized, covered_mask
 
 
+def get_within_host_filtered_snps(alt_arr, depth_arr, site_mask, sample_mask, cutoffs):
+    # because small arrays, can compute directory
+    selected_depths = depth_arr[:, sample_mask]
+    selected_depths = selected_depths[site_mask, :]
+
+    selected_alts = alt_arr[:, sample_mask]
+    selected_alts = selected_alts[site_mask, :]
+
+    # because within, polarize by sites of intermediate frequency
+    # cutoffs are major allele freq cutoffs
+    alt_upper_thresholds = selected_depths * cutoffs.reshape(1, len(cutoffs))
+    alt_lower_thresholds = selected_depths * (1 - cutoffs.reshape(1, len(cutoffs)))
+    polarized = (selected_alts <= alt_upper_thresholds) & (selected_alts >= alt_lower_thresholds)
+    polarized = polarized.compute()
+
+    covered_mask = selected_depths > 0
+    covered_mask = covered_mask.compute()
+    return polarized, covered_mask
+
 
 '''
     A class for holding relative data of a species for analysis
@@ -144,7 +164,11 @@ class DataHoarder:
             print("Keeping only QP samples, which is %d in total" %
                   np.sum(self.sample_mask))
         elif (mode == "within"):
-            raise NotImplementedError("You have to implement this mode!")
+            self.sample_mask, sample_names, self.peak_cutoffs = get_single_peak_sample_mask(species_name)
+            self.good_samples = sample_names[self.sample_mask]
+            self.mode = mode
+            print("Keeping only simple within host samples, which is %d in total" %
+                  np.sum(self.sample_mask))
         else:
             raise ValueError("Only support QP or within modes")
 
@@ -173,7 +197,10 @@ class DataHoarder:
                     rechunked_alt_arr, rechunked_depth_arr, self.general_mask, self.sample_mask)
             print("Finish loading sites, took %d secs" % (time.time() - t0))
         else:
-            raise ValueError("Need to implement other modes")
+            self.snp_arr, self.covered_arr = get_within_host_filtered_snps(
+                    rechunked_alt_arr, rechunked_depth_arr, self.general_mask,
+                    self.sample_mask, self.peak_cutoffs)
+            print("Finish loading sites, took %d secs" % (time.time() - t0))
 
     def get_snp_mask(self):
         # keep sites that pass the snp prevalence threshold
@@ -228,11 +255,18 @@ class DataHoarder:
         snp_mask = self.get_snp_mask()
         return prev_mask & snp_mask
 
+    def get_snp_vector(self, idx):
+        if self.mode == 'QP':
+            return get_two_QP_sample_snp_vector(
+                    self.snp_arr, self.covered_arr, idx)
+        else:
+            return get_within_sample_snp_vector(
+                    self.snp_arr, self.covered_arr, idx)
+
     def save_haplotype_fs(self, save_dir, prev_thre=0.9):
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
-        save_path = os.path.join(
-                save_dir, "haplotypes.phase".format(self.species_name, self.mode))
+        save_path = os.path.join(save_dir, "haplotypes.phase")
         hap_mask = self.get_haplotype_mask(prev_thre)
         good_sites = self.snp_arr[hap_mask, :]
         good_locations = self.locations[self.general_mask][hap_mask]
@@ -250,8 +284,7 @@ class DataHoarder:
             f.write('\n')
             np.savetxt(f, np.transpose(good_sites.astype(int)), delimiter='', fmt='%d')
 
-        save_path = os.path.join(
-                save_dir, "samples.ids".format(self.species_name, self.mode))
+        save_path = os.path.join(save_dir, "samples.ids")
         print("Saving %d names to fineSTRUCTURE format" % len(self.good_samples))
         with open(save_path, 'w') as f:
             for name in self.good_samples:
@@ -262,12 +295,19 @@ class DataHoarder:
     The next few functions are not limited to zarr arr, so should be moved
     to another file eventually
 '''
+
+
 def get_two_QP_sample_snp_vector(snp_arr, coverage_arr, sample_ids):
     id1 = sample_ids[0]
     id2 = sample_ids[1]
     mask = coverage_arr[:, id1] & coverage_arr[:, id2]
     vec = snp_arr[:, id1] != snp_arr[:, id2]
     return vec[mask], mask
+
+
+def get_within_sample_snp_vector(snp_arr, coverage_arr, sample_id):
+    mask = coverage_arr[:, sample_id]
+    return snp_arr[mask, sample_id], mask
 
 
 def _compute_runs_single_chromosome(snp_vec, locations=None):
@@ -291,14 +331,52 @@ def compute_runs_all_chromosomes(snp_vec, chromosomes, locations=None):
     return np.concatenate(all_runs)
 
 
-def get_QP_sample_mask(species_name):
+def get_sample_names(species_name):
     snp_file = bz2.BZ2File("%ssnps/%s/annotated_snps.txt.bz2" % (config.data_directory, species_name), "r")
     line = snp_file.readline()
     items = line.split()[1:]
     sample_names = sample_utils.parse_merged_sample_names(items)
     snp_file.close()
+    return sample_names
+
+
+def get_QP_sample_mask(species_name):
+    sample_names = get_sample_names(species_name)
 
     QP_samples = set(diversity_utils.calculate_haploid_samples(species_name))
     highcoverage_samples = set(diversity_utils.calculate_highcoverage_samples(species_name))
     allowed_samples = QP_samples & highcoverage_samples
     return np.isin(sample_names, list(allowed_samples)), sample_names
+
+
+def get_single_peak_sample_mask(species_name):
+    """
+    Compute a mask that keep only samples suitable for within host analysis
+    A sample need to be 1) well covered, 2) has single clean peak
+    The list of sample names and the list of peak cutoffs will also be returned
+    """
+    sample_names = get_sample_names(species_name)
+
+    blacklist = set(HGT_utils.get_within_host_bad_samples(species_name))
+
+    highcoverage_samples = set(diversity_utils.calculate_highcoverage_samples(species_name))
+    single_peak_dir = os.path.join(config.analysis_directory, 'allele_freq', species_name, '1')
+    if not os.path.exists(single_peak_dir):
+        print("No single peak samples found for {}".format(species_name))
+        mask = np.zeros(len(sample_names)).astype(bool)
+        return mask, sample_names, np.array([])
+    else:
+        single_peak_samples = set([f.split('.')[0] for f in os.listdir(single_peak_dir) if not f.startswith('.')])
+        allowed_samples = single_peak_samples & highcoverage_samples - blacklist
+    mask = np.isin(sample_names, list(allowed_samples))
+
+    # filter samples with a clean single peak
+    _, sfs_map = parse_midas_data.parse_within_sample_sfs(
+        species_name, allowed_variant_types=set(['4D']))
+    results = [HGT_utils.find_sfs_peaks_and_cutoff(
+        sample, sfs_map) for sample in sample_names[mask]]
+    cutoffs = np.array([res[1] for res in results])
+    clean_peak_mask = np.array([cutoff is not None for cutoff in cutoffs])
+    mask[mask] = clean_peak_mask
+    good_cutoffs = cutoffs[clean_peak_mask]
+    return mask, sample_names, good_cutoffs.astype(float)
