@@ -29,8 +29,12 @@ def plot_for_one_species(ax, species_name, num_to_plot, normalization=True, mode
     # load same clade snp cutoff
     # TODO eventually want to use only divergence
     cutoffs = json.load(open('./same_clade_snp_cutoffs.json', 'r'))
-    lower_cutoff = cutoffs[species_name][0] or 0  # hacky way of assigning value to None
-    upper_cutoff = cutoffs[species_name][1] or 5e6
+    if species_name not in cutoffs:
+        lower_cutoff = 5
+        upper_cutoff = 5e6
+    else:
+        lower_cutoff = cutoffs[species_name][0] or 0  # hacky way of assigning value to None
+        upper_cutoff = cutoffs[species_name][1] or 5e6
 
     print("Finish loading for {}".format(species_name))
 
@@ -68,6 +72,9 @@ def plot_for_one_species(ax, species_name, num_to_plot, normalization=True, mode
         else:
             div = 1
         runs = parallel_utils.compute_runs_all_chromosomes(snp_vec, good_chromo[snp_mask])
+        if len(runs) == 0:
+            print("Divergence is %f, for a total of %d snps" % (div, snp_count))
+            continue
         # normalize by multiplying div
         data = runs * div
         plot_range = (0, max(data))
@@ -87,9 +94,13 @@ def main():
     t0 = time.time()
     base_dir = 'zarr_snps'
     fig_base_path = os.path.join(
-        config.analysis_directory, 'run_size_survival_distributions', 'both')
+        config.analysis_directory, 'run_size_survival_distributions', 'empirical', 'full_sites', 'both')
     for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
         if species_name.startswith('.'):
+            continue
+        fig_path = os.path.join(fig_base_path, '{}.pdf'.format(species_name))
+        if os.path.exists(fig_path):
+            print('{} has already been processed'.format(species_name))
             continue
         print("plotting for {} at {} min".format(species_name, (time.time()-t0)/60))
 
@@ -102,7 +113,6 @@ def main():
         plot_null(ax)
         ax.legend()
 
-        fig_path = os.path.join(fig_base_path, '{}.pdf'.format(species_name))
         plt.savefig(fig_path)
         plt.close()
 

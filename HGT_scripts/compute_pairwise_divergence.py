@@ -7,6 +7,11 @@ import config
 
 
 def compute_one_species(species_name, debug=True):
+    save_path = os.path.join(
+            config.analysis_directory, "pairwise_divergence", "between_hosts", "%s.csv" % species_name)
+    if os.path.exists(save_path):
+        print('{} has already been processed'.format(species_name))
+        return
     dh = parallel_utils.DataHoarder(species_name)
     num_samples = dh.snp_arr.shape[1] if not debug else 10
     div_mat = np.zeros((num_samples, num_samples))
@@ -17,8 +22,6 @@ def compute_one_species(species_name, debug=True):
             div = np.sum(snp_vec) / float(len(snp_vec))
             div_mat[i, j] = div
             div_mat[j, i] = div
-    save_path = os.path.join(
-            config.analysis_directory, "pairwise_divergence", "between_hosts", "%s.csv" % species_name)
     np.savetxt(save_path, div_mat, delimiter=',')
 
 

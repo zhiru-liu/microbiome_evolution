@@ -34,7 +34,16 @@ desired_species = ['Bacteroides_vulgatus_57955',
                    'Roseburia_inulinivorans_61943',
                    'Dialister_invisus_61905',
                    'Escherichia_coli_58110',
-                   'Faecalibacterium_cf_62236']
+                   'Faecalibacterium_cf_62236',
+                   'Eubacterium_rectale_56927',
+                   'Bacteroides_plebeius_61623',
+                   'Bacteroides_finegoldii_57739',
+                   'Parabacteroides_merdae_56972',
+                   'Odoribacter_splanchnicus_62174',
+                   'Parabacteroides_distasonis_56985',
+                   'Alistipes_onderdonkii_55464',
+                   'Oscillibacter_sp_60799',
+                   'Akkermansia_muciniphila_55290']
 
 
 def parse_site_counts():
@@ -58,7 +67,7 @@ def main():
         snp_file_path = os.path.join(
                 config.data_directory, "snps", species_name, "annotated_snps.txt.bz2")
         zarr_path = os.path.join(
-                config.analysis_directory, 'zarr_snps', species_name)
+                config.data_directory, 'zarr_snps', species_name)
 
         print("Start processing {}".format(species_name))
         print("{} has {} sites to be processed".format(species_name, site_counts))

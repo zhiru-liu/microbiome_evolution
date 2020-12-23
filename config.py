@@ -10,7 +10,7 @@ data_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/")
 #data_directory = os.path.expanduser("~/ben_nandita_hmp_data_071518/")
 #data_directory = os.path.expanduser("~/ben_nandita_hmp_data/")
 analysis_directory = os.path.expanduser("/Volumes/Botein/zhiru_analysis/")
-scripts_directory = os.path.expanduser("/Volumes/externalhd/garud_etal_2019_scripts/")
+scripts_directory = os.path.expanduser("/Users/Device6/Documents/Research/bgoodlab/microbiome_evolution/")
 patric_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/patric_db/")
 midas_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/midas_db/")
 
