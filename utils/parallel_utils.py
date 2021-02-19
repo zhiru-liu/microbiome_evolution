@@ -5,7 +5,7 @@ import time
 import os
 import bz2
 from utils import sample_utils, core_gene_utils, diversity_utils, HGT_utils
-from parsers import parse_midas_data
+from parsers import parse_midas_data, parse_HMP_data
 import config
 
 
@@ -254,6 +254,18 @@ class DataHoarder:
         prev_mask = self.get_covered_sites_mask(prev_thre)
         snp_mask = self.get_snp_mask()
         return prev_mask & snp_mask
+
+    def get_single_subject_idxs(self):
+        sub_sam_map = parse_HMP_data.parse_subject_sample_map()
+        sam_sub_map = sample_utils.calculate_sample_subject_map(sub_sam_map)
+        subs = list(map(sam_sub_map.get, self.good_samples))
+        seen = set()
+        good_idxs = []
+        for i, sub in enumerate(subs):
+            if sub not in seen:
+                good_idxs.append(i)
+                seen.add(sub)
+        return np.array(good_idxs)
 
     def get_snp_vector(self, idx):
         if self.mode == 'QP':
