@@ -1,27 +1,18 @@
 import matplotlib  
 matplotlib.use('Agg') 
 import config
-import os.path
 import pylab
 import sys
 import numpy
 
-import species_phylogeny_utils
-from utils import diversity_utils, clade_utils, gene_diversity_utils, stats_utils
+from utils import diversity_utils, clade_utils, species_phylogeny_utils
 from parsers import parse_HMP_data, parse_midas_data
 import calculate_substitution_rates
 
-import matplotlib.colors as colors
-import matplotlib.cm as cmx
-from math import log10,ceil
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from numpy.random import randint, shuffle
-
-from scipy.cluster.hierarchy import dendrogram, linkage
-from scipy.cluster.hierarchy import cophenet
-from scipy.cluster.hierarchy import fcluster
+from numpy.random import shuffle
 
 from scipy.stats import gaussian_kde
 

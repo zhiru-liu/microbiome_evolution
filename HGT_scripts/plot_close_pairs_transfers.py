@@ -21,9 +21,9 @@ def bootstrap(x, y, x_p, bs_frac=0.5):
 
 
 def lowess_summary(x, y, num_plot=100, if_bs=False, bs_frac=0.5, bs_size=200):
-    x_plot = np.linspace(0, np.max(x), num_plot)
+    x_plot = np.linspace(np.min(x), np.max(x), num_plot)
     lowess = sm.nonparametric.lowess
-    sm_y = lowess(y, x, xvals=x_plot, return_sorted=True).T
+    sm_y = lowess(y, x, frac=0.33, xvals=x_plot, return_sorted=True).T
 
     if if_bs:
         bs_res = np.stack([bootstrap(x, y, x_plot) for i in range(bs_size)]).T
@@ -71,6 +71,9 @@ for filename in os.listdir(data_dir):
     species_name = filename.split('.')[0]
     print("Processing {}".format(species_name))
     df = pd.read_csv(os.path.join(data_dir, filename), index_col=0)
+    if df.shape[0] < 10:
+        print("Skipping; Only {} pairs".format(df.shape[0]))
+        continue
 
     fig, ax = plt.subplots(1, 1, figsize=(4, 3))
 
@@ -97,7 +100,7 @@ for filename in os.listdir(data_dir):
         ax.plot(x_plot, y_plot)
 
         k = int(len(x)*0.1)  # number of neighbor points to choose
-        if k >= 2:
+        if k >= 7:
             lowess = sm.nonparametric.lowess
             order = np.argsort(x)
             x = x[order]
@@ -115,6 +118,6 @@ for filename in os.listdir(data_dir):
 
     fig.tight_layout()
     fig.savefig(os.path.join(config.analysis_directory,
-                             "closely_related", "wall_clock_v2.1",
+                             "closely_related", "wall_clock_v2.2",
                              "{}.pdf".format(species_name)), dpi=300)
     plt.close()

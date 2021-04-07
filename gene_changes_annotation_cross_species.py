@@ -1,28 +1,16 @@
 # Within-host gene change annotation
 
 import matplotlib  
-matplotlib.use('Agg') 
-import config
+matplotlib.use('Agg')
 import os
 
 import pylab
-import sys
 import numpy
-import random
 
-from utils import diversity_utils, gene_diversity_utils, stats_utils, sfs_utils
-from parsers import parse_patric, parse_HMP_data, parse_midas_data
-import calculate_substitution_rates
-import calculate_temporal_changes
-import species_phylogeny_utils
+from utils import stats_utils
+from parsers import parse_midas_data
 
-import matplotlib.colors as colors
-import matplotlib.cm as cmx
-from math import log10,ceil
 import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from numpy.random import randint, choice
 import operator
 import pickle
 import seaborn as sns; sns.set()

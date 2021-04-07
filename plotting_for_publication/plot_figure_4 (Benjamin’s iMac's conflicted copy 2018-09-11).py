@@ -3,32 +3,22 @@
 import matplotlib  
 matplotlib.use('Agg')
 import config
-import os.path
 import pylab
 import sys
 import numpy
-from math import exp
 
-import species_phylogeny_utils
-from utils import diversity_utils, figure_utils, gene_diversity_utils, sample_utils, stats_utils, sfs_utils
+from utils import diversity_utils, figure_utils, sample_utils, species_phylogeny_utils
 from parsers import parse_midas_data
-import calculate_temporal_changes
-import calculate_substitution_rates
 import calculate_linkage_disequilibria
 import calculate_snv_distances
 
-from scipy.optimize import least_squares, newton, brentq
-      
-import matplotlib.colors as colors
-import matplotlib.cm as cmx
-from math import log10,ceil
+from scipy.optimize import brentq
+
+from math import log10
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from numpy.random import randint, multinomial
-import matplotlib.colors as mcolors
-
-from math import log
+from numpy.random import multinomial
 
 mpl.rcParams['font.size'] = 6
 mpl.rcParams['lines.linewidth'] = 0.5
@@ -174,7 +164,7 @@ for species_name in good_species_list:
         else:
             sys.stderr.write("%s intergene LD too high: %g (%g)\n" % (species_name, control_rsquared, rsquareds[0])) 
 
-sorted_species_names = species_phylogeny_utils.sort_phylogenetically(passed_species,first_entry='Bacteroides_vulgatus_57955',second_sorting_attribute=sample_sizes)
+sorted_species_names = species_phylogeny_utils.sort_phylogenetically(passed_species, first_entry='Bacteroides_vulgatus_57955', second_sorting_attribute=sample_sizes)
 
 #passed_species = species_phylogeny_utils.sort_phylogenetically(passed_species)
 num_passed_species = len(passed_species)

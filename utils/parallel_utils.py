@@ -149,7 +149,7 @@ def get_within_host_filtered_snps(alt_arr, depth_arr, site_mask, sample_mask, cu
     A class for holding relative data of a species for analysis
 '''
 class DataHoarder:
-    def __init__(self, species_name, mode="QP"):
+    def __init__(self, species_name, mode="QP", allowed_variants=["4D"]):
         self.species_name = species_name
         self.data_dir = os.path.join(
                 config.data_directory, 'zarr_snps', species_name)
@@ -191,7 +191,8 @@ class DataHoarder:
         core_genes = core_gene_utils.get_sorted_core_genes(species_name)
         # len = total number of snps
         self.general_mask = get_general_site_mask(
-                self.gene_names, self.variants, self.pvalues, core_genes)
+                self.gene_names, self.variants, self.pvalues, core_genes,
+                allowed_variants=allowed_variants)
         if (mode == "QP"):
             self.snp_arr, self.covered_arr = get_QP_filtered_snps(
                     rechunked_alt_arr, rechunked_depth_arr, self.general_mask, self.sample_mask)
@@ -330,6 +331,7 @@ def _compute_runs_single_chromosome(snp_vec, locations=None):
     else:
         locs = site_locations
     return locs[1:] - locs[:-1]
+
 
 def compute_runs_all_chromosomes(snp_vec, chromosomes, locations=None):
     all_runs = []

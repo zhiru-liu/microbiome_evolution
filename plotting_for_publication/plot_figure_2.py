@@ -1,31 +1,21 @@
 import matplotlib  
 matplotlib.use('Agg')
 import config
-import os.path
 import pylab
 import sys
 import numpy
-from numpy.random import choice
 
-import species_phylogeny_utils
-from utils import diversity_utils, figure_utils, gene_diversity_utils, sample_utils, stats_utils
+from utils import diversity_utils, figure_utils, sample_utils, stats_utils, \
+    species_phylogeny_utils
 from parsers import parse_midas_data
 import calculate_substitution_rates
 
-import matplotlib.colors as colors
-import matplotlib.cm as cmx
-from math import log10,ceil,log,exp
+from math import log,exp
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from numpy.random import randint
-from mpl_toolkits.axes_grid.inset_locator import inset_axes
 
-from numpy.random import randint, binomial, choice
-from scipy.stats import poisson as poisson_distribution
-from scipy.cluster.hierarchy import dendrogram, linkage
-from scipy.cluster.hierarchy import cophenet
-from scipy.cluster.hierarchy import fcluster
+from numpy.random import choice
 
 from scipy.stats import gaussian_kde
 
@@ -206,7 +196,7 @@ for species_name in divergence_matrices.keys():
     else:
         sample_sizes.append( -divergence_matrices[species_name].shape[0] )
     
-sorted_species_names = species_phylogeny_utils.sort_phylogenetically(divergence_matrices.keys(),first_entry='Bacteroides_vulgatus_57955',second_sorting_attribute=sample_sizes)
+sorted_species_names = species_phylogeny_utils.sort_phylogenetically(divergence_matrices.keys(), first_entry='Bacteroides_vulgatus_57955', second_sorting_attribute=sample_sizes)
 
 species_names = []
 sample_sizes = []

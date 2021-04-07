@@ -2,6 +2,24 @@ import numpy as np
 import pandas as pd
 
 
+def find_close_pairs(cutoff, div_mat, good_idxs):
+    """
+    helper function for picking out pairs to process
+    :param cutoff: cutoff divergence
+    :param div_mat: matrix of pairwise divergences. Must be sorted the
+    same order as DataHoarder order
+    :param good_idxs: list of indices corresponding to distinct subjects
+    Can be computed with dh.get_single_subject_idxs
+    :return:
+    """
+    masked_div_mat = div_mat[good_idxs, :][:, good_idxs]
+    idxs = np.nonzero((masked_div_mat < cutoff) & (masked_div_mat != 0))
+    pairs = zip(list(idxs[0]), list(idxs[1]))
+    pairs = [(good_idxs[pair[0]], good_idxs[pair[1]])
+             for pair in pairs if pair[0] < pair[1]]
+    return pairs
+
+
 def to_block(bool_array, block_size):
     """
     Converting a boolean array into blocks of True counts. The last
@@ -75,6 +93,7 @@ def find_segments(states, target_state=None):
     ups = np.nonzero(diff == 1)[0]
     downs = np.nonzero(diff == -1)[0]
     return ups, downs - 1
+
 
 def prepare_x_y(df):
     # Multiple choice of x&y to plot

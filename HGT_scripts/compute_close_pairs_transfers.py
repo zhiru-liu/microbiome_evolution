@@ -22,9 +22,7 @@ def process_one_species(species_name, div_cutoff, hmm_init_means=[0.5, 10]):
     div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
                            'between_hosts', '%s.csv' % species_name)
     div_mat = np.loadtxt(div_dir, delimiter=',')
-    idxs = np.nonzero((div_mat < div_cutoff) & (div_mat != 0))
-    pairs = zip(list(idxs[0]), list(idxs[1]))
-    pairs = [pair for pair in pairs if pair[0] < pair[1]]
+    pairs = close_pair_utils.find_close_pairs(div_cutoff, div_mat, dh.get_single_subject_idxs())
     logging.info("After divergence cutoff, {} has {} pairs".format(species_name, len(pairs)))
     if len(pairs) < 5:
         logging.info("Too few pairs, skipping")

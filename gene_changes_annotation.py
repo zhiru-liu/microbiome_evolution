@@ -3,26 +3,18 @@
 import matplotlib  
 matplotlib.use('Agg') 
 import config
-import os
 
-import pylab
 import sys
 import numpy
 import random
 
-from utils import diversity_utils, gene_diversity_utils, core_gene_utils, stats_utils, sfs_utils
+from utils import diversity_utils, gene_diversity_utils, core_gene_utils
 from parsers import parse_patric, parse_HMP_data, parse_midas_data
 import calculate_substitution_rates
 import calculate_temporal_changes
-import species_phylogeny_utils
 
-import matplotlib.colors as colors
-import matplotlib.cm as cmx
-from math import log10,ceil
 import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from numpy.random import randint, choice
+from numpy.random import choice
 import pickle
 
 

@@ -1,31 +1,18 @@
 import matplotlib  
-matplotlib.use('Agg') 
-import config
-import os.path
+matplotlib.use('Agg')
 import pylab
 import sys
 import numpy
-from math import exp
 
-import species_phylogeny_utils
-from utils import diversity_utils, figure_utils, gene_diversity_utils, sample_utils, stats_utils, sfs_utils
+from utils import figure_utils
 from parsers import parse_midas_data
-import calculate_temporal_changes
-import calculate_substitution_rates
 import calculate_linkage_disequilibria
 
-from scipy.optimize import least_squares, newton, brentq
-      
-import matplotlib.colors as colors
-import matplotlib.cm as cmx
-from math import log10,ceil
+from math import log10
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from numpy.random import randint, multinomial
-import matplotlib.colors as mcolors
-
-from math import log
+from numpy.random import multinomial
 
 mpl.rcParams['font.size'] = 6
 mpl.rcParams['lines.linewidth'] = 0.5

@@ -2,34 +2,20 @@ import matplotlib
 matplotlib.use('Agg')
 
 import config
-import os.path
 import pylab
 import sys
 import numpy
-from numpy.random import choice
 
-import species_phylogeny_utils
-from utils import diversity_utils, gene_diversity_utils, sample_utils, stats_utils
+from utils import diversity_utils, sample_utils, stats_utils, species_phylogeny_utils
 from parsers import parse_midas_data
-import calculate_substitution_rates
 import calculate_singletons
 import calculate_temporal_changes
 
-import matplotlib.colors as colors
-import matplotlib.cm as cmx
-from math import log10,ceil,log
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from numpy.random import randint, shuffle, poisson, binomial, choice, hypergeometric
-import matplotlib.colors as mcolors
+from numpy.random import poisson, binomial, choice, hypergeometric
 import matplotlib.patheffects as pe
-
-from scipy.cluster.hierarchy import dendrogram, linkage
-from scipy.cluster.hierarchy import cophenet
-from scipy.cluster.hierarchy import fcluster
-
-from scipy.stats import gaussian_kde
 
 mpl.rcParams['font.size'] = 6
 mpl.rcParams['lines.linewidth'] = 0.5
