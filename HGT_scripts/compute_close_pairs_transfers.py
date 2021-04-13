@@ -18,6 +18,7 @@ logging.basicConfig(
 
 def process_one_species(species_name, div_cutoff, hmm_init_means=[0.5, 10]):
     dh = parallel_utils.DataHoarder(species_name, mode="QP")
+    good_chromo = dh.chromosomes[dh.general_mask] # will be used in contig-wise transfer computation
 
     div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
                            'between_hosts', '%s.csv' % species_name)
@@ -29,7 +30,7 @@ def process_one_species(species_name, div_cutoff, hmm_init_means=[0.5, 10]):
         return None
 
     logging.info("Coarse-graining the genome into blocks of size {}".format(BLOCK_SIZE))
-    first_pass_stats = close_pair_utils.process_close_pairs(dh, pairs, BLOCK_SIZE)
+    first_pass_stats = close_pair_utils.process_close_pairs_first_pass(dh, pairs, BLOCK_SIZE)
     mean_total_blocks = first_pass_stats['num_total_blocks'].mean()
     # use num of snp block as an estimate for clonal fraction
     # throw away pairs with too many blocks covered
@@ -44,22 +45,19 @@ def process_one_species(species_name, div_cutoff, hmm_init_means=[0.5, 10]):
     phmm = hmm.PoissonHMM(init_means=hmm_init_means,
                           n_components=num_states, params='st')
     num_transfers = []
-    num_clonal_snps = []
-    transfer_len = []
+    transfer_lens = []
+    T_approxs = []
     for pair in good_pairs:
-        snp_vec, _ = dh.get_snp_vector(pair)
-        # has to reshape because of hmm requirement
-        sequence = close_pair_utils.to_block(snp_vec, BLOCK_SIZE).reshape((-1, 1))
-        phmm.fit(sequence)
-        _, states = phmm.decode(sequence)
-        starts, ends = close_pair_utils.find_segments(states)
-        num_transfers.append(len(starts))
-        transfer_len.append(np.sum(ends-starts+1))
-        # sum the snps in the clonal region
-        num_clonal_snps.append(np.sum(sequence[states == 0]))
+        snp_vec, snp_mask = dh.get_snp_vector(pair)
+        chromosomes = good_chromo[snp_mask]
+        num_transfer, transfer_len, T_approx = close_pair_utils.fit_and_count_transfers_all_chromosomes(
+            snp_vec, chromosomes, phmm, BLOCK_SIZE)
+        num_transfers.append(num_transfer)
+        transfer_lens.append(transfer_len)
+        T_approxs.append(T_approx)
     second_pass_stats['num_transfers'] = num_transfers
-    second_pass_stats['num_clonal_snps'] = num_clonal_snps
-    second_pass_stats['transfer_len'] = transfer_len
+    second_pass_stats['T_approx'] = T_approxs
+    second_pass_stats['transfer_len'] = transfer_lens
 
     return first_pass_stats, second_pass_stats
 
