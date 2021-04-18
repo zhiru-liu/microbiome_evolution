@@ -110,8 +110,8 @@ def _fit_and_count_transfers_iterative(sequence, model, block_size, iters=3):
     starts = []
     ends = []
     T_approx = 0
+    blk_seq = to_block(sequence, block_size).reshape((-1, 1))
     for i in range(iters):
-        blk_seq = to_block(sequence, block_size).reshape((-1, 1))
         model.fit(blk_seq)
         _, states = model.decode(blk_seq)
         starts, ends = find_segments(states)
