@@ -29,7 +29,7 @@ def to_block(bool_array, block_size):
     :return: An array of counts of Trues in blocks
     """
     # coarse-graining the bool array (snp array) into blocks
-    num_blocks = len(bool_array) / int(block_size) + 1
+    num_blocks = (len(bool_array) + block_size - 1) // block_size
     bins = np.arange(0, num_blocks * block_size + 1, block_size)
     counts, _ = np.histogram(np.nonzero(bool_array), bins)
     return counts
@@ -95,14 +95,16 @@ def find_segments(states, target_state=None):
     return ups, downs - 1
 
 
-def _fit_and_count_transfers_iterative(sequence, model, block_size, iters=3):
+def _fit_and_count_transfers_iterative(sequence, model, block_size, desired_states=[], iters=3):
     """
     Use a HMM to fit the sequence and eventually compute the number of runs, as well as
     and estimate for walll clock T. The program will iteratively determine the divergence
     in the clonal region. Only distinguishes clonal vs non-clonal.
-    :param sequence: The sequence in sites, a snp vector
+    :param sequence: The sequence in blocks
     :param model: The hidden markov model
     :param block_size: Size of the coarse-grained blocks
+    :param desired_states: a list of states that should be detected. If not provided, return
+    all runs of nonzero states
     :param iters: Number of iterations
     :return: triplet of start and end indices (inclusive) as well as wall clock estimate
     """
@@ -110,14 +112,23 @@ def _fit_and_count_transfers_iterative(sequence, model, block_size, iters=3):
     starts = []
     ends = []
     T_approx = 0
-    blk_seq = to_block(sequence, block_size).reshape((-1, 1))
     for i in range(iters):
-        model.fit(blk_seq)
-        _, states = model.decode(blk_seq)
+        model.fit(sequence)
+        _, states = model.decode(sequence)
         starts, ends = find_segments(states)
-        T_approx = np.sum(blk_seq[states == 0]) / (float(block_size) * np.sum(states == 0))
+        T_approx = np.sum(sequence[states == 0]) / (float(block_size) * np.sum(states == 0))
         model.init_means[0] = T_approx * block_size  # update the clonal divergence
     model.init_means = init_means
+
+    if len(desired_states) > 0:
+        # compute segments lengths for desire states
+        starts = []
+        ends = []
+        for state in desired_states:
+            tmp_starts, tmp_ends = find_segments(states, state)
+            starts.append(tmp_starts)
+            ends.append(tmp_ends)
+
     return starts, ends, T_approx
 
 
@@ -137,8 +148,9 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
     for chromo in np.unique(chromosomes):
         # iterate over contigs; similar to run length dist calculation
         subvec = snp_vec[chromosomes==chromo]
+        blk_seq = to_block(subvec, block_size).reshape((-1, 1))
         starts, ends, T_approx = _fit_and_count_transfers_iterative(
-            subvec, model, block_size, iters=iters)
+            blk_seq, model, block_size, iters=iters)
         num_transfers.append(len(starts))
         transfer_lens.append(np.sum(ends-starts+1))
         T_approxs.append(T_approx)

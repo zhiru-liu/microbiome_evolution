@@ -58,8 +58,9 @@ def test_species(species_name, transfer_div=None, debug=False):
         for i in range(num_reps):
             g, sim_starts, sim_lens = generate_fake_genome(
                 T, mean_transfer_len, rbymu, int(L))
+            seq = close_pair_utils.to_block(g, BLOCK_SIZE).reshape((-1, 1))
             starts, ends, T_approx = close_pair_utils._fit_and_count_transfers_iterative(
-                g, phmm, BLOCK_SIZE, iters=3)
+                seq, phmm, BLOCK_SIZE, iters=3)
             phmm.init_means = hmm_init_means
             true_counts.append(len(sim_starts))
             counts.append(len(starts))
