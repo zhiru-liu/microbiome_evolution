@@ -300,7 +300,7 @@ if __name__=='__main__':
             num_reference_remaining = (non_shared_idxs*reference_gene_idxs).sum()
             num_core = core_gene_idxs.sum()
             
-            print "%s %d %d %d %d %d %d %d" % (species_name, num_metagenome_and_midas, num_metagenome_only, num_midas_only, num_metagenome_or_midas, num_remaining, num_reference_remaining, num_core)
+            print("%s %d %d %d %d %d %d %d" % (species_name, num_metagenome_and_midas, num_metagenome_only, num_midas_only, num_metagenome_or_midas, num_remaining, num_reference_remaining, num_core))
             
             # Measure frequencies and output them
             gene_prevalence_numerators = ((gene_copynum_matrix>=cmin)*(gene_copynum_matrix<=cmax)).sum(axis=1)

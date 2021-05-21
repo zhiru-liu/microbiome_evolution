@@ -94,7 +94,7 @@ def parse_snp_info(info_filename):
             return float(items[4])
 
     chromosomes = np.array(map(lambda x: x[0], split_info_items))
-    locations = np.array(map(lambda x: long(x[1]), split_info_items))
+    locations = np.array(map(lambda x: int(x[1]), split_info_items))
     gene_names = np.array(map(lambda x: x[2], split_info_items))
     variants = np.array(map(lambda x: x[3], split_info_items))
     pvalues = np.array(map(_get_pvalue, split_info_items))
@@ -140,9 +140,13 @@ def get_within_host_filtered_snps(alt_arr, depth_arr, site_mask, sample_mask, cu
     polarized = (selected_alts <= alt_upper_thresholds) & (selected_alts >= alt_lower_thresholds)
     polarized = polarized.compute()
 
+    # for getting the actual haplotype of the shared regions
+    polarized_hap = selected_alts >= 0.5 * selected_depths
+    polarized_hap = polarized_hap.compute()
+
     covered_mask = selected_depths > 0
     covered_mask = covered_mask.compute()
-    return polarized, covered_mask
+    return polarized, polarized_hap, covered_mask
 
 
 '''
@@ -198,7 +202,7 @@ class DataHoarder:
                     rechunked_alt_arr, rechunked_depth_arr, self.general_mask, self.sample_mask)
             print("Finish loading sites, took %d secs" % (time.time() - t0))
         else:
-            self.snp_arr, self.covered_arr = get_within_host_filtered_snps(
+            self.snp_arr, self.naive_haplotype, self.covered_arr = get_within_host_filtered_snps(
                     rechunked_alt_arr, rechunked_depth_arr, self.general_mask,
                     self.sample_mask, self.peak_cutoffs)
             print("Finish loading sites, took %d secs" % (time.time() - t0))
@@ -250,6 +254,32 @@ class DataHoarder:
         # Keep sites that have enough samples NOT MISSING
         min_samples = self.covered_arr.shape[1] * prev_thre
         return np.sum(self.covered_arr, axis=1) >= min_samples
+
+    def get_local_haplotype(self, start, end, force_QP=False, only_snps=True, if_polarize=True):
+        """
+        Return a haplotype and a missing data array for all samples
+        :param start: start genome location
+        :param end: end genome location (non inclusive)
+        :param only_snps: whether throw away sites with no snps
+        :param if_polarize: whether polarize the sites according to the dominant allele
+        :return:
+        """
+        if self.mode == 'QP' or force_QP:
+            snps = self.snp_arr[start:end, :]
+        else:
+            snps = self.naive_haplotype[start:end, :]
+        covered = self.covered_arr[start:end, :]
+        # make sure the missing sites are not counted as snps
+        snps[~covered] = False
+        if only_snps:
+            has_snps = snps.sum(axis=1) > 0
+            snps = snps[has_snps, :]
+            covered = covered[has_snps, :]
+
+        if if_polarize:
+            to_flip = snps.sum(axis=1) > (0.5 * covered.sum(axis=1))
+            snps[to_flip, :] = ~snps[to_flip, :]
+        return snps, covered
 
     def get_haplotype_mask(self, prev_thre=0.9):
         prev_mask = self.get_covered_sites_mask(prev_thre)

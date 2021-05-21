@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import scipy.cluster.hierarchy as hierarchy
 
 
 def find_close_pairs(cutoff, div_mat, good_idxs):
@@ -168,3 +169,34 @@ def prepare_x_y(df):
 #    y = df['transfer_len'].to_numpy()
     y = df['num_transfers'].to_numpy()
     return x, y
+
+
+def _fclusters_to_dict(clusters):
+    """
+    organize scipy.hierarchy.fcluster output into a dictionary
+    :param clusters: a array of length num_samples, values are the cluster id
+    :return: dictionary of {cluster_id: [sample_idxs]}
+    """
+    d = dict()
+    for i, c in enumerate(clusters):
+        if c in d:
+            d[c].append(i)
+        else:
+            d[c] = [i]
+    return d
+
+
+def get_clusters_from_pairwise_matrix(pd_mat, threshold=1e-3):
+    """
+    Clustering samples to avoid overcounting close pairs
+    Method is linkage average clustering
+    :param pd_mat: pairwise divergence matrix
+    :param threshold: the distance cutoff for clustering
+    :return: a dictionary of {cluster id: [sample idx]}
+    """
+    uptri = np.triu_indices(pd_mat.shape[0], 1)
+    divergences = pd_mat[uptri]
+    Z = hierarchy.linkage(divergences, 'average')
+    clusters = hierarchy.fcluster(Z, t=threshold, criterion='distance')
+    d = _fclusters_to_dict(clusters)
+    return d
