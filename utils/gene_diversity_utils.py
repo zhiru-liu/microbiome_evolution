@@ -384,7 +384,7 @@ def merge_nearby_gene_differences(gene_differences):
     blocks = []
     
     for new_difference in gene_differences:
-        print new_difference[0]
+        print(new_difference[0])
         matched=False
         for block_idx in xrange(0,len(blocks)):
             for old_difference in blocks[block_idx]:
@@ -398,7 +398,7 @@ def merge_nearby_gene_differences(gene_differences):
         if not matched:
             blocks.append([new_difference])
       
-    print len(gene_differences), len(blocks)        
+    print(len(gene_differences), len(blocks))
     return blocks
             
   

@@ -60,6 +60,7 @@ class PoissonHMM(_BaseHMM):
         super(PoissonHMM, self)._accumulate_sufficient_statistics(
             stats, X, framelogprob, posteriors, fwdlattice, bwdlattice)
         if 'm' in self.params:
+            # TODO: 05.26.2021 figure out whether the next two lines should use posteriors instead of framelogprob!!
             stats['sum_p'] += np.transpose(np.sum(framelogprob, axis=0))
             stats['sum_px'] += np.squeeze(np.dot(np.transpose(framelogprob), X))
         return

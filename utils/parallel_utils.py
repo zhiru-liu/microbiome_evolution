@@ -260,6 +260,7 @@ class DataHoarder:
         Return a haplotype and a missing data array for all samples
         :param start: start genome location
         :param end: end genome location (non inclusive)
+        :param force_QP: whether calculate haplotype from snp_arr regardless if mode='within'
         :param only_snps: whether throw away sites with no snps
         :param if_polarize: whether polarize the sites according to the dominant allele
         :return:
