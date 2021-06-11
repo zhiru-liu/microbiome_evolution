@@ -1,6 +1,8 @@
 import numpy as np
 from hmmlearn.base import _BaseHMM
 from scipy.stats import poisson, bernoulli
+import os
+import config
 
 
 class PoissonHMM(_BaseHMM):
@@ -75,23 +77,20 @@ class ClosePairHMM(_BaseHMM):
     def __init__(self,
                  species_name=None, transfer_emissions=np.array([0.1]),
                  transfer_rate=1e-2, clonal_emission=1e-3,
-                 transfer_length=5e2,
+                 transfer_length=5e2, transition_prior=None,
                  algorithm="viterbi", n_iter=10, tol=1e-2,
                  verbose=False, params="m"):
         if species_name is not None:
             self.transfer_emissions, self.transition_prior = self.get_empirical_emissions(species_name)
-        elif transfer_emissions is not None:
-            self.transfer_emissions = transfer_emissions
-            self.transition_prior = np.ones(transfer_emissions.shape)
         else:
-            raise ValueError("Must supply either the species name " +
-                             "or the emission probability in transferred regions")
+            self._init_emissions_manual(transfer_emissions, transition_prior)
         n_components = 1 + len(self.transfer_emissions)
         # normalizing the transition prior
         self.transition_prior = self.transition_prior.astype(np.float32) / np.sum(self.transition_prior)
         self.transfer_rate = transfer_rate
         self.clonal_emission = clonal_emission
         self.exit_rate = 1. / transfer_length  # rate of leaving the transferred state
+        self.all_emissions = np.concatenate([[self.clonal_emission], self.transfer_emissions])
 
         _BaseHMM.__init__(self, n_components,
                           algorithm=algorithm,
@@ -99,8 +98,28 @@ class ClosePairHMM(_BaseHMM):
                           params=params)
 
     def get_empirical_emissions(self, species_name):
-        # TODO: implement this!
-        return None, None
+        path = os.path.join(config.hmm_data_directory, species_name + '.csv')
+        if not os.path.exists(path):
+            raise ValueError("No empirical data found for {}".format(species_name))
+        dat = np.loadtxt(path)
+        return dat[0, :], dat[1, :]
+
+    def _init_emissions_manual(self, transfer_emissions, transition_prior):
+        if transfer_emissions is not None:
+            if transition_prior is not None:
+                if len(transition_prior) != len(transfer_emissions):
+                    raise ValueError("Transition prior must have the same length as transfer emissions")
+                if (transition_prior < 0).any():
+                    raise ValueError("Transition prior must be all positive")
+                self.transfer_emissions = transfer_emissions
+                self.transition_prior = transition_prior
+            else:
+                print("No transition prior provided. Assuming uniform transition probability")
+                self.transfer_emissions = transfer_emissions
+                self.transition_prior = np.ones(transfer_emissions.shape)
+        else:
+            raise ValueError("Please provide either the species name for empirical emission rates "
+                             "or relevant parameters directly")
 
     def _init(self, X, lengths=None):
         init = 1. / self.n_components
@@ -124,11 +143,13 @@ class ClosePairHMM(_BaseHMM):
     def _compute_log_likelihood(self, X):
         # each observation will be either "snp in bin / 1" or "no snp in bin/ 0"
         # so the emission simply follows bernoulli RV
-        clonal_logp = bernoulli.logpmf(X, self.clonal_emission)
-        transfer_logp = bernoulli.logpmf(X, self.transfer_emissions)
+        # logp = np.zeros((X.shape[0], self.transfer_emissions.shape[0] + 1))
+        # logp[:, 0] = np.squeeze(bernoulli.logpmf(X, self.clonal_emission))
+        # logp[:, 1:] = bernoulli.logpmf(X, self.transfer_emissions)
         # clonal_logp = poisson.logpmf(X, self.clonal_emission)
         # transfer_logp = poisson.logpmf(X, self.transfer_emissions)
-        logp = np.hstack([clonal_logp, transfer_logp])
+        # logp = np.hstack([clonal_logp, transfer_logp])
+        logp = np.log(1 - self.all_emissions + np.outer(X, 2 * self.all_emissions - 1))
         return logp
 
     def _initialize_sufficient_statistics(self):
