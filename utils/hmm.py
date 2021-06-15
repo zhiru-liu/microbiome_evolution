@@ -75,13 +75,15 @@ class PoissonHMM(_BaseHMM):
 
 class ClosePairHMM(_BaseHMM):
     def __init__(self,
-                 species_name=None, transfer_emissions=np.array([0.1]),
+                 species_name=None, block_size=1,
+                 transfer_emissions=np.array([0.1]),
                  transfer_rate=1e-2, clonal_emission=1e-3,
                  transfer_length=5e2, transition_prior=None,
                  algorithm="viterbi", n_iter=10, tol=1e-2,
                  verbose=False, params="m"):
         if species_name is not None:
-            self.transfer_emissions, self.transition_prior = self.get_empirical_emissions(species_name)
+            self.transfer_emissions, self.transition_prior = self.get_empirical_emissions(
+                species_name, block_size)
         else:
             self._init_emissions_manual(transfer_emissions, transition_prior)
         n_components = 1 + len(self.transfer_emissions)
@@ -97,12 +99,12 @@ class ClosePairHMM(_BaseHMM):
                           n_iter=n_iter, tol=tol, verbose=verbose,
                           params=params)
 
-    def get_empirical_emissions(self, species_name):
+    def get_empirical_emissions(self, species_name, block_size):
         path = os.path.join(config.hmm_data_directory, species_name + '.csv')
         if not os.path.exists(path):
             raise ValueError("No empirical data found for {}".format(species_name))
         dat = np.loadtxt(path)
-        return dat[0, :], dat[1, :]
+        return dat[0, :] * block_size, dat[1, :]
 
     def _init_emissions_manual(self, transfer_emissions, transition_prior):
         if transfer_emissions is not None:

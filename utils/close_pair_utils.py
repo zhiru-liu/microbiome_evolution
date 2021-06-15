@@ -65,18 +65,26 @@ def process_close_pairs_first_pass(dh, idxs, block_size):
     return df
 
 
-def find_segments(states, target_state=None):
+def find_segments(states, target_state=None, target_range=None):
     """
     Find the continuous segments of a target state. By default, all
     nonzero segments will be found.
     :param states: array of non-negative integers, output of HMM
-    :param target_state: the state of the segments, if None, find nonzero segments
+    :param target_state: the state of the segments, if None and no target_range,
+    find nonzero segments
+    :param target_range: the range of accepted states, left inclusive
     :return: start and end indices of segments, *inclusive*
     """
     if target_state is not None:
         states = states == target_state
         states = states.astype(int)
+    elif target_range is not None:
+        if len(target_range) != 2:
+            raise ValueError("Please supply the desired range of states as [min, max]")
+        states = (states >= target_range[0]) & (states < target_range[1])
+        states = states.astype(int)
     else:
+        # find all non zero segments
         for n in np.unique(states):
             if n not in [0, 1]:
                 import warnings
@@ -94,6 +102,37 @@ def find_segments(states, target_state=None):
     ups = np.nonzero(diff == 1)[0]
     downs = np.nonzero(diff == -1)[0]
     return ups, downs - 1
+
+
+def _decode_and_count_transfers(sequence, model, block_size, need_fit=True, clade_cutoff_bin=None):
+    """
+    Use a HMM to decode the sequence and eventually compute the number of runs, as well as
+    and estimate for wall clock T. Can distinguish different types of transfers using clade_cutoff_bin.
+    Does not fit every sequence!
+    :param sequence: The sequence in blocks
+    :param model: The hidden markov model
+    :param block_size: Size of the coarse-grained blocks
+    :param clade_cutoff_bin: For determining whether transfer is within clade or between clade
+    based on the inferred bin in the empirical distribution. Within clade range from state 1 to
+    state clade_cutoff_bin, inclusive.
+    :return: triplet of start and end indices (inclusive) as well as wall clock estimate
+    """
+    if need_fit:
+        model.fit(sequence)
+    _, states = model.decode(sequence)
+    starts, ends = find_segments(states)
+    T_approx = np.sum(sequence[states == 0]) / (float(block_size) * np.sum(states == 0))
+
+    if clade_cutoff_bin is not None:
+        # compute segments lengths for desire states
+        starts = []
+        ends = []
+        for limits in [[1, clade_cutoff_bin], [clade_cutoff_bin, np.inf]]:
+            tmp_starts, tmp_ends = find_segments(states, target_state=None, target_range=limits)
+            starts.append(tmp_starts)
+            ends.append(tmp_ends)
+
+    return starts, ends, T_approx
 
 
 def _fit_and_count_transfers_iterative(sequence, model, block_size, desired_states=[], iters=3):
@@ -200,3 +239,19 @@ def get_clusters_from_pairwise_matrix(pd_mat, threshold=1e-3):
     clusters = hierarchy.fcluster(Z, t=threshold, criterion='distance')
     d = _fclusters_to_dict(clusters)
     return d
+
+
+def get_empirical_div_dist(local_divs, genome_divs, num_bins, separate_clades, clade_cutoff=0.03):
+    # both local divs and genome divs are obtained by sampling QP pairs; call DH function
+    # the center of the bin is returned
+    # separate_clades and clade_cutoff are used to separate within/between clade donors
+    bins = np.linspace(0, max(local_divs), num_bins + 1)
+    divs = (bins[:-1] + bins[1:]) / 2
+    if separate_clades:
+        within_counts, _ = np.histogram(local_divs[genome_divs <= clade_cutoff], bins=bins)
+        between_counts, _ = np.histogram(local_divs[genome_divs > clade_cutoff], bins=bins)
+        divs = np.concatenate([divs, divs])
+        counts = np.concatenate([within_counts, between_counts])
+    else:
+        counts = np.histogram(local_divs, bins=bins)
+    return divs, counts

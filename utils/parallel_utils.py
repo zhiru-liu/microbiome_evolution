@@ -4,6 +4,7 @@ import numpy as np
 import time
 import os
 import bz2
+import random
 from utils import sample_utils, core_gene_utils, diversity_utils, HGT_utils
 from parsers import parse_midas_data, parse_HMP_data
 import config
@@ -150,7 +151,7 @@ def get_within_host_filtered_snps(alt_arr, depth_arr, site_mask, sample_mask, cu
 
 
 '''
-    A class for holding relative data of a species for analysis
+    A class for holding relevant data of a species for analysis
 '''
 class DataHoarder:
     def __init__(self, species_name, mode="QP", allowed_variants=["4D"]):
@@ -175,6 +176,8 @@ class DataHoarder:
                   np.sum(self.sample_mask))
         else:
             raise ValueError("Only support QP or within modes")
+
+        self.single_subject_samples = self.get_single_subject_idxs()
 
         alt_arr = da.from_zarr('{}/full_alt.zarr'.format(self.data_dir))
         depth_arr = da.from_zarr('{}/full_depth.zarr'.format(self.data_dir))
@@ -306,6 +309,15 @@ class DataHoarder:
         else:
             return get_within_sample_snp_vector(
                     self.snp_arr, self.covered_arr, idx)
+
+    def sample_local_T_pairwise(self, l):
+        # l is the size of the chunk for T estimation
+        pair = random.sample(self.single_subject_samples, 2)
+        snp_vec, _ = self.get_snp_vector(pair)
+        genome_div = np.mean(snp_vec)
+        start_idx = np.random.randint(0, len(snp_vec) - l)
+        local_div = np.mean(snp_vec[start_idx:start_idx + l])
+        return local_div, genome_div
 
     def save_haplotype_fs(self, save_dir, prev_thre=0.9):
         if not os.path.exists(save_dir):
