@@ -13,7 +13,7 @@ analysis_directory = os.path.expanduser("/Volumes/Botein/zhiru_analysis/")
 scripts_directory = os.path.expanduser("/Users/Device6/Documents/Research/bgoodlab/microbiome_evolution/")
 patric_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/patric_db/")
 midas_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/midas_db/")
-hmm_data_directory = os.path.expanduser("~/Documents/Research/bgoodlab/microbiome_evolution/hmm_empirical_dat/")
+hmm_data_directory = os.path.expanduser("~/Documents/Research/bgoodlab/microbiome_evolution/cphmm/dat/")
 
 # We use this one to debug because it was the first one we looked at
 debug_species_name = 'Bacteroides_uniformis_57318'

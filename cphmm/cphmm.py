@@ -2,6 +2,7 @@ import numpy as np
 import os
 from scipy import linalg, special
 from . import _routines
+from hmmlearn import _hmmc
 from .utils import normalize, log_normalize, log_mask_zero
 
 
@@ -72,6 +73,14 @@ class ClosePairHMM:
         self.transmat_[0, 0] = 1 - self.transfer_rate
         self.transmat_[0, 1:] = self.transfer_rate * self.transition_prior
 
+    def _update_clonal_emission(self, emission_rate):
+        self.clonal_emission = emission_rate
+        self.all_emissions[0] = emission_rate
+
+    def _update_transfer_rate(self, transfer_rate):
+        self.transfer_rate = transfer_rate
+        self._init_transitions()
+
     def _compute_log_likelihood(self, X):
         # each observation will be either "snp in bin / 1" or "no snp in bin/ 0"
         # so the emission simply follows bernoulli RV
@@ -111,21 +120,24 @@ class ClosePairHMM:
         self._check_array(X)
 
         for iter in range(self.n_iter):
-            stats = self._initialize_sufficient_statistics()
-            curr_logprob = 0
             framelogprob = self._compute_log_likelihood(X)
             logprob, fwdlattice = self._do_forward_pass(framelogprob)
-            curr_logprob += logprob
             bwdlattice = self._do_backward_pass(framelogprob)
-            posteriors = self._compute_posteriors(fwdlattice, bwdlattice)
-            self._accumulate_sufficient_statistics(
-                stats, X, framelogprob, posteriors, fwdlattice,
-                bwdlattice)
+            log_xi_sum = self._do_forward_backward(fwdlattice, bwdlattice, framelogprob)
 
-            # XXX must be before convergence check, because otherwise
-            #     there won't be any updates for the case ``n_iter=1``.
-            self._do_mstep(stats)
+            # estimator of no transfer is prob{i->i} / prob{i->any}
+            transfer_rate_est = 1 - np.exp(log_xi_sum[0, 0] - special.logsumexp(log_xi_sum[0, :]))
+            self._update_transfer_rate(transfer_rate_est)
 
+            # estimator of clonal divergence
+            alpha_beta = fwdlattice[:, 0] + bwdlattice[:, 0]
+            emission_est = special.logsumexp(alpha_beta[np.squeeze(X > 0)]) \
+                           - special.logsumexp(alpha_beta)
+            emission_est = np.exp(emission_est)
+            self._update_clonal_emission(emission_est)
+
+            # posteriors = self._compute_posteriors(fwdlattice, bwdlattice)
+            
             # self.monitor_.report(curr_logprob)
             # if self.monitor_.converged:
             #     break
@@ -141,27 +153,53 @@ class ClosePairHMM:
 
     def _do_forward_pass(self, framelogprob):
         n_samples, n_components = framelogprob.shape
-        fwdlattice = _routines._forward(n_samples, n_components,
+        # archived numpy version
+        # fwdlattice = _routines._forward(n_samples, n_components,
+        #                log_mask_zero(self.startprob_),
+        #                log_mask_zero(self.transmat_),
+        #                framelogprob)
+
+        fwdlattice = np.zeros((n_samples, n_components))
+        _hmmc._forward(n_samples, n_components,
                        log_mask_zero(self.startprob_),
                        log_mask_zero(self.transmat_),
-                       framelogprob)
+                       framelogprob, fwdlattice)
+
         with np.errstate(under="ignore"):
             return special.logsumexp(fwdlattice[-1]), fwdlattice
 
     def _do_backward_pass(self, framelogprob):
         n_samples, n_components = framelogprob.shape
-        bwdlattice = _routines._backward(n_samples, n_components,
+        bwdlattice = np.zeros((n_samples, n_components))
+        _hmmc._backward(n_samples, n_components,
                         log_mask_zero(self.startprob_),
                         log_mask_zero(self.transmat_),
-                        framelogprob)
+                        framelogprob, bwdlattice)
+        # bwdlattice = _routines._backward(n_samples, n_components,
+        #                 log_mask_zero(self.startprob_),
+        #                 log_mask_zero(self.transmat_),
+        #                 framelogprob)
+        
         return bwdlattice
 
     def _do_viterbi_pass(self, framelogprob):
         n_samples, n_components = framelogprob.shape
-        logprob, state_sequence = _routines._viterbi(
-            n_samples, n_components, log_mask_zero(self.startprob_),
-            log_mask_zero(self.transmat_), framelogprob)
+        # logprob, state_sequence = _routines._viterbi(
+        #     n_samples, n_components, log_mask_zero(self.startprob_),
+        #     log_mask_zero(self.transmat_), framelogprob)
+        state_sequence, logprob = _hmmc._viterbi(
+                n_samples, n_components, log_mask_zero(self.startprob_),
+                log_mask_zero(self.transmat_), framelogprob)
         return logprob, state_sequence
+
+    def _do_forward_backward(self, fwdlattice, bwdlattice, framelogprob):
+        n_samples, n_components = framelogprob.shape
+        log_xi_sum = np.full((n_components, n_components), -np.inf)
+        _hmmc._compute_log_xi_sum(n_samples, n_components, fwdlattice,
+                                  log_mask_zero(self.transmat_),
+                                  bwdlattice, framelogprob,
+                                  log_xi_sum)
+        return log_xi_sum
 
     def _compute_posteriors(self, fwdlattice, bwdlattice):
         # gamma is guaranteed to be correctly normalized by logprob at
