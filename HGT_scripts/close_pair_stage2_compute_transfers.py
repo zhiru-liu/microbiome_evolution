@@ -2,21 +2,32 @@ import sys
 import os
 import logging
 import json
+import pickle
 import numpy as np
 sys.path.append("..")
 import config
-from utils import parallel_utils, close_pair_utils, hmm
-
-BLOCK_SIZE = 1000
-CLONAL_FRAC_CUTOFF = 0.5
-
-logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
-    level=logging.INFO,
-    datefmt='%H:%M:%S')
+import cphmm.cphmm as hmm
+from utils import parallel_utils, close_pair_utils
 
 
-def process_one_species(species_name, div_cutoff, hmm_init_means=[0.5, 10]):
+def init_hmm(species_name, genome_len, block_size):
+    # initialize the hmm with default params
+    # clonal emission and transfer rate will be fitted per sequence later in the pipeline
+    num_blocks = genome_len / block_size
+    transfer_counts = 20.
+    clonal_div = 5e-5
+    transfer_length = 1000.
+
+    transfer_rate = transfer_counts / num_blocks
+    transfer_length = transfer_length / block_size
+    clonal_emission = clonal_div * block_size
+    cphmm = hmm.ClosePairHMM(species_name=species_name, block_size=block_size,
+                             transfer_rate=transfer_rate, clonal_emission=clonal_emission,
+                             transfer_length=transfer_length, n_iter=5)
+    return cphmm
+
+
+def process_one_species(species_name, div_cutoff, block_size, debug=False):
     dh = parallel_utils.DataHoarder(species_name, mode="QP")
     good_chromo = dh.chromosomes[dh.general_mask] # will be used in contig-wise transfer computation
 
@@ -29,50 +40,82 @@ def process_one_species(species_name, div_cutoff, hmm_init_means=[0.5, 10]):
         logging.info("Too few pairs, skipping")
         return None
 
-    logging.info("Coarse-graining the genome into blocks of size {}".format(BLOCK_SIZE))
-    first_pass_stats = close_pair_utils.process_close_pairs_first_pass(dh, pairs, BLOCK_SIZE)
+    FIRST_PASS_BLOCK_SIZE = 1000
+    logging.info("Coarse-graining the genome into blocks of size {}".format(FIRST_PASS_BLOCK_SIZE))
+    first_pass_stats = close_pair_utils.process_close_pairs_first_pass(dh, pairs, FIRST_PASS_BLOCK_SIZE)
     mean_total_blocks = first_pass_stats['num_total_blocks'].mean()
+
     # use num of snp block as an estimate for clonal fraction
     # throw away pairs with too many blocks covered
     snp_block_cutoff = (1 - CLONAL_FRAC_CUTOFF) * mean_total_blocks
     second_pass_stats = first_pass_stats[
         first_pass_stats['snp_blocks'] < snp_block_cutoff].copy()
     good_pairs = second_pass_stats['pair_idxs']
-    logging.info("After first pass, {} has {} pairs".format(species_name, len(good_pairs)))
+    if debug:
+        # good_pairs = good_pairs[:5]
+        good_pairs = good_pairs
 
-    num_states = len(hmm_init_means)
-    logging.info("Using a {} state HMM to detect transfers".format(num_states))
-    phmm = hmm.PoissonHMM(init_means=hmm_init_means,
-                          n_components=num_states, params='st')
-    num_transfers = []
-    transfer_lens = []
-    T_approxs = []
+    logging.info("After first pass, {} has {} pairs".format(species_name, len(good_pairs)))
+    mean_genome_len = mean_total_blocks * FIRST_PASS_BLOCK_SIZE
+    logging.info("Mean genome length is {} sites".format(mean_genome_len))
+
+    logging.info("Using HMM to detect transfers")
+    cphmm = init_hmm(species_name, mean_genome_len, block_size)
+
+    dat = dict()
+    dat['starts'] = []
+    dat['ends'] = []
+    dat['T approxs'] = []
+    dat['pairs'] = list(good_pairs)
+    processed_count = 0
     for pair in good_pairs:
         snp_vec, snp_mask = dh.get_snp_vector(pair)
         chromosomes = good_chromo[snp_mask]
-        num_transfer, transfer_len, T_approx = close_pair_utils.fit_and_count_transfers_all_chromosomes(
-            snp_vec, chromosomes, phmm, BLOCK_SIZE)
-        num_transfers.append(num_transfer)
-        transfer_lens.append(transfer_len)
-        T_approxs.append(T_approx)
-    second_pass_stats['num_transfers'] = num_transfers
-    second_pass_stats['T_approx'] = T_approxs
-    second_pass_stats['transfer_len'] = transfer_lens
+        try:
+            starts, ends, T_approx = close_pair_utils.fit_and_count_transfers_all_chromosomes(
+                snp_vec, chromosomes, cphmm, block_size)
+        except:
+            e = sys.exc_info()[0]
+            print(pair)
+            raise e
+        dat['starts'].append(starts)
+        dat['ends'].append(ends)
+        dat['T approxs'].append(T_approx)
 
-    return first_pass_stats, second_pass_stats
+        processed_count += 1
+        if processed_count % 100 == 0:
+            logging.info("Finished %d out of %d pairs" % (processed_count, len(good_pairs)))
+    return first_pass_stats, dat
 
+
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.INFO,
+    datefmt='%H:%M:%S')
+
+CLONAL_FRAC_CUTOFF = 0.5
+BLOCK_SIZE = 10
+DEBUG = True
 
 cutoff_dict = json.load(open('./same_clade_div_cutoffs.json', 'r'))
 base_dir = 'zarr_snps'
 for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
     if species_name.startswith('.'):
         continue
-    res = process_one_species(species_name, cutoff_dict[species_name][0])
+    if DEBUG:
+        # species_name = 'Bacteroides_vulgatus_57955'
+        species_name = 'Alistipes_putredinis_61533'
+    logging.info("Starting %s" % species_name)
+    res = process_one_species(species_name, cutoff_dict[species_name][0], BLOCK_SIZE, debug=DEBUG)
+    logging.info("Finished %s" % species_name)
     if res is not None:
-        df1, df2 = res
+        df, data = res
         save_path = os.path.join(config.analysis_directory,
                                  "closely_related", "first_pass", "{}.csv".format(species_name))
-        df1.to_csv(save_path)
-        save_path = os.path.join(config.analysis_directory,
-                                 "closely_related", "second_pass", "{}.csv".format(species_name))
-        df2.to_csv(save_path)
+        df.to_csv(save_path)
+        # save_path = os.path.join(config.analysis_directory,
+                                 # "closely_related", "second_pass", "{}.pickle".format(species_name))
+        # data has a mixture of np array and lists and dict... save to pickle for simplicity
+        pickle.dump(data, open(save_path, 'wb'))
+    if DEBUG:
+        break

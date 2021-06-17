@@ -1,9 +1,8 @@
 import numpy as np
 import os
-from scipy import linalg, special
-from . import _routines
+from scipy import special
 from hmmlearn import _hmmc
-from .utils import normalize, log_normalize, log_mask_zero
+from .utils import log_normalize, log_mask_zero
 
 
 class ClosePairHMM:
@@ -12,7 +11,7 @@ class ClosePairHMM:
                  transfer_emissions=np.array([0.1]),
                  transfer_rate=1e-2, clonal_emission=1e-3,
                  transfer_length=5e2, transition_prior=None,
-                 n_iter=10, tol=1e-2, params="m"):
+                 n_iter=5, min_clonal_emission=1e-6):
 
         # init emission probabilities
         if species_name is not None:
@@ -21,6 +20,8 @@ class ClosePairHMM:
         else:
             self._init_emissions_manual(transfer_emissions, transition_prior)
         self.clonal_emission = clonal_emission
+        self.init_clonal_emission = clonal_emission
+        self.min_clonal_emissions = min_clonal_emission
         self.all_emissions = np.concatenate([[self.clonal_emission], self.transfer_emissions])
 
         # normalizing the transition prior
@@ -28,12 +29,11 @@ class ClosePairHMM:
         self.n_components = n_components
         self.transition_prior = self.transition_prior.astype(np.float32) / np.sum(self.transition_prior)
         self.transfer_rate = transfer_rate
+        self.init_transfer_rate = transfer_rate
         self.exit_rate = 1. / transfer_length  # rate of leaving the transferred state
         self._init_transitions()
 
-        self.params = params
         self.n_iter = n_iter
-        self.tol = tol
 
     def _get_empirical_emissions(self, species_name, block_size):
         path = os.path.join(os.path.dirname(__file__), 'dat', species_name + '.csv')
@@ -81,6 +81,10 @@ class ClosePairHMM:
         self.transfer_rate = transfer_rate
         self._init_transitions()
 
+    def reinit_emission_and_transfer_rates(self):
+        self._update_clonal_emission(self.init_clonal_emission)
+        self._update_transfer_rate(self.init_transfer_rate)
+
     def _compute_log_likelihood(self, X):
         # each observation will be either "snp in bin / 1" or "no snp in bin/ 0"
         # so the emission simply follows bernoulli RV
@@ -90,7 +94,8 @@ class ClosePairHMM:
         # clonal_logp = poisson.logpmf(X, self.clonal_emission)
         # transfer_logp = poisson.logpmf(X, self.transfer_emissions)
         # logp = np.hstack([clonal_logp, transfer_logp])
-        logp = np.log(1 - self.all_emissions + np.outer(X, 2 * self.all_emissions - 1))
+        with np.errstate(divide='raise'):
+            logp = np.log(1 - self.all_emissions + np.outer(X, 2 * self.all_emissions - 1))
         return logp
 
     def _check(self):
@@ -110,6 +115,8 @@ class ClosePairHMM:
                              .format(self.transmat_.sum(axis=1)))
 
     def _check_array(self, X):
+        if len(X.shape)==1:
+            raise ValueError("Please reshape sequence to be (length, 1) ")
         n_samples, n_features = X.shape
         if n_features != 1:
             raise ValueError("Only supports binned 1d genome as input data")
@@ -121,6 +128,8 @@ class ClosePairHMM:
 
         for iter in range(self.n_iter):
             framelogprob = self._compute_log_likelihood(X)
+            if np.isnan(np.sum(framelogprob)):
+                raise ValueError("Nan detected in log likelihood. Check X")
             logprob, fwdlattice = self._do_forward_pass(framelogprob)
             bwdlattice = self._do_backward_pass(framelogprob)
             log_xi_sum = self._do_forward_backward(fwdlattice, bwdlattice, framelogprob)
@@ -133,14 +142,9 @@ class ClosePairHMM:
             alpha_beta = fwdlattice[:, 0] + bwdlattice[:, 0]
             emission_est = special.logsumexp(alpha_beta[np.squeeze(X > 0)]) \
                            - special.logsumexp(alpha_beta)
-            emission_est = np.exp(emission_est)
+            # set a lower limit for clonal emission to prevent zero probability
+            emission_est = max(np.exp(emission_est), self.min_clonal_emissions)
             self._update_clonal_emission(emission_est)
-
-            # posteriors = self._compute_posteriors(fwdlattice, bwdlattice)
-            
-            # self.monitor_.report(curr_logprob)
-            # if self.monitor_.converged:
-            #     break
         return self
 
     def decode(self, X):
@@ -210,18 +214,3 @@ class ClosePairHMM:
         log_normalize(log_gamma, axis=1)
         with np.errstate(under="ignore"):
             return np.exp(log_gamma)
-
-    def _initialize_sufficient_statistics(self):
-        # TODO may need to implement for inferring wall clock time
-        return
-
-    def _accumulate_sufficient_statistics(self, stats, X, framelogprob,
-                                          posteriors, fwdlattice, bwdlattice):
-        # TODO may need to implement for inferring wall clock time
-        print("Skipping")
-        return
-
-    def _do_mstep(self, stats):
-        # TODO may need to implement for inferring wall clock time
-        print("skipping m step")
-        return

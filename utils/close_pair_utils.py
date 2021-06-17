@@ -104,7 +104,8 @@ def find_segments(states, target_state=None, target_range=None):
     return ups, downs - 1
 
 
-def _decode_and_count_transfers(sequence, model, block_size, need_fit=True, clade_cutoff_bin=None):
+def _decode_and_count_transfers(sequence, model, block_size, need_fit=True, clade_cutoff_bin=None,
+                                index_offset=0):
     """
     Use a HMM to decode the sequence and eventually compute the number of runs, as well as
     and estimate for wall clock T. Can distinguish different types of transfers using clade_cutoff_bin.
@@ -120,7 +121,6 @@ def _decode_and_count_transfers(sequence, model, block_size, need_fit=True, clad
     if need_fit:
         model.fit(sequence)
     _, states = model.decode(sequence)
-    starts, ends = find_segments(states)
     T_approx = np.sum(sequence[states == 0]) / (float(block_size) * np.sum(states == 0))
 
     if clade_cutoff_bin is not None:
@@ -129,9 +129,20 @@ def _decode_and_count_transfers(sequence, model, block_size, need_fit=True, clad
         ends = []
         for limits in [[1, clade_cutoff_bin], [clade_cutoff_bin, np.inf]]:
             tmp_starts, tmp_ends = find_segments(states, target_state=None, target_range=limits)
+            if len(tmp_starts) != 0:
+                # for taking care of contigs
+                tmp_starts += index_offset
+                tmp_ends += index_offset
             starts.append(tmp_starts)
             ends.append(tmp_ends)
-
+    else:
+        tmp_starts, tmp_ends = find_segments(states)
+        if len(tmp_starts) != 0:
+            tmp_starts += index_offset
+            tmp_ends += index_offset
+        # put in [] for compatibility with the above case
+        starts = [tmp_starts]
+        ends = [tmp_ends]
     return starts, ends, T_approx
 
 
@@ -172,32 +183,126 @@ def _fit_and_count_transfers_iterative(sequence, model, block_size, desired_stat
     return starts, ends, T_approx
 
 
-def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_size, iters=3):
+def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_size):
     """
     Accumulate the results of above function for all contigs
     :param snp_vec: The full snp vector for a given pair of QP samples
     :param chromosomes: Array of same length as snp_vec, containing the chromosome of each site
     :param model: HMM model
-    :param block_size: same as above
-    :param iters: same as above
-    :return: triplet of number of transfers, total transfer length, and wall clock estimate
+    :param block_size: size of the block
+    :return: triplet of starts and ends of transfers, and wall clock estimate
     """
-    num_transfers = []
-    transfer_lens = []
+    all_starts = []
+    all_ends = []
     T_approxs = []
+    index_offset = 0
     for chromo in np.unique(chromosomes):
         # iterate over contigs; similar to run length dist calculation
         subvec = snp_vec[chromosomes==chromo]
         blk_seq = to_block(subvec, block_size).reshape((-1, 1))
-        starts, ends, T_approx = _fit_and_count_transfers_iterative(
-            blk_seq, model, block_size, iters=iters)
-        num_transfers.append(len(starts))
-        transfer_lens.append(np.sum(ends-starts+1))
+        # to reduce effect of correlated mutation over short distances
+        blk_seq = (blk_seq > 0).astype(float)
+        if np.sum(blk_seq) == 0:
+            # some time will have an identical contig
+            # have to skip otherwise will mess up hmm
+            starts = [np.array([])]
+            ends = [np.array([])]
+            T_approx = 0
+        else:
+            starts, ends, T_approx = _decode_and_count_transfers(
+                blk_seq, model, block_size, index_offset=index_offset)
+        all_starts.append(starts)
+        all_ends.append(ends)
         T_approxs.append(T_approx)
-    num_transfer = np.sum(num_transfers)
-    transfer_len = np.sum(transfer_lens)
+        model.reinit_emission_and_transfer_rates()
+        index_offset += len(blk_seq)
+
+    # group transfers of the same type together over contigs
+    num_types = len(all_starts[0])
+    starts = []
+    ends = []
+    for i in xrange(num_types):
+        starts.append(np.concatenate([s[i] for s in all_starts]))
+        ends.append(np.concatenate([s[i] for s in all_ends]))
     T_approx = np.mean(T_approxs)
-    return num_transfer, transfer_len, T_approx
+    return starts, ends, T_approx
+
+
+def merge_and_filter_transfers_one_pair(starts, ends, merge_threshold=100, filter_threshold=10):
+    # clean up raw data
+    df_transfers = pd.DataFrame()
+    df_transfers['starts'] = np.concatenate(starts)
+    df_transfers['ends'] = np.concatenate(ends)
+    df_transfers['types'] = np.concatenate(
+        [np.repeat(i, len(x)) for i, x in enumerate(starts)])
+    df_transfers = df_transfers.sort_values('starts')
+
+    # merging
+    new_starts = []
+    new_ends = []
+    new_types = []
+    curr_start = None
+    curr_end = None
+    curr_type = None
+    for _, row in df_transfers.iterrows():
+        if curr_start is None:
+            curr_start = row['starts']
+            curr_end = row['ends']
+            curr_type = row['types']
+            continue
+        if (row['starts'] - curr_end) < merge_threshold:
+            curr_len = curr_end - curr_start + 1
+            next_len = row['ends'] - row['starts'] + 1
+            curr_end = row['ends']
+            curr_type = curr_type if curr_len >= next_len else row['types']
+        else:
+            new_starts.append(curr_start)
+            new_ends.append(curr_end)
+            new_types.append(curr_type)
+            curr_start = row['starts']
+            curr_end = row['ends']
+            curr_type = row['types']
+    new_starts.append(curr_start)
+    new_ends.append(curr_end)
+    new_types.append(curr_type)
+    new_df = pd.DataFrame(zip(new_starts, new_ends, new_types), columns=['starts', 'ends', 'types'])
+    new_df['lengths'] = new_df['ends'] - new_df['starts'] + 1
+
+    if filter_threshold:
+        new_df = new_df[new_df['lengths'] >= filter_threshold]
+    return new_df
+
+
+def merge_and_filter_transfers(data, separate_clade=False):
+    """
+    process the output of stage 2 (HMM detection) by merging and filtering transfers
+    to reduce bioinformatic errors
+    :param data: dict with intermediate stats
+    :param separate_clade: whether report within/between clade transfer separately
+    :return: array of number of transfer per pair; dataframe of every single transfer's info
+    """
+    all_dfs = []
+    num_pairs = len(data['starts'])
+    counts = []
+    if separate_clade:
+        between_counts = []
+        within_counts = []
+    for i in range(num_pairs):
+        merged_df = merge_and_filter_transfers_one_pair(data['starts'][i], data['ends'][i],
+                                                        merge_threshold=100,
+                                                        filter_threshold=10)
+        merged_df['pairs'] = [data['pairs'][i] for x in range(merged_df.shape[0])]  # record pair information
+        counts.append(len(merged_df))
+        if separate_clade:
+            between_counts.append(np.sum(merged_df['types'] == 1))
+            within_counts.append(len(merged_df) - between_counts[-1])
+        all_dfs.append(merged_df)
+    counts = np.array(counts)
+    full_df = pd.concat(all_dfs)
+    if separate_clade:
+        return within_counts, between_counts, full_df
+    else:
+        return counts, full_df
 
 
 def prepare_x_y(df):
@@ -253,5 +358,5 @@ def get_empirical_div_dist(local_divs, genome_divs, num_bins, separate_clades, c
         divs = np.concatenate([divs, divs])
         counts = np.concatenate([within_counts, between_counts])
     else:
-        counts = np.histogram(local_divs, bins=bins)
+        counts, _ = np.histogram(local_divs, bins=bins)
     return divs, counts
