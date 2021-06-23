@@ -104,7 +104,8 @@ class ClosePairHMM(_BaseHMM):
         if not os.path.exists(path):
             raise ValueError("No empirical data found for {}".format(species_name))
         dat = np.loadtxt(path)
-        return dat[0, :] * block_size, dat[1, :]
+        prob_has_snp = 1 - np.power(1 - dat[0, :], block_size)
+        return prob_has_snp, dat[1, :]
 
     def _init_emissions_manual(self, transfer_emissions, transition_prior):
         if transfer_emissions is not None:

@@ -3,7 +3,8 @@ import bz2
 import gzip
 import os.path
 from math import floor, ceil
-from utils import gene_diversity_utils, sample_utils, stats_utils, diversity_utils
+from utils import gene_diversity_utils, sample_utils, stats_utils
+# from utils import diversity_utils
 from parse_HMP_data import parse_subject_sample_map
 
 import config

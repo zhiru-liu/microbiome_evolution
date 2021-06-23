@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import random
 import scipy.cluster.hierarchy as hierarchy
 
 
@@ -104,7 +105,7 @@ def find_segments(states, target_state=None, target_range=None):
     return ups, downs - 1
 
 
-def _decode_and_count_transfers(sequence, model, block_size, need_fit=True, clade_cutoff_bin=None,
+def _decode_and_count_transfers(sequence, model, sequence_with_snps=None, need_fit=True, clade_cutoff_bin=None,
                                 index_offset=0):
     """
     Use a HMM to decode the sequence and eventually compute the number of runs, as well as
@@ -112,7 +113,7 @@ def _decode_and_count_transfers(sequence, model, block_size, need_fit=True, clad
     Does not fit every sequence!
     :param sequence: The sequence in blocks
     :param model: The hidden markov model
-    :param block_size: Size of the coarse-grained blocks
+    :param sequence_with_snps: The sequence with actual snp counts. Could be different from the 0/1 sequence for fitting
     :param clade_cutoff_bin: For determining whether transfer is within clade or between clade
     based on the inferred bin in the empirical distribution. Within clade range from state 1 to
     state clade_cutoff_bin, inclusive.
@@ -121,7 +122,11 @@ def _decode_and_count_transfers(sequence, model, block_size, need_fit=True, clad
     if need_fit:
         model.fit(sequence)
     _, states = model.decode(sequence)
-    T_approx = np.sum(sequence[states == 0]) / (float(block_size) * np.sum(states == 0))
+    if sequence_with_snps is not None:
+        snp_count = np.sum(sequence_with_snps[states == 0])
+    else:
+        snp_count = np.sum(sequence[states == 0])
+    clonal_len = np.sum(states == 0)
 
     if clade_cutoff_bin is not None:
         # compute segments lengths for desire states
@@ -143,7 +148,7 @@ def _decode_and_count_transfers(sequence, model, block_size, need_fit=True, clad
         # put in [] for compatibility with the above case
         starts = [tmp_starts]
         ends = [tmp_ends]
-    return starts, ends, T_approx
+    return starts, ends, snp_count, clonal_len
 
 
 def _fit_and_count_transfers_iterative(sequence, model, block_size, desired_states=[], iters=3):
@@ -194,26 +199,30 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
     """
     all_starts = []
     all_ends = []
-    T_approxs = []
+    snp_counts = []
+    clonal_lens = []
     index_offset = 0
     for chromo in np.unique(chromosomes):
         # iterate over contigs; similar to run length dist calculation
         subvec = snp_vec[chromosomes==chromo]
         blk_seq = to_block(subvec, block_size).reshape((-1, 1))
         # to reduce effect of correlated mutation over short distances
-        blk_seq = (blk_seq > 0).astype(float)
+        blk_seq_fit = (blk_seq > 0).astype(float)
         if np.sum(blk_seq) == 0:
             # some time will have an identical contig
             # have to skip otherwise will mess up hmm
             starts = [np.array([])]
             ends = [np.array([])]
-            T_approx = 0
+            snp_count = 0
+            clonal_len = len(blk_seq)
         else:
-            starts, ends, T_approx = _decode_and_count_transfers(
-                blk_seq, model, block_size, index_offset=index_offset)
+            starts, ends, snp_count, clonal_len = _decode_and_count_transfers(
+                blk_seq_fit, model, sequence_with_snps=blk_seq, index_offset=index_offset)
         all_starts.append(starts)
         all_ends.append(ends)
-        T_approxs.append(T_approx)
+        snp_counts.append(snp_count)
+        clonal_lens.append(clonal_len)
+        # T_approxs.append(T_approx)
         model.reinit_emission_and_transfer_rates()
         index_offset += len(blk_seq)
 
@@ -224,8 +233,9 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
     for i in xrange(num_types):
         starts.append(np.concatenate([s[i] for s in all_starts]))
         ends.append(np.concatenate([s[i] for s in all_ends]))
-    T_approx = np.mean(T_approxs)
-    return starts, ends, T_approx
+    # T_approx = float(np.sum(snp_counts)) / np.sum(clonal_lens)
+    expected_clonal_snp = float(np.sum(snp_counts)) / (block_size * np.sum(clonal_lens)) * len(snp_vec)
+    return starts, ends, expected_clonal_snp
 
 
 def merge_and_filter_transfers_one_pair(starts, ends, merge_threshold=100, filter_threshold=10):
@@ -303,6 +313,29 @@ def merge_and_filter_transfers(data, separate_clade=False):
         return within_counts, between_counts, full_df
     else:
         return counts, full_df
+
+
+def get_transfer(dh, l):
+    # sample a block of length l from a random pair
+    good_idxs = dh.get_single_subject_idxs()
+    pair = random.sample(good_idxs, 2)
+    snp_vec, _ = dh.get_snp_vector(pair)
+    div = np.mean(snp_vec)
+    start_idx = np.random.randint(0, len(snp_vec) - l)
+    return snp_vec[start_idx:start_idx + l], div
+
+
+def sample_blocks(dh, num_samples=5000, block_size=1000):
+    local_divs = []
+    genome_divs = []
+    for i in xrange(num_samples):
+        seq, genome_div = get_transfer(dh, block_size)
+        local_div = np.mean(seq)
+        local_divs.append(local_div)
+        genome_divs.append(genome_div)
+    local_divs = np.array(local_divs)
+    genome_divs = np.array(genome_divs)
+    return local_divs, genome_divs
 
 
 def prepare_x_y(df):

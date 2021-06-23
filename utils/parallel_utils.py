@@ -225,7 +225,7 @@ class DataHoarder:
         filtered_alt = rechunked_alt_arr[:, self.sample_mask]
 
         # Some snps need to be polarized according to pop_freqs
-        import calculate_snp_prevalences
+        from plos_bio_scripts import calculate_snp_prevalences
         population_freqs = calculate_snp_prevalences.parse_population_freqs(
                 self.species_name, polarize_by_consensus=False)
         all_pop_freqs = np.array(map(lambda x: population_freqs.get(x, 0),

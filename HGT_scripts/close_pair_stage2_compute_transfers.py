@@ -4,6 +4,7 @@ import logging
 import json
 import pickle
 import numpy as np
+import traceback
 sys.path.append("..")
 import config
 import cphmm.cphmm as hmm
@@ -28,6 +29,13 @@ def init_hmm(species_name, genome_len, block_size):
 
 
 def process_one_species(species_name, div_cutoff, block_size, debug=False):
+    """
+    :param species_name:
+    :param div_cutoff: Hand annotated cutoff for first filtering of pairs
+    :param block_size: Coarse-graining length scale for the genome
+    :param debug: Flag to determine whether running the debug version
+    :return: a DataFrame for first pass statistics, and a dict for second pass statistics (including clonal snps etc)
+    """
     dh = parallel_utils.DataHoarder(species_name, mode="QP")
     good_chromo = dh.chromosomes[dh.general_mask] # will be used in contig-wise transfer computation
 
@@ -60,27 +68,33 @@ def process_one_species(species_name, div_cutoff, block_size, debug=False):
     logging.info("Mean genome length is {} sites".format(mean_genome_len))
 
     logging.info("Using HMM to detect transfers")
+    logging.info("Block size is {}".format(block_size))
     cphmm = init_hmm(species_name, mean_genome_len, block_size)
 
     dat = dict()
     dat['starts'] = []
     dat['ends'] = []
-    dat['T approxs'] = []
+    # dat['T approxs'] = []
+    dat['clonal snps'] = []
     dat['pairs'] = list(good_pairs)
     processed_count = 0
     for pair in good_pairs:
         snp_vec, snp_mask = dh.get_snp_vector(pair)
         chromosomes = good_chromo[snp_mask]
         try:
-            starts, ends, T_approx = close_pair_utils.fit_and_count_transfers_all_chromosomes(
+            # starts, ends, T_approx = close_pair_utils.fit_and_count_transfers_all_chromosomes(
+            starts, ends, clonal_snp = close_pair_utils.fit_and_count_transfers_all_chromosomes(
                 snp_vec, chromosomes, cphmm, block_size)
         except:
             e = sys.exc_info()[0]
+            tb = traceback.format_exc()
             print(pair)
+            print(tb)
             raise e
         dat['starts'].append(starts)
         dat['ends'].append(ends)
-        dat['T approxs'].append(T_approx)
+        # dat['T approxs'].append(T_approx)
+        dat['clonal snps'].append(clonal_snp)
 
         processed_count += 1
         if processed_count % 100 == 0:
@@ -95,7 +109,10 @@ logging.basicConfig(
 
 CLONAL_FRAC_CUTOFF = 0.5
 BLOCK_SIZE = 10
-DEBUG = True
+DEBUG = False
+
+black_list = ['Bacteroides_xylanisolvens_57185', # for having extremely short contigs and short total core genome
+              'Escherichia_coli_58110'] # for having extremely short contigs
 
 cutoff_dict = json.load(open('./same_clade_div_cutoffs.json', 'r'))
 base_dir = 'zarr_snps'
@@ -104,18 +121,29 @@ for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
         continue
     if DEBUG:
         # species_name = 'Bacteroides_vulgatus_57955'
-        species_name = 'Alistipes_putredinis_61533'
+        species_name = 'Bacteroides_massiliensis_44749'
+        second_path_save_path = os.path.join(config.analysis_directory,
+                                             "closely_related", "debug", "{}_block_5.pickle".format(species_name))
+    else:
+        second_path_save_path = os.path.join(config.analysis_directory,
+                                 "closely_related", "second_pass", "{}.pickle".format(species_name))
+    if os.path.exists(second_path_save_path):
+        logging.info("Skipping %s" % species_name)
+        continue
+
+    if species_name in black_list:
+        logging.info("Skipping %s" % species_name)
+        continue
+
     logging.info("Starting %s" % species_name)
     res = process_one_species(species_name, cutoff_dict[species_name][0], BLOCK_SIZE, debug=DEBUG)
     logging.info("Finished %s" % species_name)
     if res is not None:
         df, data = res
-        save_path = os.path.join(config.analysis_directory,
+        first_pass_save_path = os.path.join(config.analysis_directory,
                                  "closely_related", "first_pass", "{}.csv".format(species_name))
-        df.to_csv(save_path)
-        # save_path = os.path.join(config.analysis_directory,
-                                 # "closely_related", "second_pass", "{}.pickle".format(species_name))
+        df.to_csv(first_pass_save_path)
         # data has a mixture of np array and lists and dict... save to pickle for simplicity
-        pickle.dump(data, open(save_path, 'wb'))
+        pickle.dump(data, open(second_path_save_path, 'wb'))
     if DEBUG:
         break

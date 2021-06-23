@@ -5,29 +5,7 @@ import numpy as np
 sys.path.append("..")
 import config
 from utils import parallel_utils
-
-
-def get_transfer(dh, l):
-    # sample a block of length l from a random pair
-    good_idxs = dh.get_single_subject_idxs()
-    pair = random.sample(good_idxs, 2)
-    snp_vec, _ = dh.get_snp_vector(pair)
-    div = np.mean(snp_vec)
-    start_idx = np.random.randint(0, len(snp_vec) - l)
-    return snp_vec[start_idx:start_idx + l], div
-
-
-def sample_blocks(dh, num_samples=5000, block_size=1000):
-    local_divs = []
-    genome_divs = []
-    for i in xrange(num_samples):
-        seq, genome_div = get_transfer(dh, block_size)
-        local_div = np.mean(seq)
-        local_divs.append(local_div)
-        genome_divs.append(genome_div)
-    local_divs = np.array(local_divs)
-    genome_divs = np.array(genome_divs)
-    return local_divs, genome_divs
+from utils.close_pair_utils import sample_blocks
 
 
 def get_empirical_div_dist(local_divs, genome_divs, num_bins, separate_clades=True, clade_cutoff=0.03):
