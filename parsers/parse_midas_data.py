@@ -1,10 +1,11 @@
-import numpy
 import sys
 import bz2
 import gzip
 import os.path
 from math import floor, ceil
 from utils import gene_diversity_utils, sample_utils, stats_utils
+# from utils import diversity_utils
+from parse_HMP_data import parse_subject_sample_map
 
 import config
 
@@ -133,8 +134,6 @@ def parse_species_marker_gene_coverages(desired_species_name):
     return None
     
 def parse_sample_coverage_map(desired_species_name):
-    import utils.stats_utils
-    
     # Load genomic coverage distributions
     sample_coverage_histograms, samples = parse_coverage_distribution(desired_species_name)
     median_coverages = numpy.array([stats_utils.calculate_nonzero_median_from_histogram(sample_coverage_histogram) for sample_coverage_histogram in sample_coverage_histograms])
@@ -501,7 +500,7 @@ def pipe_snps(species_name, min_nonzero_median_coverage=config.pipe_snps_min_non
 ###############################################################################
 def parse_snps(species_name, debug=False, allowed_samples=[], allowed_genes=[], allowed_variant_types=['1D','2D','3D','4D'], initial_line_number=0, chunk_size=1000000000):
     
-    import calculate_snp_prevalences
+    from plos_bio_scripts import calculate_snp_prevalences
     # Load population freqs (for polarization purposes)    
     population_freqs = calculate_snp_prevalences.parse_population_freqs(species_name, polarize_by_consensus=False)
    

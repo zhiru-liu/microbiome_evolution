@@ -6,13 +6,14 @@
 import os.path 
 from math import log10
 
-data_directory = os.path.expanduser("/Volumes/externalhd/garud_etal_2019_data/")
+data_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/")
 #data_directory = os.path.expanduser("~/ben_nandita_hmp_data_071518/")
 #data_directory = os.path.expanduser("~/ben_nandita_hmp_data/")
-analysis_directory = os.path.expanduser("/Volumes/externalhd/zhiru_outputs/")
-scripts_directory = os.path.expanduser("/Volumes/externalhd/garud_etal_2019_scripts/")
-patric_directory = os.path.expanduser("~/patric_db/")
-midas_directory = os.path.expanduser("/Volumes/externalhd/midas_db/")
+analysis_directory = os.path.expanduser("/Volumes/Botein/zhiru_analysis/")
+scripts_directory = os.path.expanduser("/Users/Device6/Documents/Research/bgoodlab/microbiome_evolution/")
+patric_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/patric_db/")
+midas_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/midas_db/")
+hmm_data_directory = os.path.expanduser("~/Documents/Research/bgoodlab/microbiome_evolution/cphmm/dat/")
 
 # We use this one to debug because it was the first one we looked at
 debug_species_name = 'Bacteroides_uniformis_57318'
@@ -64,7 +65,7 @@ within_host_min_haploid_sample_size = 10
 between_low_divergence_threshold = 2e-04
 
 # Comment this out
-from parsers.parse_HMP_data import *
+#from parsers.parse_HMP_data import *
 # and uncomment this
 #from parse_simulated_data import *
 # for isolate data
