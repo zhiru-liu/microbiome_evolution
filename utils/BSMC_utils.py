@@ -19,6 +19,13 @@ def load_data(path):
     return np.array(data)
 
 
+def get_simulation_ids(metadata_df, rbymu, l):
+    """
+    Handy function to use the metadata df (loaded by reading metadata csv) to filter desired sim ids
+    """
+    return metadata_df[(metadata_df['rbymu']==rbymu) & (metadata_df['lambda']==l)]['sim_id']
+
+
 def compare_two_samples(idx1, idx2, data, genome_len):
     locations = data[:, -1][np.nonzero(data[:, idx1] != data[:, idx2])]
     runs = locations[1:] - locations[:-1]

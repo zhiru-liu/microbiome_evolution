@@ -437,3 +437,21 @@ def get_single_peak_sample_mask(species_name):
     mask[mask] = clean_peak_mask
     good_cutoffs = cutoffs[clean_peak_mask]
     return mask, sample_names, good_cutoffs.astype(float)
+
+
+def get_contig_lengths(good_chromo):
+    contig_lengths = []
+    for chromo in np.unique(good_chromo):
+        # iterate over contigs; similar to run length dist calculation
+        contig_len = np.sum(good_chromo==chromo)
+        contig_lengths.append(contig_len)
+    return contig_lengths
+
+
+def get_contig_boundary(filtered_chromosomes):
+    ls = []
+    for i in xrange(len(filtered_chromosomes)-1):
+        if filtered_chromosomes[i+1] != filtered_chromosomes[i]:
+            ls.append(i)
+    return np.array(ls)
+

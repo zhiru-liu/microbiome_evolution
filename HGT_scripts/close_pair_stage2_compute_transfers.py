@@ -48,7 +48,7 @@ def process_one_species(species_name, div_cutoff, block_size, debug=False):
         logging.info("Too few pairs, skipping")
         return None
 
-    FIRST_PASS_BLOCK_SIZE = 1000
+    FIRST_PASS_BLOCK_SIZE = config.first_pass_block_size
     logging.info("Coarse-graining the genome into blocks of size {}".format(FIRST_PASS_BLOCK_SIZE))
     first_pass_stats = close_pair_utils.process_close_pairs_first_pass(dh, pairs, FIRST_PASS_BLOCK_SIZE)
     mean_total_blocks = first_pass_stats['num_total_blocks'].mean()
@@ -61,7 +61,9 @@ def process_one_species(species_name, div_cutoff, block_size, debug=False):
     good_pairs = second_pass_stats['pair_idxs']
     if debug:
         # good_pairs = good_pairs[:5]
-        good_pairs = good_pairs
+        clade_cutoff_bin = config.empirical_histogram_bins  # for B vulgatus separate clade
+    else:
+        clade_cutoff_bin = None
 
     logging.info("After first pass, {} has {} pairs".format(species_name, len(good_pairs)))
     mean_genome_len = mean_total_blocks * FIRST_PASS_BLOCK_SIZE
@@ -84,7 +86,7 @@ def process_one_species(species_name, div_cutoff, block_size, debug=False):
         try:
             # starts, ends, T_approx = close_pair_utils.fit_and_count_transfers_all_chromosomes(
             starts, ends, clonal_snp = close_pair_utils.fit_and_count_transfers_all_chromosomes(
-                snp_vec, chromosomes, cphmm, block_size)
+                snp_vec, chromosomes, cphmm, block_size, clade_cutoff_bin=clade_cutoff_bin)
         except:
             e = sys.exc_info()[0]
             tb = traceback.format_exc()
@@ -107,9 +109,9 @@ logging.basicConfig(
     level=logging.INFO,
     datefmt='%H:%M:%S')
 
-CLONAL_FRAC_CUTOFF = 0.5
-BLOCK_SIZE = 10
-DEBUG = False
+CLONAL_FRAC_CUTOFF = config.clonal_fraction_cutoff
+BLOCK_SIZE = config.second_pass_block_size
+DEBUG = True
 
 black_list = ['Bacteroides_xylanisolvens_57185', # for having extremely short contigs and short total core genome
               'Escherichia_coli_58110'] # for having extremely short contigs
@@ -120,10 +122,10 @@ for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
     if species_name.startswith('.'):
         continue
     if DEBUG:
-        # species_name = 'Bacteroides_vulgatus_57955'
-        species_name = 'Bacteroides_massiliensis_44749'
+        species_name = 'Bacteroides_vulgatus_57955'
+        # species_name = 'Bacteroides_massiliensis_44749'
         second_path_save_path = os.path.join(config.analysis_directory,
-                                             "closely_related", "debug", "{}_block_5.pickle".format(species_name))
+                                             "closely_related", "debug", "{}_two_clades.pickle".format(species_name))
     else:
         second_path_save_path = os.path.join(config.analysis_directory,
                                  "closely_related", "second_pass", "{}.pickle".format(species_name))
@@ -141,8 +143,8 @@ for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
     if res is not None:
         df, data = res
         first_pass_save_path = os.path.join(config.analysis_directory,
-                                 "closely_related", "first_pass", "{}.csv".format(species_name))
-        df.to_csv(first_pass_save_path)
+                                 "closely_related", "first_pass", "{}.pickle".format(species_name))
+        df.to_pickle(first_pass_save_path)
         # data has a mixture of np array and lists and dict... save to pickle for simplicity
         pickle.dump(data, open(second_path_save_path, 'wb'))
     if DEBUG:

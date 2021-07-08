@@ -22,6 +22,11 @@ def find_close_pairs(cutoff, div_mat, good_idxs):
     return pairs
 
 
+def length_to_num_blocks(seq_len, block_size):
+    # Magical formula the works for all cases
+    return (seq_len + block_size - 1) // block_size
+
+
 def to_block(bool_array, block_size):
     """
     Converting a boolean array into blocks of True counts. The last
@@ -31,10 +36,31 @@ def to_block(bool_array, block_size):
     :return: An array of counts of Trues in blocks
     """
     # coarse-graining the bool array (snp array) into blocks
-    num_blocks = (len(bool_array) + block_size - 1) // block_size
+    num_blocks = length_to_num_blocks(len(bool_array), block_size)
     bins = np.arange(0, num_blocks * block_size + 1, block_size)
     counts, _ = np.histogram(np.nonzero(bool_array), bins)
     return counts
+
+
+def block_loc_to_genome_loc(block_loc, contig_lengths, block_size, left=True):
+    """
+    Hacky function to translate a location coordinate in blocks to the correct genome location
+    :param block_loc: location in block coordinate
+    :param contig_lengths: a list of contig lengths, can be computed by relevant function in parallel_utils
+    :param block_size:
+    :param left: Whether returning the location of the left end of the block or the right end
+    :return:
+    """
+    contig_blk_lens = [length_to_num_blocks(ctg_len, block_size) for ctg_len in contig_lengths]
+    cum_blk = np.insert(np.cumsum(contig_blk_lens), 0, 0)
+    cum_genome = np.insert(np.cumsum(contig_lengths), 0, 0)
+    contig_id = np.nonzero(block_loc < cum_blk)[0][0] - 1
+    blk_loc_in_ctg = block_loc - cum_blk[contig_id]
+    if left:
+        return cum_genome[contig_id] + blk_loc_in_ctg * block_size
+    else:
+        # right end of the block, exclusive
+        return min(cum_genome[contig_id] + (blk_loc_in_ctg + 1) * block_size, cum_genome[contig_id + 1])
 
 
 def process_close_pairs_first_pass(dh, idxs, block_size):
@@ -188,7 +214,7 @@ def _fit_and_count_transfers_iterative(sequence, model, block_size, desired_stat
     return starts, ends, T_approx
 
 
-def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_size):
+def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_size, clade_cutoff_bin=None):
     """
     Accumulate the results of above function for all contigs
     :param snp_vec: The full snp vector for a given pair of QP samples
@@ -217,7 +243,7 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
             clonal_len = len(blk_seq)
         else:
             starts, ends, snp_count, clonal_len = _decode_and_count_transfers(
-                blk_seq_fit, model, sequence_with_snps=blk_seq, index_offset=index_offset)
+                blk_seq_fit, model, sequence_with_snps=blk_seq, index_offset=index_offset, clade_cutoff_bin=clade_cutoff_bin)
         all_starts.append(starts)
         all_ends.append(ends)
         snp_counts.append(snp_count)
@@ -283,7 +309,7 @@ def merge_and_filter_transfers_one_pair(starts, ends, merge_threshold=100, filte
     return new_df
 
 
-def merge_and_filter_transfers(data, separate_clade=False):
+def merge_and_filter_transfers(data, separate_clade=False, merge_threshold=100, filter_threshold=10):
     """
     process the output of stage 2 (HMM detection) by merging and filtering transfers
     to reduce bioinformatic errors
@@ -293,14 +319,16 @@ def merge_and_filter_transfers(data, separate_clade=False):
     """
     all_dfs = []
     num_pairs = len(data['starts'])
+    if num_pairs == 0:
+        return None, None
     counts = []
     if separate_clade:
         between_counts = []
         within_counts = []
     for i in range(num_pairs):
         merged_df = merge_and_filter_transfers_one_pair(data['starts'][i], data['ends'][i],
-                                                        merge_threshold=100,
-                                                        filter_threshold=10)
+                                                        merge_threshold=merge_threshold,
+                                                        filter_threshold=filter_threshold)
         merged_df['pairs'] = [data['pairs'][i] for x in range(merged_df.shape[0])]  # record pair information
         counts.append(len(merged_df))
         if separate_clade:
@@ -340,11 +368,14 @@ def sample_blocks(dh, num_samples=5000, block_size=1000):
 
 def prepare_x_y(df):
     # Multiple choice of x&y to plot
-    clonal_fraction = 1 - df['transfer_len'] / df['num_total_blocks'].mean()
-    exp_snps = df['num_clonal_snps'] / clonal_fraction
-    x = exp_snps.to_numpy()
-#    y = df['transfer_len'].to_numpy()
-    y = df['num_transfers'].to_numpy()
+    # current version works for CPHMM pass 3 format
+
+    # clonal_fraction = 1 - df['transfer_len'] / df['num_total_blocks'].mean()
+    # exp_snps = df['num_clonal_snps'] / clonal_fraction
+    # x = exp_snps.to_numpy()
+    # y = df['transfer_len'].to_numpy()
+    x = df['clonal snps'].to_numpy()
+    y = df['transfer counts'].to_numpy()
     return x, y
 
 
