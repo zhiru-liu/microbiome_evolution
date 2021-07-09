@@ -1,41 +1,90 @@
 import sys
 import os
+import json
+import itertools
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import matplotlib as mpl
 sys.path.append("..")
 import config
 from utils import pileup_utils
 
 
-def plot_single_side(ckpt_path, threshold_lens, pileup_ax, histo_ax):
+def plot_single_side(ckpt_path, threshold_lens, pileup_ax, histo_ax,
+                     ind_to_plot=None, histo_bins=None, legend=True, xlabel=True):
+    # also returns bins in histogram plot + cumu_runs
     cumu_runs = np.loadtxt(ckpt_path)
-    histo_bins = np.linspace(0, np.max(cumu_runs), 100)
-    for i in range(cumu_runs.shape[1]):
-        dat = cumu_runs[:, i]  # / float(rep)
-        pileup_ax.plot(dat, linewidth=1, label="{}".format(threshold_lens[i]))
+    if histo_bins is None:
+        histo_bins = np.linspace(0, np.max(cumu_runs), 100)
+
+    # decide which of the cumu_runs to plot
+    if ind_to_plot is None:
+        to_plot = range(cumu_runs.shape[1])
+    else:
+        to_plot = ind_to_plot
+
+    for i in to_plot:
+        dat = cumu_runs[:, i]
+        pileup_ax.plot(dat, linewidth=1, label="{}".format(int(threshold_lens[i])))
         _ = histo_ax.hist(dat, bins=histo_bins, orientation='horizontal')
-    pileup_ax.legend()
-    pileup_ax.set_ylim([0, 0.3])
+    pileup_ax.set_ylim([0, 0.35])
+    histo_ax.set_ylim([0, 0.35])
     pileup_ax.set_xlim([0, cumu_runs.shape[0]])
-    pileup_ax.set_xlabel('4D core genome location')
+    histo_ax.set_yticklabels([])
+    if xlabel:
+        pileup_ax.set_xlabel('4D core genome location')
+    else:
+        pileup_ax.set_xticklabels([])
+    if legend:
+        pileup_ax.legend()
     pileup_ax.set_ylabel('sharing fraction')
+    return histo_bins, cumu_runs
 
 
-def plot_mirror(between_host_path, within_host_path, ax):
+def plot_haplotype_spectrum(axes, all_spectra, spectra_titles):
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-    between_cumu_runs = np.loadtxt(between_host_path)
-    within_cumu_runs = np.loadtxt(within_host_path)
-    for i in range(between_cumu_runs.shape[1]):
-        ax.plot(between_cumu_runs[:, i], linewidth=1, color=colors[i])
-        ax.plot(-within_cumu_runs[:, i], linewidth=1, color=colors[i])
-    ax.hlines(0, 0, between_cumu_runs.shape[0], 'black', linewidth=1)
-    ax.set_xlim([0, between_cumu_runs.shape[0]])
-    ax.set_ylim([-0.3, 0.3])
-    ax.set_xlabel("4D core genome location")
-    ax.set_ylabel("sharing fraction")
+    for i, dat in enumerate(all_spectra):
+        cum_size = sum(dat)
+        color_idx = 0
+        for size in dat[::-1]:
+            cum_size -= size
+            if size > 1:
+                color = colors[color_idx % len(colors)]
+                color_idx += 1
+                edgecolor = None
+            else:
+                color = 'grey'
+                edgecolor = "white"
+            axes[i].bar(0, size, bottom=cum_size, color=color, edgecolor=edgecolor, linewidth=0.1)
+        axes[i].set_xlim([-0.4, 0.4])
+        axes[i].set_ylim([0, sum(dat)])
+        axes[i].axis('off')
+        axes[i].set_title(spectra_titles[i])
+
+
+def plot_cvs_comparison(ax, thresholds, real_cvs, sim_cvs):
+    # currently sim params are hard coded
+    rbymus = [0.1, 0.5, 1, 1.5, 2]
+    lambdas = [5000, 10000]
+    num_reps = 4  # number of replicates
+    markers = itertools.cycle(('^', 'x'))
+
+    for i in range(len(rbymus)):
+        rbymu = rbymus[i]
+        c = plt.get_cmap("tab10")(i)
+        for j in range(len(lambdas)):
+            l = lambdas[j]
+            idx = i * len(lambdas) + j
+            mean_cv = np.mean(sim_cvs[idx:idx + num_reps, :], axis=0)
+            ax.plot(thresholds, mean_cv, marker=next(markers), color=c, label='r/mu=%.1f l=%d' % (rbymu, l))
+
+    ax.plot(thresholds, real_cvs, 'r--', label="B. vulgatus")
     ax.legend(bbox_to_anchor=(1, 1))
-    ax.set_yticklabels(np.around(map(np.abs, ax.get_yticks()), decimals=1))
+    ax.set_xlabel("Sharing threshold (4D syn sites)")
+    ax.set_ylabel("coefficient of variation")
+
 
 # set up figure
 mpl.rcParams['font.size'] = 7
@@ -43,8 +92,61 @@ mpl.rcParams['lines.linewidth'] = 1
 mpl.rcParams['legend.frameon']  = False
 mpl.rcParams['legend.fontsize']  = 'small'
 
-fig, axes = plt.subplots(1, 2, figsize=(7, 2), sharey=True, gridspec_kw={'width_ratios': [4, 1]})
-save_path = os.path.join(config.analysis_directory, 'IBS_locations', 'full_genome', 'B_vulgatus_cutoff_0.001.csv')
-plot_single_side(save_path, [15, 20, 25, 30, 35], axes[0], axes[1])
+# setting up grids
+fig = plt.figure(figsize=(7, 5))
+outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[3.5, 2], hspace=0.4, figure=fig)
+pileup_grid = gridspec.GridSpecFromSubplotSpec(ncols=1, nrows=2, height_ratios=[1, 1], hspace=0.4, subplot_spec=outer_grid[0])
+top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[4, 1], wspace=0.1, subplot_spec=pileup_grid[0])
+mid_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[4, 1], wspace=0.1, subplot_spec=pileup_grid[1])
+low_grid = gridspec.GridSpecFromSubplotSpec(1, 3, width_ratios=[1, 1, 0.5], wspace=0.7, subplot_spec=outer_grid[1])
+spectrum_grid = gridspec.GridSpecFromSubplotSpec(1, 4, width_ratios=[1, 1, 1, 1], wspace=0.4, subplot_spec=low_grid[0])
 
+# setting up axes
+pileup_ax_sim = fig.add_subplot(top_grid[0])
+pileup_ax_real = fig.add_subplot(mid_grid[0])
+histo_ax_sim = fig.add_subplot(top_grid[1])
+histo_ax_real = fig.add_subplot(mid_grid[1])
+spectrum_axes = [fig.add_subplot(x) for x in spectrum_grid]
+cv_ax = fig.add_subplot(low_grid[1])
+
+# loading necessary data
+real_data_save_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', 'Bacteroides_vulgatus_57955')
+thresholds = np.loadtxt(os.path.join(real_data_save_path, 'thresholds.txt'))
+
+spectra_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'local_hap', 'local_haplotype_spectra.json')
+all_hap_spectra = json.load(open(spectra_path, 'r'))
+
+cvs_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'b_vulgatus', 'cv.csv')
+sim_cvs = np.loadtxt(cvs_path)
+
+# plot one species
+ind_to_plot = [0, 3, 6] # only showing three thresholds
+histo_bins, real_cumu_runs = plot_single_side(
+    os.path.join(real_data_save_path, 'cutoff_0.001.csv'),
+    thresholds, pileup_ax_real, histo_ax_real, ind_to_plot=ind_to_plot)
+
+# plot one simulation
+save_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'b_vulgatus')
+plot_single_side(os.path.join(save_path, '4.txt'), thresholds, pileup_ax_sim, histo_ax_sim,
+                 ind_to_plot=ind_to_plot, histo_bins=histo_bins, legend=False, xlabel=False)
+
+# plot haplotype spectra
+plot_haplotype_spectrum(spectrum_axes, all_hap_spectra, ['a', 'b', 'c', 'neutral'])
+
+# plot CV comparison
+real_cv = np.std(real_cumu_runs, axis=0) / np.mean(real_cumu_runs, axis=0)
+plot_cvs_comparison(cv_ax, thresholds, real_cv, sim_cvs)
+
+# annotating regions
+regions = [[61000, 63000], [143000, 145000], [223000, 225000]]
+for x,y in regions:
+    pileup_ax_real.axvspan(x, y, alpha=0.3, color='red')
+pileup_ax_sim.axvspan(regions[-1][0], regions[-1][1], alpha=0.3, color='red')
+
+# final adjustment of axes limits, labels, ...
+pileup_ax_real.set_title("Empirical")
+pileup_ax_sim.set_title("Simulated")
+pileup_ax_sim.set_xlim(pileup_ax_real.get_xlim())
+
+# finally saving figure
 fig.savefig('test_pileup.pdf', bbox_inches='tight')

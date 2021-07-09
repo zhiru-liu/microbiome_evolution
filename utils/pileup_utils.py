@@ -40,6 +40,40 @@ def compute_pileup_for_clusters(cluster_dict, get_run_start_end, genome_len, thr
     return cumu_runs
 
 
+def compute_pileup_for_within_host(dh, thresholds):
+    """
+    Computing same pileup dist for within host data
+    :param dh: DataHoarder instance that loads within host data for a given species
+    :param thresholds: list of threshold lengths for filtering out sharing events
+    :return: np array of shape (genome length, number of thresholds)
+    """
+    num_reps = 0
+    single_subject_samples = dh.get_single_subject_idxs()
+    good_chromo = dh.chromosomes[dh.general_mask]
+
+    within_cumu_runs = np.zeros([np.sum(dh.general_mask), len(thresholds)])
+    for pair in single_subject_samples:
+        # get the snp data
+        snp_vec, coverage_arr = dh.get_snp_vector(pair)
+        if np.sum(snp_vec) / float(np.sum(coverage_arr)) > 0.03:  # removing two clade pairs
+            continue
+        num_reps += 1
+        # get the location in the full array
+        snp_to_core = np.nonzero(coverage_arr)[0]
+        snp_genome_locs = snp_to_core[np.nonzero(snp_vec)[0]]
+
+        runs = parallel_utils.compute_runs_all_chromosomes(snp_vec, good_chromo[coverage_arr])
+        # filter the runs and accumulate
+        for i in range(len(thresholds)):
+            threshold = thresholds[i]
+            event_starts = snp_genome_locs[:-1][runs > threshold]
+            event_ends = snp_genome_locs[1:][runs > threshold]
+            for start, end in zip(event_starts, event_ends):
+                within_cumu_runs[start:end, i] += 1
+    within_cumu_runs /= float(num_reps)
+    return within_cumu_runs
+
+
 def get_event_start_end_BSMC(sim_data, genome_len, idx1, idx2, thresholds):
     """
     Function for obtaining all sharing events over thresholds for genome pairs (idx1, idx2)

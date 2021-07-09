@@ -34,7 +34,7 @@ BLOCK_SIZE = 10
 print("Mean within transfer length: {}".format(np.mean(within_lens) * BLOCK_SIZE))
 print("Mean between transfer length: {}".format(np.mean(between_lens) * BLOCK_SIZE))
 
-
+# mapping out grids
 fig = plt.figure(figsize=(7, 5.5))
 outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[3, 2.5], hspace=0.2, figure=fig)
 
@@ -44,16 +44,14 @@ top_right_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1,1],hspa
 
 bottom_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1, 1], wspace=0.2, subplot_spec=outer_grid[1])
 
-# within_ct_ax = fig.add_subplot(spec[0, 0])
-# between_ct_ax = fig.add_subplot(spec[1, 0])
+# adding axes
 ct_ax = fig.add_subplot(bottom_grid[0])
-len_dist_ax = fig.add_subplot(bottom_grid[1])
-ex1_ax = fig.add_subplot(top_right_grid[0])
-ex2_ax = fig.add_subplot(top_right_grid[1])
-# grid = gridspec.GridSpecFromSubplotSpec(1,2, width_ratios=[1,1],wspace=1)
-# axes = plt.Subplot(fig, grid[0])
-# fig.add_subplot(axes)
 
+len_dist_ax = fig.add_subplot(bottom_grid[1])
+
+ex1_ax = fig.add_subplot(top_right_grid[0])
+
+ex2_ax = fig.add_subplot(top_right_grid[1])
 
 ######################################################################
 # example species
