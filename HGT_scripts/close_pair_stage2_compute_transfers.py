@@ -37,7 +37,7 @@ def process_one_species(species_name, div_cutoff, block_size, debug=False):
     :return: a DataFrame for first pass statistics, and a dict for second pass statistics (including clonal snps etc)
     """
     dh = parallel_utils.DataHoarder(species_name, mode="QP")
-    good_chromo = dh.chromosomes[dh.general_mask] # will be used in contig-wise transfer computation
+    good_chromo = dh.chromosomes[dh.general_mask]  # will be used in contig-wise transfer computation
 
     div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
                            'between_hosts', '%s.csv' % species_name)

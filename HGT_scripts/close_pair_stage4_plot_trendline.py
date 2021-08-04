@@ -43,7 +43,7 @@ def tricube(x):
     return (1 - x**3)**3
 
 
-def find_weighted_residue_dist(x, y_res, x_obs, k=25, qs=[0.66]):    
+def find_weighted_residual_dist(x, y_res, x_obs, k=25, qs=[0.66]):
     if len(qs) == 0:
         warnings.warn("No desired quantiles supplied")
         return None
@@ -58,7 +58,7 @@ def find_weighted_residue_dist(x, y_res, x_obs, k=25, qs=[0.66]):
     weights = tricube(dist)
     weights = weights / np.sum(weights)
 
-    # generating numerical CDF for residues
+    # generating numerical CDF for residuals
     vals = np.abs(y_res[lid:rid])
     order = vals.argsort()
     vals = vals[order]
@@ -113,7 +113,7 @@ for filename in os.listdir(data_dir):
             y_fit = lowess(y, x, return_sorted=False).T
             sigmas = []
             for x_obs in x_plot:
-                sigmas.append(find_weighted_residue_dist(x, y_fit - y, x_obs, k=k))
+                sigmas.append(find_weighted_residual_dist(x, y_fit - y, x_obs, k=k))
             sigmas = np.array(sigmas).squeeze()
             ax.fill_between(x_plot, y_plot - sigmas,
                             y_plot + sigmas, alpha=0.25)
