@@ -56,6 +56,7 @@ def compute_pileup_for_within_host(dh, thresholds):
         # get the snp data
         snp_vec, coverage_arr = dh.get_snp_vector(pair)
         if np.sum(snp_vec) / float(np.sum(coverage_arr)) > 0.03:  # removing two clade pairs
+            # TODO: problematic for other species!
             continue
         num_reps += 1
         # get the location in the full array
