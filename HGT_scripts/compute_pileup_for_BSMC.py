@@ -12,7 +12,7 @@ t = 0.00825
 genome_len = 280000
 # surprise_index = np.array([15, 20, 25, 30, 35])
 # thresholds = surprise_index / t
-thresholds = [1500, 3000, 4500]
+thresholds = [1500, 2000, 2500, 3000, 3500, 4000, 4500]
 
 # find the simulation id from the metadata df
 df = pd.read_csv(os.path.join(data_dir, 'experiments.txt'), delimiter=' ')

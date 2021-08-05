@@ -304,12 +304,13 @@ def merge_and_filter_transfers_one_pair(starts, ends, merge_threshold=100, filte
     new_df = pd.DataFrame(zip(new_starts, new_ends, new_types), columns=['starts', 'ends', 'types'])
     new_df['lengths'] = new_df['ends'] - new_df['starts'] + 1
 
-    if filter_threshold:
+    if filter_threshold is not None:
         new_df = new_df[new_df['lengths'] >= filter_threshold]
     return new_df
 
 
-def merge_and_filter_transfers(data, separate_clade=False, merge_threshold=100, filter_threshold=10):
+def merge_and_filter_transfers(data, separate_clade=False, merge_threshold=100, filter_threshold=10,
+                               ignore_pairs=False):
     """
     process the output of stage 2 (HMM detection) by merging and filtering transfers
     to reduce bioinformatic errors
@@ -329,7 +330,8 @@ def merge_and_filter_transfers(data, separate_clade=False, merge_threshold=100, 
         merged_df = merge_and_filter_transfers_one_pair(data['starts'][i], data['ends'][i],
                                                         merge_threshold=merge_threshold,
                                                         filter_threshold=filter_threshold)
-        merged_df['pairs'] = [data['pairs'][i] for x in range(merged_df.shape[0])]  # record pair information
+        if not ignore_pairs:
+            merged_df['pairs'] = [data['pairs'][i] for x in range(merged_df.shape[0])]  # record pair information
         counts.append(len(merged_df))
         if separate_clade:
             between_counts.append(np.sum(merged_df['types'] == 1))

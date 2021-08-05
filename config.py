@@ -64,6 +64,12 @@ within_host_min_haploid_sample_size = 10
 
 between_low_divergence_threshold = 2e-04
 
+# for close pair analysis
+clonal_fraction_cutoff = 0.8
+first_pass_block_size = 1000
+second_pass_block_size = 10
+empirical_histogram_bins = 40
+
 # Comment this out
 #from parsers.parse_HMP_data import *
 # and uncomment this

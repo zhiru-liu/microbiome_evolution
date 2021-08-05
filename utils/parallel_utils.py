@@ -397,6 +397,16 @@ def get_sample_names(species_name):
     return sample_names
 
 
+def get_raw_data_idx_for_sample(species_name, sample_name):
+    # sometimes need to work with zarr array directly; so helpful to get the zarr array index for a given sample
+    sample_names = get_sample_names(species_name)
+    res = np.where(sample_names==sample_name)[0]
+    if len(res) > 0:
+        return res[0]
+    else:
+        return None
+
+
 def get_QP_sample_mask(species_name):
     sample_names = get_sample_names(species_name)
 

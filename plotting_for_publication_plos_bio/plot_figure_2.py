@@ -1,13 +1,14 @@
 import matplotlib  
 matplotlib.use('Agg')
-import config
 import pylab
 import sys
 import numpy
 
+sys.path.append("..")
+import config
 from utils import diversity_utils, figure_utils, sample_utils, stats_utils, \
     species_phylogeny_utils
-from parsers import parse_midas_data
+from parsers import parse_midas_data, parse_HMP_data
 from plos_bio_scripts import calculate_substitution_rates
 
 from math import log,exp
@@ -71,8 +72,10 @@ if debug:
     good_species_list = ["Bacteroides_vulgatus_57955", "Bacteroides_uniformis_57318"]
 
 sys.stderr.write("Loading sample metadata...\n")
-subject_sample_map = sample_utils.parse_subject_sample_map()
-sample_continent_map = sample_utils.parse_sample_continent_map()
+# subject_sample_map = sample_utils.parse_subject_sample_map()
+# sample_continent_map = sample_utils.parse_sample_continent_map()
+subject_sample_map = parse_HMP_data.parse_subject_sample_map()
+sample_continent_map = parse_HMP_data.parse_sample_continent_map()
 sys.stderr.write("Done!\n")
 
 for species_name in good_species_list:
