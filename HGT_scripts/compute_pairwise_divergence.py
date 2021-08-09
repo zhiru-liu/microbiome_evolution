@@ -15,7 +15,7 @@ def compute_one_species(species_name, debug=False):
     dh = parallel_utils.DataHoarder(species_name)
     num_samples = dh.snp_arr.shape[1] if not debug else 10
     div_mat = np.zeros((num_samples, num_samples))
-    clonal_frac_mat = np.zeros((num_samples, num_samples))
+    clonal_frac_mat = np.ones((num_samples, num_samples))
     for i in range(num_samples):
         for j in range(i + 1, num_samples):
             snp_vec, _ = parallel_utils.get_two_QP_sample_snp_vector(
@@ -72,7 +72,7 @@ def main():
         if species_name.startswith('.'):
             continue
         print("processing %s" % species_name)
-        compute_one_species_within_host(species_name)
+        compute_one_species(species_name)
 
 
 if __name__ == "__main__":

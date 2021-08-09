@@ -1,9 +1,11 @@
 import zarr
 import dask.array as da
 import numpy as np
+import pandas as pd
 import time
 import os
 import bz2
+import csv
 import random
 from utils import sample_utils, core_gene_utils, diversity_utils, HGT_utils
 from parsers import parse_midas_data, parse_HMP_data
@@ -148,6 +150,33 @@ def get_within_host_filtered_snps(alt_arr, depth_arr, site_mask, sample_mask, cu
     covered_mask = selected_depths > 0
     covered_mask = covered_mask.compute()
     return polarized, polarized_hap, covered_mask
+
+
+def compute_good_sample_stats():
+    basepath = os.path.join(config.analysis_directory, 'typical_pairs')
+    csvpath = os.path.join(basepath, 'sample_stats.csv')
+    if not os.path.exists(csvpath):
+        print("Did not find cached results. Calculating sample stats for all species")
+        if not(os.path.exists(basepath)):
+            os.makedirs(basepath)
+
+        csv_file = open(csvpath, 'w')
+        writer = csv.writer(csv_file)
+        writer.writerow(['species_name', 'num_samples', 'num_qp_samples',
+                         'num_good_within_samples'])
+
+        for species_name in os.listdir(os.path.join(config.data_directory, 'zarr_snps')):
+            if species_name.startswith('.'):
+                continue
+            print("processing %s" % species_name)
+            qp_mask, _ = get_QP_sample_mask(species_name)
+            good_within_mask, _, _ = get_single_peak_sample_mask(species_name)
+
+            writer.writerow([species_name, len(qp_mask), np.sum(qp_mask), np.sum(good_within_mask)])
+
+        csv_file.close()
+
+    return pd.read_csv(csvpath)
 
 
 '''

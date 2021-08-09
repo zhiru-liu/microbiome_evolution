@@ -42,12 +42,12 @@ def generate_within_sample_idxs(dh, clonal_frac_cutoff=0.15, clade_cutoff=None):
 
     single_subject_samples = dh.get_single_subject_idxs()
     if clade_cutoff is None:
-        mask = clonal_frac_mat[single_subject_samples] > clonal_frac_cutoff
+        mask = clonal_frac_mat[single_subject_samples] < clonal_frac_cutoff
         return single_subject_samples[mask]
     else:
-        mask1 = (clonal_frac_mat[single_subject_samples] > clonal_frac_cutoff) & \
+        mask1 = (clonal_frac_mat[single_subject_samples] < clonal_frac_cutoff) & \
                 (div_mat[single_subject_samples] < clade_cutoff)
-        mask2 = (clonal_frac_mat[single_subject_samples] > clonal_frac_cutoff) & \
+        mask2 = (clonal_frac_mat[single_subject_samples] < clonal_frac_cutoff) & \
                 (div_mat[single_subject_samples] >= clade_cutoff)
         return single_subject_samples[mask1], single_subject_samples[mask2]
 
@@ -58,12 +58,12 @@ def generate_between_sample_idxs(dh, clonal_frac_cutoff=0.15, num_pairs=100, cla
                            'between_hosts', '%s.csv' % species_name)
     div_mat = np.loadtxt(div_dir, delimiter=',')
     clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
-                                   'within_hosts', '%s.csv' % species_name)
+                                   'between_hosts', '%s.csv' % species_name)
     clonal_frac_mat = np.loadtxt(clonal_frac_dir, delimiter=',')
 
     if clade_cutoff is None:
-        idx1, idx2 = np.where(clonal_frac_mat > clonal_frac_cutoff)
-        idx1, idx2 = idx1[idx1 > idx2], idx2[idx1 < idx2]  # dedup
+        idx1, idx2 = np.where(clonal_frac_mat < clonal_frac_cutoff)
+        idx1, idx2 = idx1[idx1 > idx2], idx2[idx1 > idx2]  # dedup
         all_pairs = zip(idx1, idx2)
         if num_pairs >= len(all_pairs):
             return all_pairs
@@ -74,11 +74,11 @@ def generate_between_sample_idxs(dh, clonal_frac_cutoff=0.15, num_pairs=100, cla
         cluster_dict = close_pair_utils.get_clusters_from_pairwise_matrix(div_mat, clade_cutoff)
         clade1, clade2 = cluster_dict[1], cluster_dict[2]
         # next form all within-clade pairs that are typically diverged
-        clade1_pairs = [x for x in itertools.combinations(clade1, 2) if clonal_frac_mat[x] > clonal_frac_cutoff]
-        clade2_pairs = [x for x in itertools.combinations(clade2, 2) if clonal_frac_mat[x] > clonal_frac_cutoff]
+        clade1_pairs = [x for x in itertools.combinations(clade1, 2) if clonal_frac_mat[x] < clonal_frac_cutoff]
+        clade2_pairs = [x for x in itertools.combinations(clade2, 2) if clonal_frac_mat[x] < clonal_frac_cutoff]
         within_clade_pairs = clade1_pairs + clade2_pairs
         # next form all between-clade pairs that are typically diverged
-        between_clade_pairs = [x for x in itertools.product(clade1, clade2) if clonal_frac_mat[x] > clonal_frac_cutoff]
+        between_clade_pairs = [x for x in itertools.product(clade1, clade2) if clonal_frac_mat[x] < clonal_frac_cutoff]
         # finally, sample desired number of pairs from two lists
         if num_pairs >= len(within_clade_pairs):
             within_clade_pairs = within_clade_pairs

@@ -30,12 +30,15 @@ for filename in os.listdir(ckpt_path):
 
     third_pass_df = pd.DataFrame()
     third_pass_df['pairs'] = data['pairs']
-    third_pass_df['clonal snps'] = data['clonal snps']
+    third_pass_df['clonal divs'] = data['clonal divs']
+    third_pass_df['transfer snps'] = data['transfer snps']
+    third_pass_df['genome lengths'] = data['genome lengths']
+    third_pass_df['clonal snps'] = third_pass_df['clonal divs'] * third_pass_df['genome lengths']
     third_pass_df['transfer counts'] = transfer_counts
     third_pass_df['total transfer lengths'] = full_lengths
 
-    total_blocks = first_pass_df[first_pass_df['pair_idxs'].isin(data['pairs'])]['num_total_blocks']
-    third_pass_df['genome lengths'] = total_blocks.to_numpy() * config.first_pass_block_size
+    # total_blocks = first_pass_df[first_pass_df['pair_idxs'].isin(data['pairs'])]['num_total_blocks']
+    # third_pass_df['genome lengths'] = total_blocks.to_numpy() * config.first_pass_block_size
     third_pass_df['clonal fractions'] = 1 - third_pass_df['total transfer lengths'] / \
                                        third_pass_df['genome lengths'].astype(float)
     # one more round of clonal fraction cutoff based on detected transfers

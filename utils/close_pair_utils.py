@@ -260,8 +260,9 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
         starts.append(np.concatenate([s[i] for s in all_starts]))
         ends.append(np.concatenate([s[i] for s in all_ends]))
     # T_approx = float(np.sum(snp_counts)) / np.sum(clonal_lens)
-    expected_clonal_snp = float(np.sum(snp_counts)) / (block_size * np.sum(clonal_lens)) * len(snp_vec)
-    return starts, ends, expected_clonal_snp
+    transfer_snp = np.sum(snp_vec) - np.sum(snp_counts)
+    clonal_div = float(np.sum(snp_counts)) / (block_size * np.sum(clonal_lens))
+    return starts, ends, transfer_snp, clonal_div, len(snp_vec)
 
 
 def merge_and_filter_transfers_one_pair(starts, ends, merge_threshold=100, filter_threshold=10):

@@ -77,7 +77,9 @@ def process_one_species(species_name, div_cutoff, block_size, debug=False):
     dat['starts'] = []
     dat['ends'] = []
     # dat['T approxs'] = []
-    dat['clonal snps'] = []
+    dat['clonal divs'] = []
+    dat['transfer snps'] = []
+    dat['genome lengths'] = []
     dat['pairs'] = list(good_pairs)
     processed_count = 0
     for pair in good_pairs:
@@ -85,7 +87,7 @@ def process_one_species(species_name, div_cutoff, block_size, debug=False):
         chromosomes = good_chromo[snp_mask]
         try:
             # starts, ends, T_approx = close_pair_utils.fit_and_count_transfers_all_chromosomes(
-            starts, ends, clonal_snp = close_pair_utils.fit_and_count_transfers_all_chromosomes(
+            starts, ends, transfer_snp, clonal_div, genome_len = close_pair_utils.fit_and_count_transfers_all_chromosomes(
                 snp_vec, chromosomes, cphmm, block_size, clade_cutoff_bin=clade_cutoff_bin)
         except:
             e = sys.exc_info()[0]
@@ -96,7 +98,9 @@ def process_one_species(species_name, div_cutoff, block_size, debug=False):
         dat['starts'].append(starts)
         dat['ends'].append(ends)
         # dat['T approxs'].append(T_approx)
-        dat['clonal snps'].append(clonal_snp)
+        dat['transfer snps'].append(transfer_snp)
+        dat['clonal divs'].append(clonal_div)
+        dat['genome lengths'].append(genome_len)
 
         processed_count += 1
         if processed_count % 100 == 0:
