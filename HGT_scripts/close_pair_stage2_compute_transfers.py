@@ -76,10 +76,10 @@ def process_one_species(species_name, div_cutoff, block_size, debug=False):
     dat = dict()
     dat['starts'] = []
     dat['ends'] = []
-    # dat['T approxs'] = []
-    dat['clonal divs'] = []
+    dat['clonal snps'] = []
     dat['transfer snps'] = []
     dat['genome lengths'] = []
+    dat['clonal lengths'] = []
     dat['pairs'] = list(good_pairs)
     processed_count = 0
     for pair in good_pairs:
@@ -87,7 +87,8 @@ def process_one_species(species_name, div_cutoff, block_size, debug=False):
         chromosomes = good_chromo[snp_mask]
         try:
             # starts, ends, T_approx = close_pair_utils.fit_and_count_transfers_all_chromosomes(
-            starts, ends, transfer_snp, clonal_div, genome_len = close_pair_utils.fit_and_count_transfers_all_chromosomes(
+            starts, ends, transfer_snp, clonal_snp, genome_len, clonal_len = \
+                close_pair_utils.fit_and_count_transfers_all_chromosomes(
                 snp_vec, chromosomes, cphmm, block_size, clade_cutoff_bin=clade_cutoff_bin)
         except:
             e = sys.exc_info()[0]
@@ -97,10 +98,10 @@ def process_one_species(species_name, div_cutoff, block_size, debug=False):
             raise e
         dat['starts'].append(starts)
         dat['ends'].append(ends)
-        # dat['T approxs'].append(T_approx)
         dat['transfer snps'].append(transfer_snp)
-        dat['clonal divs'].append(clonal_div)
+        dat['clonal snps'].append(clonal_snp)
         dat['genome lengths'].append(genome_len)
+        dat['clonal lengths'].append(clonal_len)
 
         processed_count += 1
         if processed_count % 100 == 0:
@@ -113,9 +114,9 @@ logging.basicConfig(
     level=logging.INFO,
     datefmt='%H:%M:%S')
 
-CLONAL_FRAC_CUTOFF = config.clonal_fraction_cutoff
+CLONAL_FRAC_CUTOFF = 0.5  # config.clonal_fraction_cutoff
 BLOCK_SIZE = config.second_pass_block_size
-DEBUG = True
+DEBUG = False
 
 black_list = ['Bacteroides_xylanisolvens_57185', # for having extremely short contigs and short total core genome
               'Escherichia_coli_58110'] # for having extremely short contigs

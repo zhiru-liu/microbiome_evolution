@@ -85,68 +85,68 @@ def plot_cvs_comparison(ax, thresholds, real_cvs, sim_cvs):
     ax.set_xlabel("Sharing threshold (4D syn sites)")
     ax.set_ylabel("coefficient of variation")
 
+if __name__ == "__main__":
+    # set up figure
+    mpl.rcParams['font.size'] = 7
+    mpl.rcParams['lines.linewidth'] = 1
+    mpl.rcParams['legend.frameon']  = False
+    mpl.rcParams['legend.fontsize']  = 'small'
 
-# set up figure
-mpl.rcParams['font.size'] = 7
-mpl.rcParams['lines.linewidth'] = 1
-mpl.rcParams['legend.frameon']  = False
-mpl.rcParams['legend.fontsize']  = 'small'
+    # setting up grids
+    fig = plt.figure(figsize=(7, 5))
+    outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[3.5, 2], hspace=0.4, figure=fig)
+    pileup_grid = gridspec.GridSpecFromSubplotSpec(ncols=1, nrows=2, height_ratios=[1, 1], hspace=0.4, subplot_spec=outer_grid[0])
+    top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[4, 1], wspace=0.1, subplot_spec=pileup_grid[0])
+    mid_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[4, 1], wspace=0.1, subplot_spec=pileup_grid[1])
+    low_grid = gridspec.GridSpecFromSubplotSpec(1, 3, width_ratios=[1, 1, 0.5], wspace=0.7, subplot_spec=outer_grid[1])
+    spectrum_grid = gridspec.GridSpecFromSubplotSpec(1, 4, width_ratios=[1, 1, 1, 1], wspace=0.4, subplot_spec=low_grid[0])
 
-# setting up grids
-fig = plt.figure(figsize=(7, 5))
-outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[3.5, 2], hspace=0.4, figure=fig)
-pileup_grid = gridspec.GridSpecFromSubplotSpec(ncols=1, nrows=2, height_ratios=[1, 1], hspace=0.4, subplot_spec=outer_grid[0])
-top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[4, 1], wspace=0.1, subplot_spec=pileup_grid[0])
-mid_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[4, 1], wspace=0.1, subplot_spec=pileup_grid[1])
-low_grid = gridspec.GridSpecFromSubplotSpec(1, 3, width_ratios=[1, 1, 0.5], wspace=0.7, subplot_spec=outer_grid[1])
-spectrum_grid = gridspec.GridSpecFromSubplotSpec(1, 4, width_ratios=[1, 1, 1, 1], wspace=0.4, subplot_spec=low_grid[0])
+    # setting up axes
+    pileup_ax_sim = fig.add_subplot(top_grid[0])
+    pileup_ax_real = fig.add_subplot(mid_grid[0])
+    histo_ax_sim = fig.add_subplot(top_grid[1])
+    histo_ax_real = fig.add_subplot(mid_grid[1])
+    spectrum_axes = [fig.add_subplot(x) for x in spectrum_grid]
+    cv_ax = fig.add_subplot(low_grid[1])
 
-# setting up axes
-pileup_ax_sim = fig.add_subplot(top_grid[0])
-pileup_ax_real = fig.add_subplot(mid_grid[0])
-histo_ax_sim = fig.add_subplot(top_grid[1])
-histo_ax_real = fig.add_subplot(mid_grid[1])
-spectrum_axes = [fig.add_subplot(x) for x in spectrum_grid]
-cv_ax = fig.add_subplot(low_grid[1])
+    # loading necessary data
+    real_data_save_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', 'Bacteroides_vulgatus_57955')
+    thresholds = np.loadtxt(os.path.join(real_data_save_path, 'thresholds.txt'))
 
-# loading necessary data
-real_data_save_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', 'Bacteroides_vulgatus_57955')
-thresholds = np.loadtxt(os.path.join(real_data_save_path, 'thresholds.txt'))
+    spectra_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'local_hap', 'local_haplotype_spectra.json')
+    all_hap_spectra = json.load(open(spectra_path, 'r'))
 
-spectra_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'local_hap', 'local_haplotype_spectra.json')
-all_hap_spectra = json.load(open(spectra_path, 'r'))
+    cvs_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'b_vulgatus', 'cv.csv')
+    sim_cvs = np.loadtxt(cvs_path)
 
-cvs_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'b_vulgatus', 'cv.csv')
-sim_cvs = np.loadtxt(cvs_path)
+    # plot one species
+    ind_to_plot = [0, 3, 6] # only showing three thresholds
+    histo_bins, real_cumu_runs = plot_single_side(
+        os.path.join(real_data_save_path, 'cutoff_0.001.csv'),
+        thresholds, pileup_ax_real, histo_ax_real, ind_to_plot=ind_to_plot)
 
-# plot one species
-ind_to_plot = [0, 3, 6] # only showing three thresholds
-histo_bins, real_cumu_runs = plot_single_side(
-    os.path.join(real_data_save_path, 'cutoff_0.001.csv'),
-    thresholds, pileup_ax_real, histo_ax_real, ind_to_plot=ind_to_plot)
+    # plot one simulation
+    save_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'b_vulgatus')
+    plot_single_side(os.path.join(save_path, '4.txt'), thresholds, pileup_ax_sim, histo_ax_sim,
+                     ind_to_plot=ind_to_plot, histo_bins=histo_bins, legend=False, xlabel=False)
 
-# plot one simulation
-save_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'b_vulgatus')
-plot_single_side(os.path.join(save_path, '4.txt'), thresholds, pileup_ax_sim, histo_ax_sim,
-                 ind_to_plot=ind_to_plot, histo_bins=histo_bins, legend=False, xlabel=False)
+    # plot haplotype spectra
+    plot_haplotype_spectrum(spectrum_axes, all_hap_spectra, ['a', 'b', 'c', 'neutral'])
 
-# plot haplotype spectra
-plot_haplotype_spectrum(spectrum_axes, all_hap_spectra, ['a', 'b', 'c', 'neutral'])
+    # plot CV comparison
+    real_cv = np.std(real_cumu_runs, axis=0) / np.mean(real_cumu_runs, axis=0)
+    plot_cvs_comparison(cv_ax, thresholds, real_cv, sim_cvs)
 
-# plot CV comparison
-real_cv = np.std(real_cumu_runs, axis=0) / np.mean(real_cumu_runs, axis=0)
-plot_cvs_comparison(cv_ax, thresholds, real_cv, sim_cvs)
+    # annotating regions
+    regions = [[61000, 63000], [143000, 145000], [223000, 225000]]
+    for x,y in regions:
+        pileup_ax_real.axvspan(x, y, alpha=0.3, color='red')
+        pileup_ax_sim.axvspan(x, y, alpha=0.3, color='red')
 
-# annotating regions
-regions = [[61000, 63000], [143000, 145000], [223000, 225000]]
-for x,y in regions:
-    pileup_ax_real.axvspan(x, y, alpha=0.3, color='red')
-pileup_ax_sim.axvspan(regions[-1][0], regions[-1][1], alpha=0.3, color='red')
+    # final adjustment of axes limits, labels, ...
+    pileup_ax_real.set_title("Empirical")
+    pileup_ax_sim.set_title("Simulated")
+    pileup_ax_sim.set_xlim(pileup_ax_real.get_xlim())
 
-# final adjustment of axes limits, labels, ...
-pileup_ax_real.set_title("Empirical")
-pileup_ax_sim.set_title("Simulated")
-pileup_ax_sim.set_xlim(pileup_ax_real.get_xlim())
-
-# finally saving figure
-fig.savefig('test_pileup.pdf', bbox_inches='tight')
+    # finally saving figure
+    fig.savefig('test_pileup.pdf', bbox_inches='tight')

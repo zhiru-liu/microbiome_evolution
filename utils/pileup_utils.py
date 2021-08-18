@@ -1,7 +1,7 @@
 import numpy as np
 import itertools
 import os
-from utils import close_pair_utils, parallel_utils, BSMC_utils
+from utils import close_pair_utils, parallel_utils, BSMC_utils, typical_pair_utils
 import config
 
 
@@ -28,13 +28,16 @@ def compute_pileup_for_clusters(cluster_dict, get_run_start_end, genome_len, thr
         tmp_runs = np.zeros(cumu_runs.shape)
         for l, m in itertools.product(cluster_dict[i], cluster_dict[j]):
             # l, m are sample ids
-            num_pairs += 1
             all_start_end = get_run_start_end(l, m, thresholds)
+            if all_start_end is None:
+                continue
+            num_pairs += 1
             for k, dat in enumerate(all_start_end):
                 # k represent which threshold
                 for start, end in dat:
                     tmp_runs[start:end, k] += 1
-        tmp_runs /= num_pairs
+        if num_pairs > 0:
+            tmp_runs /= num_pairs
         cumu_runs += tmp_runs
     cumu_runs /= num_comparisons
     return cumu_runs
@@ -52,6 +55,8 @@ def compute_pileup_for_within_host(dh, thresholds):
     good_chromo = dh.chromosomes[dh.general_mask]
 
     within_cumu_runs = np.zeros([np.sum(dh.general_mask), len(thresholds)])
+    if len(single_subject_samples) == 0:
+        return None
     for pair in single_subject_samples:
         # get the snp data
         snp_vec, coverage_arr = dh.get_snp_vector(pair)
@@ -142,6 +147,11 @@ class Pileup_Helper:
         pair = (i1, i2)
         # get the snp data
         snp_vec, coverage_arr = self.dh.get_snp_vector(pair)
+        # check whether pair has lots of clonal regions
+        clonal_frac = close_pair_utils.compute_clonal_fraction(snp_vec, config.first_pass_block_size)
+        if clonal_frac > config.typical_clonal_fraction_cutoff:
+            return None
+
         # get the location in the full array
         snp_to_core = np.nonzero(coverage_arr)[0]
         snp_genome_locs = snp_to_core[np.nonzero(snp_vec)[0]]

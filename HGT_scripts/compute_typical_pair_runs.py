@@ -1,11 +1,8 @@
-import numpy as np
-import itertools
-import random
 import os
 import pickle
 import sys
 sys.path.append("..")
-from utils import close_pair_utils, parallel_utils, typical_pair_utils
+from utils import parallel_utils, typical_pair_utils
 import config
 
 

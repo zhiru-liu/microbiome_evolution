@@ -30,10 +30,12 @@ for filename in os.listdir(ckpt_path):
 
     third_pass_df = pd.DataFrame()
     third_pass_df['pairs'] = data['pairs']
-    third_pass_df['clonal divs'] = data['clonal divs']
+    third_pass_df['clonal snps'] = data['clonal snps']
     third_pass_df['transfer snps'] = data['transfer snps']
     third_pass_df['genome lengths'] = data['genome lengths']
-    third_pass_df['clonal snps'] = third_pass_df['clonal divs'] * third_pass_df['genome lengths']
+    third_pass_df['clonal lengths'] = data['clonal lengths']
+    third_pass_df['clonal divs'] = third_pass_df['clonal snps'] / third_pass_df['clonal lengths'].astype(float)
+    third_pass_df['expected clonal snps'] = third_pass_df['clonal divs'] * third_pass_df['genome lengths']
     third_pass_df['transfer counts'] = transfer_counts
     third_pass_df['total transfer lengths'] = full_lengths
 

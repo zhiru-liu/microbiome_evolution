@@ -70,6 +70,9 @@ first_pass_block_size = 1000
 second_pass_block_size = 10
 empirical_histogram_bins = 40
 
+# for typical pair analysis
+typical_clonal_fraction_cutoff = 0.15
+
 # Comment this out
 #from parsers.parse_HMP_data import *
 # and uncomment this

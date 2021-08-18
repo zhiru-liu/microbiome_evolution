@@ -42,6 +42,12 @@ def to_block(bool_array, block_size):
     return counts
 
 
+def compute_clonal_fraction(snp_array, block_size):
+    snp_blocks = to_block(snp_array, block_size)
+    nonzeros = np.sum(snp_blocks == 0)
+    return float(nonzeros) / len(snp_blocks)
+
+
 def block_loc_to_genome_loc(block_loc, contig_lengths, block_size, left=True):
     """
     Hacky function to translate a location coordinate in blocks to the correct genome location
@@ -221,7 +227,8 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
     :param chromosomes: Array of same length as snp_vec, containing the chromosome of each site
     :param model: HMM model
     :param block_size: size of the block
-    :return: triplet of starts and ends of transfers, and wall clock estimate
+    :return: tuple of starts and ends of transfers, and # transferred snps, # clonal snps, genome length and
+    clonal region length
     """
     all_starts = []
     all_ends = []
@@ -243,7 +250,8 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
             clonal_len = len(blk_seq)
         else:
             starts, ends, snp_count, clonal_len = _decode_and_count_transfers(
-                blk_seq_fit, model, sequence_with_snps=blk_seq, index_offset=index_offset, clade_cutoff_bin=clade_cutoff_bin)
+                blk_seq_fit, model, sequence_with_snps=blk_seq, index_offset=index_offset,
+                clade_cutoff_bin=clade_cutoff_bin)
         all_starts.append(starts)
         all_ends.append(ends)
         snp_counts.append(snp_count)
@@ -260,9 +268,10 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
         starts.append(np.concatenate([s[i] for s in all_starts]))
         ends.append(np.concatenate([s[i] for s in all_ends]))
     # T_approx = float(np.sum(snp_counts)) / np.sum(clonal_lens)
-    transfer_snp = np.sum(snp_vec) - np.sum(snp_counts)
-    clonal_div = float(np.sum(snp_counts)) / (block_size * np.sum(clonal_lens))
-    return starts, ends, transfer_snp, clonal_div, len(snp_vec)
+    clonal_snp = np.sum(snp_counts)
+    transfer_snp = np.sum(snp_vec) - clonal_snp
+    total_clonal_len = np.sum(clonal_lens) * block_size
+    return starts, ends, transfer_snp, clonal_snp, len(snp_vec), total_clonal_len
 
 
 def merge_and_filter_transfers_one_pair(starts, ends, merge_threshold=100, filter_threshold=10):

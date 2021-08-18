@@ -162,7 +162,7 @@ def compute_good_sample_stats():
 
         csv_file = open(csvpath, 'w')
         writer = csv.writer(csv_file)
-        writer.writerow(['species_name', 'num_samples', 'num_qp_samples',
+        writer.writerow(['species_name', 'num_total_samples', 'num_high_coverage_samples', 'num_qp_samples',
                          'num_good_within_samples'])
 
         for species_name in os.listdir(os.path.join(config.data_directory, 'zarr_snps')):
@@ -171,8 +171,9 @@ def compute_good_sample_stats():
             print("processing %s" % species_name)
             qp_mask, _ = get_QP_sample_mask(species_name)
             good_within_mask, _, _ = get_single_peak_sample_mask(species_name)
+            num_desired_samples = len(diversity_utils.calculate_highcoverage_samples(species_name))
 
-            writer.writerow([species_name, len(qp_mask), np.sum(qp_mask), np.sum(good_within_mask)])
+            writer.writerow([species_name, len(qp_mask), num_desired_samples, np.sum(qp_mask), np.sum(good_within_mask)])
 
         csv_file.close()
 
@@ -443,6 +444,12 @@ def get_QP_sample_mask(species_name):
     highcoverage_samples = set(diversity_utils.calculate_highcoverage_samples(species_name))
     allowed_samples = QP_samples & highcoverage_samples
     return np.isin(sample_names, list(allowed_samples)), sample_names
+
+
+def get_QP_samples(species_name):
+    mask, all_samples = get_QP_sample_mask(species_name)
+    QP_samples = all_samples[mask]
+    return QP_samples
 
 
 def get_single_peak_sample_mask(species_name):

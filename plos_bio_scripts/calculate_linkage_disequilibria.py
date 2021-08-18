@@ -5,14 +5,15 @@ import sys
 import numpy
 import gzip
 
-from utils import diversity_utils, clade_utils, sample_utils
+from utils import diversity_utils, clade_utils, sample_utils, core_gene_utils, typical_pair_utils
 from parsers import parse_midas_data
+from parsers.parse_HMP_data import parse_subject_sample_map
 import calculate_substitution_rates
 from math import fabs
 from numpy.random import choice
 
 ld_directory = '%slinkage_disequilibria/' % (parse_midas_data.data_directory)
-intermediate_filename_template = '%s%s.txt.gz'  
+intermediate_filename_template = '%s%s.txt.gz'
        
 
 low_divergence_threshold = config.between_low_divergence_threshold
@@ -21,11 +22,12 @@ min_sample_size = config.between_host_min_sample_size
 min_ld_sample_size = config.between_host_ld_min_sample_size
 allowed_variant_types = set(['1D','4D'])
 
-def load_ld_map(species_name):
+def load_ld_map(species_name, cf=0):
 
     ld_map = {}
 
-    intermediate_filename = intermediate_filename_template % (ld_directory, species_name)
+    full_ld_directory = "%scf_%s/" % (ld_directory, cf)
+    intermediate_filename = intermediate_filename_template % (full_ld_directory, species_name)
 
     if not os.path.isfile(intermediate_filename):
         return ld_map
@@ -106,23 +108,30 @@ def load_ld_map(species_name):
     return ld_map
 
 if __name__=='__main__':
-
+    ZR_DEBUG = True
 
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", help="Loads only a subset of SNPs for speed", action="store_true")
     parser.add_argument("--chunk-size", type=int, help="max number of records to load", default=1000000000)
     parser.add_argument("--species", help="Name of specific species to run code on", default="all")
+    parser.add_argument("--cf_cutoff", type=float,
+                        help="Clonal fraction cutoff for clustering samples."
+                             "Pairs with cf greater than this number will be clustered together"
+                             "If zero, use divergence to cluster samples.",
+                        default=0)
 
     args = parser.parse_args()
 
     debug = args.debug
     chunk_size = args.chunk_size
     species=args.species
+    cf_cutoff = args.cf_cutoff
+    cluster_by_cf = cf_cutoff != 0
 
     # Load subject and sample metadata
     sys.stderr.write("Loading sample metadata...\n")
-    subject_sample_map = sample_utils.parse_subject_sample_map()
+    subject_sample_map = parse_subject_sample_map()
     sys.stderr.write("Done!\n")
     
     good_species_list = parse_midas_data.parse_good_species_list()
@@ -150,9 +159,14 @@ if __name__=='__main__':
     record_strs = [", ".join(['Species', 'CladeType', 'VariantType', 'Pi']+distance_strs)]
     
     os.system('mkdir -p %s' % ld_directory)
+    full_ld_directory = "%scf_%s/" % (ld_directory, cf_cutoff)
+    os.system('mkdir -p %s' % full_ld_directory)
 
-    
     for species_name in good_species_list:
+        intermediate_filename = intermediate_filename_template % (full_ld_directory, species_name)
+        if os.path.exists(intermediate_filename):
+            sys.stderr.write("%s already processed...\n" % species_name)
+            continue
 
         sys.stderr.write("Loading haploid samples...\n")
         # Only plot samples above a certain depth threshold that are "haploids"
@@ -168,24 +182,36 @@ if __name__=='__main__':
         # Only consider one sample per person
         snp_samples = snp_samples[sample_utils.calculate_unique_samples(subject_sample_map, sample_list=snp_samples)]
 
-
         if len(snp_samples) < min_sample_size:
             sys.stderr.write("Not enough hosts!\n")
             continue
         else:
-            sys.stderr.write("Found %d unique hosts!\n" % len(snp_samples)) 
+            sys.stderr.write("Found %d unique hosts!\n" % len(snp_samples))
 
-        # Load divergence matrices 
+        # TODO: ZR: could cluster sample by clonal fraction instead of divergence here
+
+        # Load divergence matrices
         sys.stderr.write("Loading pre-computed substitution rates for %s...\n" % species_name)
         substitution_rate_map = calculate_substitution_rates.load_substitution_rate_map(species_name)
-        sys.stderr.write("Calculating matrix...\n")
-        dummy_samples, snp_difference_matrix, snp_opportunity_matrix = calculate_substitution_rates.calculate_matrices_from_substitution_rate_map(substitution_rate_map, 'core', allowed_samples=snp_samples)
-        snp_samples = numpy.array(dummy_samples)
-        substitution_rate = snp_difference_matrix*1.0/(snp_opportunity_matrix+(snp_opportunity_matrix==0))
-        sys.stderr.write("Done!\n")
+        if cluster_by_cf:
+            sys.stderr.write("Loading pre-computed clonal fractions for %s...\n" % species_name)
+            cfmat = typical_pair_utils.load_clonal_frac_mat(species_name, desired_samples=snp_samples)
+            if cfmat is None:
+                sys.stderr.write("No precomputed clonal fraction matrix found... skipping %s\n" % species_name)
+                continue
+            pdmat = 1 - cfmat  # diverged fraction
+            cluster_d = 1 - cf_cutoff
+        else:
+            sys.stderr.write("Calculating substitution rate matrix...\n")
+            dummy_samples, snp_difference_matrix, snp_opportunity_matrix = calculate_substitution_rates.calculate_matrices_from_substitution_rate_map(substitution_rate_map, 'core', allowed_samples=snp_samples)
+            snp_samples = numpy.array(dummy_samples)
+            substitution_rate = snp_difference_matrix*1.0/(snp_opportunity_matrix+(snp_opportunity_matrix==0))
+            sys.stderr.write("Done!\n")
+            pdmat = substitution_rate
+            cluster_d = low_divergence_threshold
 
-        sys.stderr.write("Clustering samples with low divergence...\n")
-        coarse_grained_idxs, coarse_grained_cluster_list = clade_utils.cluster_samples(substitution_rate, min_d=low_divergence_threshold) # NRG: what is this returning?
+        sys.stderr.write("Clustering samples...\n")
+        coarse_grained_idxs, coarse_grained_cluster_list = clade_utils.cluster_samples(pdmat, min_d=cluster_d) # NRG: what is this returning?
 
         coarse_grained_samples = snp_samples[coarse_grained_idxs]
         clade_sets = clade_utils.load_manual_clades(species_name)
@@ -219,7 +245,8 @@ if __name__=='__main__':
         # Clunky, but necessary to limit memory usage on cluster
 
         sys.stderr.write("Loading core genes...\n")
-        core_genes = parse_midas_data.load_core_genes(species_name)
+        # core_genes = parse_midas_data.load_core_genes(species_name)
+        core_genes = core_gene_utils.parse_core_genes(species_name)
         sys.stderr.write("Done! Core genome consists of %d genes\n" % len(core_genes))
 
         # Load SNP information for species_name
@@ -470,7 +497,6 @@ if __name__=='__main__':
     
          
         sys.stderr.write("Writing intermediate file...\n")
-        intermediate_filename = intermediate_filename_template % (ld_directory, species_name)
         file = gzip.open(intermediate_filename,"w")
         record_str = "\n".join(record_strs)
         file.write(record_str)
@@ -480,7 +506,7 @@ if __name__=='__main__':
     sys.stderr.write("Done looping over species!\n")
     
     sys.stderr.write("Testing loading...\n")
-    ld_map = load_ld_map(good_species_list[0])
+    ld_map = load_ld_map(good_species_list[0], cf=cf_cutoff)
     sys.stderr.write("Done!\n")
 
  
