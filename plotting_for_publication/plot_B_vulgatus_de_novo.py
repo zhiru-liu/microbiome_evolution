@@ -42,7 +42,7 @@ def plot_local_polymorphism(ax, sample_id):
     return
 
 
-def plot_allele_freq_zoomin(axes, dh, sample_pair):
+def plot_allele_freq_zoomin(axes, histo_axes, dh, sample_pair):
     idx1 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
     idx2 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[1])
 
@@ -57,14 +57,21 @@ def plot_allele_freq_zoomin(axes, dh, sample_pair):
     mean_depth_after = compute_mean_depth(idx2)
 
     # get raw allele frequencies polarized by first time pt
-    a_before, d_before = filter_raw_data(idx1, start, end)
-    a_after, d_after = filter_raw_data(idx2, start, end)
+    a_before, d_before = filter_raw_data(idx1, 0, -1)
+    a_after, d_after = filter_raw_data(idx2, 0, -1)
     good_sites = (d_before > 0) & (d_after > 0)
     freq_before = np.nan_to_num(a_before / d_before.astype(float))[good_sites]
     freq_after = np.nan_to_num(a_after / d_after.astype(float))[good_sites]
     to_flip = freq_before > 0.5
     freq_before[to_flip] = 1 - freq_before[to_flip]
     freq_after[to_flip] = 1 - freq_after[to_flip]
+
+    # plot the full site frequency spectrum
+    histo_axes[0].hist(freq_before)
+    histo_axes[1].hist(freq_before)
+
+    freq_before = freq_before[start:end]
+    freq_after = freq_after[start:end]
 
     xs = np.arange(len(freq_before))
     axes[0].plot(xs[freq_before < 0.1], freq_before[freq_before < 0.1], '.',
@@ -128,6 +135,6 @@ histo_ax1 = fig.add_subplot(histo_grid[0])
 histo_ax2= fig.add_subplot(histo_grid[1])
 
 # plotting
-plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], dh, ['700114218', '700171115'])
+plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], [histo_ax1, histo_ax2], dh, ['700114218', '700171115'])
 
 fig.savefig('test_denovo.pdf', bbox_inches="tight")

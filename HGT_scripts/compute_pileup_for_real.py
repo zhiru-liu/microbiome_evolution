@@ -65,17 +65,15 @@ if __name__ == '__main__':
     # thresholds = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500]
     # thresholds = [250, 350, 500, 750, 1000, 1250, 1500]
     # species_name = 'Bacteroides_vulgatus_57955'
-    species_name = 'Eubacterium_rectale_56927'
-    theta = typical_pair_utils.compute_theta(species_name)
-    thresholds = np.array([10, 20, 30, 40]) / theta
-    compute_between_host(species_name, thresholds)
-    compute_within_host(species_name, thresholds)
+    # species_name = 'Eubacterium_rectale_56927'
 
     # compute_within_host(species_name, thresholds, b_vulgatus_between_clade=True)
     # compute_B_vulgatus_between_clade(thresholds)
 
-    # for species_name in contig_data:
-    #     if contig_data[species_name] > 50:
-    #         continue
-    #     compute_between_host(species_name, thresholds)
-        # compute_within_host(species_name, thresholds)
+    for species_name in contig_data:
+        if contig_data[species_name] > 50:
+            continue
+        theta = typical_pair_utils.compute_theta(species_name)
+        thresholds = np.array([10, 20, 30, 40]) / theta
+        compute_between_host(species_name, thresholds)
+        compute_within_host(species_name, thresholds)

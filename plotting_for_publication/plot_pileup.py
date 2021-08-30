@@ -12,12 +12,10 @@ import config
 from utils import pileup_utils
 
 
-def plot_single_side(ckpt_path, threshold_lens, pileup_ax, histo_ax,
-                     ind_to_plot=None, histo_bins=None, legend=True, xlabel=True):
+def plot_single_side(ckpt_path, threshold_lens, pileup_ax,
+                     ind_to_plot=None, legend=True, xlabel=True):
     # also returns bins in histogram plot + cumu_runs
     cumu_runs = np.loadtxt(ckpt_path)
-    if histo_bins is None:
-        histo_bins = np.linspace(0, np.max(cumu_runs), 100)
 
     # decide which of the cumu_runs to plot
     if ind_to_plot is None:
@@ -28,11 +26,8 @@ def plot_single_side(ckpt_path, threshold_lens, pileup_ax, histo_ax,
     for i in to_plot:
         dat = cumu_runs[:, i]
         pileup_ax.plot(dat, linewidth=1, label="{}".format(int(threshold_lens[i])))
-        _ = histo_ax.hist(dat, bins=histo_bins, orientation='horizontal')
     pileup_ax.set_ylim([0, 0.35])
-    histo_ax.set_ylim([0, 0.35])
     pileup_ax.set_xlim([0, cumu_runs.shape[0]])
-    histo_ax.set_yticklabels([])
     if xlabel:
         pileup_ax.set_xlabel('4D core genome location')
     else:
@@ -40,7 +35,7 @@ def plot_single_side(ckpt_path, threshold_lens, pileup_ax, histo_ax,
     if legend:
         pileup_ax.legend()
     pileup_ax.set_ylabel('sharing fraction')
-    return histo_bins, cumu_runs
+    return cumu_runs
 
 
 def plot_haplotype_spectrum(axes, all_spectra, spectra_titles):
@@ -102,8 +97,8 @@ if __name__ == "__main__":
     spectrum_grid = gridspec.GridSpecFromSubplotSpec(1, 4, width_ratios=[1, 1, 1, 1], wspace=0.4, subplot_spec=low_grid[0])
 
     # setting up axes
-    pileup_ax_sim = fig.add_subplot(top_grid[0])
-    pileup_ax_real = fig.add_subplot(mid_grid[0])
+    pileup_ax_sim = fig.add_subplot(mid_grid[0])
+    pileup_ax_real = fig.add_subplot(top_grid[0])
     histo_ax_sim = fig.add_subplot(top_grid[1])
     histo_ax_real = fig.add_subplot(mid_grid[1])
     spectrum_axes = [fig.add_subplot(x) for x in spectrum_grid]
@@ -123,14 +118,14 @@ if __name__ == "__main__":
 
     # plot one species
     ind_to_plot = [0, 3, 6] # only showing three thresholds
-    histo_bins, real_cumu_runs = plot_single_side(
-        os.path.join(real_data_save_path, 'cutoff_0.001.csv'),
-        thresholds, pileup_ax_real, histo_ax_real, ind_to_plot=ind_to_plot)
+    real_cumu_runs = plot_single_side(
+        os.path.join(real_data_save_path, 'between_host.csv'),
+        thresholds, pileup_ax_real, ind_to_plot=ind_to_plot)
 
     # plot one simulation
     save_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'b_vulgatus')
-    plot_single_side(os.path.join(save_path, '4.txt'), thresholds, pileup_ax_sim, histo_ax_sim,
-                     ind_to_plot=ind_to_plot, histo_bins=histo_bins, legend=False, xlabel=False)
+    plot_single_side(os.path.join(save_path, '4.txt'), thresholds, pileup_ax_sim,
+                     ind_to_plot=ind_to_plot, legend=False, xlabel=False)
 
     # plot haplotype spectra
     plot_haplotype_spectrum(spectrum_axes, all_hap_spectra, ['a', 'b', 'c', 'neutral'])
