@@ -85,6 +85,12 @@ def parse_annotated_snps_to_zarr(snp_filename, zarr_dir, total_num_snps, zarr_ch
     info_file.close()
 
 
+def get_snp_info(species_name):
+    data_dir = os.path.join(
+        config.data_directory, 'zarr_snps', species_name, 'site_info.txt')
+    return parse_snp_info(data_dir)
+
+
 def parse_snp_info(info_filename):
     with open(info_filename, mode='r') as f:
         info_items = f.read().splitlines()
@@ -104,7 +110,13 @@ def parse_snp_info(info_filename):
     return chromosomes, locations, gene_names, variants, pvalues
 
 
-def get_general_site_mask(gene_names, variants, pvalues, allowed_genes, allowed_variants=['4D']):
+def get_general_site_mask(species_name, allowed_variants=['4D']):
+    core_genes = core_gene_utils.get_sorted_core_genes(species_name)
+    res = get_snp_info(species_name)
+    return _get_general_site_mask(res[2], res[3], res[4], core_genes, allowed_variants=allowed_variants)
+
+
+def _get_general_site_mask(gene_names, variants, pvalues, allowed_genes, allowed_variants=['4D']):
     # allowed genes must be a list; cannot be a set!
     core_gene_mask = np.isin(gene_names, allowed_genes)
     variant_mask = np.isin(variants, allowed_variants)
@@ -250,7 +262,7 @@ class DataHoarder:
         t0 = time.time()
         core_genes = core_gene_utils.get_sorted_core_genes(species_name)
         # len = total number of snps
-        self.general_mask = get_general_site_mask(
+        self.general_mask = _get_general_site_mask(
                 self.gene_names, self.variants, self.pvalues, core_genes,
                 allowed_variants=allowed_variants)
         self.core_chromosomes = self.chromosomes[self.general_mask]
