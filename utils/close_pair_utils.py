@@ -23,7 +23,7 @@ def find_close_pairs(cutoff, div_mat, good_idxs):
 
 
 def length_to_num_blocks(seq_len, block_size):
-    # Magical formula the works for all cases
+    # Magical formula that works for all cases
     return (seq_len + block_size - 1) // block_size
 
 
@@ -40,6 +40,24 @@ def to_block(bool_array, block_size):
     bins = np.arange(0, num_blocks * block_size + 1, block_size)
     counts, _ = np.histogram(np.nonzero(bool_array), bins)
     return counts
+
+
+def to_block_seq_all_chromo(bool_array, chromosomes, block_size):
+    """
+    For sequence with multiple chromosomes, each sub sequence is converted to blocks separately
+    and concatenated together. Main usage is to use block sequence index compatible saved in
+    _decode_and_count_transfers
+    :param bool_array:
+    :param chromosomes: array of chromosome names. Same length as bool_array
+    :param block_size:
+    :return: An array of concatenated block sequences
+    """
+    all_seqs = []
+    for chromo in pd.unique(chromosomes):
+        # iterate over contigs; similar to run length dist calculation
+        subvec = bool_array[chromosomes==chromo]
+        all_seqs.append(to_block(subvec, block_size).reshape((-1, 1)))
+    return np.concatenate(all_seqs)
 
 
 def compute_clonal_fraction(snp_array, block_size):
@@ -227,7 +245,7 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
     :param chromosomes: Array of same length as snp_vec, containing the chromosome of each site
     :param model: HMM model
     :param block_size: size of the block
-    :return: tuple of starts and ends of transfers, and # transferred snps, # clonal snps, genome length and
+    :return: tuple of starts and ends of transfers (in blocks), and # transferred snps, # clonal snps, genome length and
     clonal region length
     """
     all_starts = []
@@ -235,7 +253,7 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
     snp_counts = []
     clonal_lens = []
     index_offset = 0
-    for chromo in np.unique(chromosomes):
+    for chromo in pd.unique(chromosomes):
         # iterate over contigs; similar to run length dist calculation
         subvec = snp_vec[chromosomes==chromo]
         blk_seq = to_block(subvec, block_size).reshape((-1, 1))
@@ -386,7 +404,7 @@ def prepare_x_y(df):
     # exp_snps = df['num_clonal_snps'] / clonal_fraction
     # x = exp_snps.to_numpy()
     # y = df['transfer_len'].to_numpy()
-    x = df['clonal snps'].to_numpy()
+    x = df['clonal divs'].to_numpy()
     y = df['transfer counts'].to_numpy()
     return x, y
 

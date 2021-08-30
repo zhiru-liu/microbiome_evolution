@@ -44,9 +44,9 @@ for filename in os.listdir(ckpt_path):
     third_pass_df['clonal fractions'] = 1 - third_pass_df['total transfer lengths'] / \
                                        third_pass_df['genome lengths'].astype(float)
     # one more round of clonal fraction cutoff based on detected transfers
-    third_pass_df = third_pass_df[third_pass_df['clonal fractions'] >= config.clonal_fraction_cutoff]
-    print("Before additional clonal fraction filter, {} pairs".format(len(data['pairs'])))
-    print("After filter, {} pairs".format(third_pass_df.shape[0]))
+    # third_pass_df = third_pass_df[third_pass_df['clonal fractions'] >= config.clonal_fraction_cutoff]
+    # print("Before additional clonal fraction filter, {} pairs".format(len(data['pairs'])))
+    # print("After filter, {} pairs".format(third_pass_df.shape[0]))
 
     third_pass_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass', species_name + '.pickle'))
     all_transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass', species_name + '_all_transfers.pickle'))

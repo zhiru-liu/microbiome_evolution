@@ -64,7 +64,7 @@ def plot_haplotype_spectrum(axes, all_spectra, spectra_titles):
         axes[i].set_title(spectra_titles[i])
 
 
-def plot_cvs_comparison(ax, thresholds, real_cvs, sim_cvs):
+def plot_cvs_comparison(ax, real_thresholds, sim_thresholds, real_cvs, sim_cvs):
     # currently sim params are hard coded
     rbymus = [0.1, 0.5, 1, 1.5, 2]
     lambdas = [5000, 10000]
@@ -78,9 +78,9 @@ def plot_cvs_comparison(ax, thresholds, real_cvs, sim_cvs):
             l = lambdas[j]
             idx = i * len(lambdas) + j
             mean_cv = np.mean(sim_cvs[idx:idx + num_reps, :], axis=0)
-            ax.plot(thresholds, mean_cv, marker=next(markers), color=c, label='r/mu=%.1f l=%d' % (rbymu, l))
+            ax.plot(sim_thresholds, mean_cv, marker=next(markers), color=c, label='r/mu=%.1f l=%d' % (rbymu, l))
 
-    ax.plot(thresholds, real_cvs, 'r--', label="B. vulgatus")
+    ax.plot(real_thresholds, real_cvs, 'r--', label="B. vulgatus")
     ax.legend(bbox_to_anchor=(1, 1))
     ax.set_xlabel("Sharing threshold (4D syn sites)")
     ax.set_ylabel("coefficient of variation")
@@ -118,6 +118,8 @@ if __name__ == "__main__":
 
     cvs_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'b_vulgatus', 'cv.csv')
     sim_cvs = np.loadtxt(cvs_path)
+    threshold_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'b_vulgatus', 'thresholds.txt')
+    sim_thresholds = np.loadtxt(os.path.join(threshold_path))
 
     # plot one species
     ind_to_plot = [0, 3, 6] # only showing three thresholds
@@ -135,7 +137,7 @@ if __name__ == "__main__":
 
     # plot CV comparison
     real_cv = np.std(real_cumu_runs, axis=0) / np.mean(real_cumu_runs, axis=0)
-    plot_cvs_comparison(cv_ax, thresholds, real_cv, sim_cvs)
+    plot_cvs_comparison(cv_ax, thresholds, sim_thresholds, real_cv, sim_cvs)
 
     # annotating regions
     regions = [[61000, 63000], [143000, 145000], [223000, 225000]]

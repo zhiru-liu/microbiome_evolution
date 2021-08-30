@@ -112,6 +112,29 @@ def get_general_site_mask(gene_names, variants, pvalues, allowed_genes, allowed_
     return core_gene_mask & variant_mask & p_value_mask
 
 
+def get_contig_lengths(good_chromo):
+    chromos = pd.unique(good_chromo)
+    contig_lengths = [np.sum(good_chromo==chromo) for chromo in chromos]
+    return contig_lengths
+
+
+def get_core_genome_contig_lengths(species_name, allowed_variants=['4D']):
+    # handy function for computing the contig lengths in core genome coordinates
+    data_dir = os.path.join(config.data_directory, 'zarr_snps', species_name, 'site_info.txt')
+    res = parse_snp_info(data_dir)
+    chromosomes = res[0]
+    gene_names = res[2]
+    variants = res[3]
+    pvalues = res[4]
+
+    core_genes = core_gene_utils.get_sorted_core_genes(species_name)
+    # len = total number of snps
+    general_mask = get_general_site_mask(
+        gene_names, variants, pvalues, core_genes, allowed_variants=allowed_variants)
+    good_chromo = chromosomes[general_mask]
+    return get_contig_lengths(good_chromo)
+
+
 def get_QP_filtered_snps(alt_arr, depth_arr, site_mask, sample_mask):
     selected_depths = depth_arr[:, sample_mask]
     selected_depths = selected_depths[site_mask, :]
@@ -230,6 +253,7 @@ class DataHoarder:
         self.general_mask = get_general_site_mask(
                 self.gene_names, self.variants, self.pvalues, core_genes,
                 allowed_variants=allowed_variants)
+        self.core_chromosomes = self.chromosomes[self.general_mask]
         if (mode == "QP"):
             self.snp_arr, self.covered_arr = get_QP_filtered_snps(
                     rechunked_alt_arr, rechunked_depth_arr, self.general_mask, self.sample_mask)
@@ -396,19 +420,27 @@ def get_within_sample_snp_vector(snp_arr, coverage_arr, sample_id):
     return snp_arr[mask, sample_id], mask
 
 
-def _compute_runs_single_chromosome(snp_vec, locations=None):
+def _compute_runs_single_chromosome(snp_vec, locations=None, return_starts=False):
+    # run includes start->first snp and last snp->end
     # get the locations of snps in the vector
-    site_locations = np.nonzero(snp_vec)[0]
+    padded_vec = np.ones(len(snp_vec) + 2)
+    padded_vec[1:-1] = snp_vec
+    site_locations = np.nonzero(padded_vec)[0]
     if locations is not None:
         locs = locations[site_locations]
     else:
         locs = site_locations
-    return locs[1:] - locs[:-1]
+    runs = locs[1:] - locs[:-1] - 1
+    starts = locs[:-1][runs > 0]
+    runs = runs[runs > 0]
+    if return_starts:
+        return runs, starts
+    return runs
 
 
 def compute_runs_all_chromosomes(snp_vec, chromosomes, locations=None):
     all_runs = []
-    for chromo in np.unique(chromosomes):
+    for chromo in pd.unique(chromosomes):
         subvec = snp_vec[chromosomes==chromo]
         if locations is not None:
             subloc = locations[chromosomes==chromo]
@@ -483,15 +515,6 @@ def get_single_peak_sample_mask(species_name):
     mask[mask] = clean_peak_mask
     good_cutoffs = cutoffs[clean_peak_mask]
     return mask, sample_names, good_cutoffs.astype(float)
-
-
-def get_contig_lengths(good_chromo):
-    contig_lengths = []
-    for chromo in np.unique(good_chromo):
-        # iterate over contigs; similar to run length dist calculation
-        contig_len = np.sum(good_chromo==chromo)
-        contig_lengths.append(contig_len)
-    return contig_lengths
 
 
 def get_contig_boundary(filtered_chromosomes):

@@ -6,16 +6,22 @@ from utils import close_pair_utils, parallel_utils
 import config
 
 
-def load_clonal_frac_mat(species_name, desired_samples=None):
+def load_clonal_frac_mat(species_name, desired_samples=None, between_hosts=True):
     """
     Load precomputed clonal fraction matrix. If desired_samples is supplied, will sort
     matrix according to desired_samples
     :param species_name:
     :param desired_samples: np.array
+    :param between_hosts: whether load the between host array (2d) or within host array (1d)
     :return: np.array of clonal fractions between pairs of QP samples
     """
-    clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
-                               'between_hosts', '%s.csv' % species_name)
+    if between_hosts:
+        clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
+                                   'between_hosts', '%s.csv' % species_name)
+    else:
+        clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
+                                   'within_hosts', '%s.csv' % species_name)
+
     if not os.path.exists(clonal_frac_dir):
         return None
     clonal_frac_mat = np.loadtxt(clonal_frac_dir, delimiter=',')
@@ -25,7 +31,38 @@ def load_clonal_frac_mat(species_name, desired_samples=None):
         QP_samples = parallel_utils.get_QP_samples(species_name)
         name_to_idx = {x:i for i, x in enumerate(QP_samples)}
         desired_idxs = np.array([name_to_idx[x] for x in desired_samples])
-        return clonal_frac_mat[desired_idxs, :][:, desired_idxs]
+        if between_hosts:
+            return clonal_frac_mat[desired_idxs, :][:, desired_idxs]
+        else:
+            return clonal_frac_mat[desired_idxs]
+
+
+def load_pairwise_div_mat(species_name, between_hosts=True):
+    if between_hosts:
+        div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
+                                       'between_hosts', '%s.csv' % species_name)
+    else:
+        div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
+                                       'within_hosts', '%s.csv' % species_name)
+
+    if not os.path.exists(div_dir):
+        return None
+    div_mat = np.loadtxt(div_dir, delimiter=',')
+    return div_mat
+
+
+def compute_theta(species_name, clade_cutoff=None):
+    pd_mat = load_pairwise_div_mat(species_name)
+    cf_mat = load_clonal_frac_mat(species_name)
+    uptri = np.triu_indices(pd_mat.shape[0], 1)
+    pds = pd_mat[uptri]
+    cfs = cf_mat[uptri]
+    if clade_cutoff:
+        within_theta = np.mean(pds[(cfs < 0.05) & (pds < clade_cutoff)])
+        between_theta = np.mean(pds[(cfs < 0.05) & (pds > clade_cutoff)])
+        return within_theta, between_theta
+    else:
+        return np.mean(pds[cfs < 0.05])
 
 
 def compute_runs(dh, good_idxs):
@@ -46,7 +83,8 @@ def compute_runs(dh, good_idxs):
     return run_data
 
 
-def generate_within_sample_idxs(dh, clonal_frac_cutoff=0.15, clade_cutoff=None):
+def generate_within_sample_idxs(dh, clonal_frac_cutoff=config.typical_clonal_fraction_cutoff,
+                                clade_cutoff=None):
     """
     :param dh: DataHoarder instance
     :param clonal_frac_cutoff: clonal fraction cutoff for keeping typically diverged pairs
@@ -58,7 +96,7 @@ def generate_within_sample_idxs(dh, clonal_frac_cutoff=0.15, clade_cutoff=None):
                            'within_hosts', '%s.csv' % species_name)
     div_mat = np.loadtxt(div_dir, delimiter=',')
 
-    clonal_frac_mat = load_clonal_frac_mat(species_name)
+    clonal_frac_mat = load_clonal_frac_mat(species_name, between_hosts=False)
 
     single_subject_samples = dh.get_single_subject_idxs()
     if clade_cutoff is None:
@@ -72,7 +110,8 @@ def generate_within_sample_idxs(dh, clonal_frac_cutoff=0.15, clade_cutoff=None):
         return single_subject_samples[mask1], single_subject_samples[mask2]
 
 
-def generate_between_sample_idxs(dh, clonal_frac_cutoff=0.15, num_pairs=100, clade_cutoff=None):
+def generate_between_sample_idxs(dh, clonal_frac_cutoff=config.typical_clonal_fraction_cutoff,
+                                 num_pairs=100, clade_cutoff=None):
     species_name = dh.species_name
     div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
                            'between_hosts', '%s.csv' % species_name)

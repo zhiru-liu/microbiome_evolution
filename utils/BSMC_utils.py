@@ -3,6 +3,7 @@ Lots of helper functions for parsing fastsimbac(BSMC) simulation results
 '''
 import numpy as np
 import itertools
+from utils import close_pair_utils
 
 
 def load_data(path):
@@ -77,3 +78,15 @@ def get_pairwise_distance_matrix(sim_data, genome_len):
         pd_mat[i, j] = div
         pd_mat[j, i] = div
     return pd_mat
+
+
+def get_pairwise_clonal_fraction_matrix(sim_data, genome_len):
+    sample_size = sim_data.shape[1] - 1
+    cf_mat = np.ones((sample_size, sample_size))
+    genome_len = float(genome_len)
+    for i, j in itertools.combinations(range(sample_size), 2):
+        snp_vec = get_full_snp_vector(i, j, sim_data, genome_len)
+        cf = close_pair_utils.compute_clonal_fraction(snp_vec, block_size=1000)
+        cf_mat[i, j] = cf
+        cf_mat[j, i] = cf
+    return cf_mat

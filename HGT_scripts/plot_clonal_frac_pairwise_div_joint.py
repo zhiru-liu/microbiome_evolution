@@ -27,7 +27,7 @@ def plot_one_species(x, y, asexual_line=True, same_ylim=False):
         ys = -np.log(xs) / config.first_pass_block_size
         ax_joint.plot(xs, ys, '--r', zorder=1)
 
-    ax_joint.scatter(x, y, s=1, zorder=2)
+    ax_joint.scatter(x, y, s=1, zorder=2, rasterized=True)
     ax_marg_x.hist(x, bins=100, alpha=0.6)
     ax_marg_y.hist(y, orientation='horizontal', bins=100, alpha=0.6)
 
@@ -54,23 +54,24 @@ def fit_polynomial(x, y, threshold=0.2, deg=2):
     return params, res
 
 
-base_dir = 'zarr_snps'
-for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
-    if species_name.startswith('.'):
-        continue
+if __name__ == "__main__":
+    base_dir = 'zarr_snps'
+    for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
+        if species_name.startswith('.'):
+            continue
 
-    clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
-                                   'between_hosts', '%s.csv' % species_name)
-    clonal_frac_mat = np.loadtxt(clonal_frac_dir, delimiter=',')
-    div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
-                           'between_hosts', '%s.csv' % species_name)
-    div_mat = np.loadtxt(div_dir, delimiter=',')
+        clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
+                                       'between_hosts', '%s.csv' % species_name)
+        clonal_frac_mat = np.loadtxt(clonal_frac_dir, delimiter=',')
+        div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
+                               'between_hosts', '%s.csv' % species_name)
+        div_mat = np.loadtxt(div_dir, delimiter=',')
 
-    x = clonal_frac_mat[np.triu_indices(clonal_frac_mat.shape[0], 1)]
-    y = div_mat[np.triu_indices(div_mat.shape[0], 1)]
-    save_path = os.path.join(config.analysis_directory, 'clonal_frac_pairwise_div_joint',
-                             'same_ylim', '{}.pdf'.format(species_name))
-    f, axes = plot_one_species(x, y, asexual_line=True, same_ylim=True)
+        x = clonal_frac_mat[np.triu_indices(clonal_frac_mat.shape[0], 1)]
+        y = div_mat[np.triu_indices(div_mat.shape[0], 1)]
+        save_path = os.path.join(config.analysis_directory, 'clonal_frac_pairwise_div_joint',
+                                 'same_ylim', '{}.pdf'.format(species_name))
+        f, axes = plot_one_species(x, y, asexual_line=True, same_ylim=True)
 
-    f.savefig(save_path)
-    plt.close()
+        f.savefig(save_path)
+        plt.close()

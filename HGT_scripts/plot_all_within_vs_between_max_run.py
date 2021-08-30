@@ -36,3 +36,4 @@ for filename in os.listdir(os.path.join(run_data_dir, 'between_hosts')):
     ax.set_title("p={:.1e}".format(p_val))
 
     fig.savefig(os.path.join(plot_dir, '{}.pdf'.format(species_name)), bbox_inches='tight')
+    plt.close()

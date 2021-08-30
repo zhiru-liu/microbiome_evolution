@@ -116,7 +116,7 @@ logging.basicConfig(
 
 CLONAL_FRAC_CUTOFF = 0.5  # config.clonal_fraction_cutoff
 BLOCK_SIZE = config.second_pass_block_size
-DEBUG = False
+DEBUG = True
 
 black_list = ['Bacteroides_xylanisolvens_57185', # for having extremely short contigs and short total core genome
               'Escherichia_coli_58110'] # for having extremely short contigs

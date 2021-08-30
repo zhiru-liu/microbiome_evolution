@@ -70,14 +70,19 @@ def find_weighted_residual_dist(x, y_res, x_obs, k=25, qs=[0.66]):
 
 trend_line = True
 colored = True  # whether to use clonal fraction for color code
+second_pass_dir = os.path.join(config.analysis_directory, "closely_related", "second_pass")
 data_dir = os.path.join(config.analysis_directory, "closely_related", "third_pass")
 
-for filename in os.listdir(data_dir):
+for filename in os.listdir(second_pass_dir):
     if filename.startswith('.'):
         continue
     species_name = filename.split('.')[0]
     print("Processing {}".format(species_name))
-    df = pd.read_pickle(os.path.join(data_dir, filename))
+    filepath = os.path.join(data_dir, "%s.pickle" % species_name)
+    if not os.path.exists(filepath):
+        print("Intermediate file not found for {}, skipping".format(species_name))
+        continue
+    df = pd.read_pickle(filepath)
     if df.shape[0] < 10:
         print("Skipping; Only {} pairs".format(df.shape[0]))
         continue
@@ -85,12 +90,17 @@ for filename in os.listdir(data_dir):
     fig, ax = plt.subplots(1, 1, figsize=(4, 3))
 
     # we have different choices of x&y values to plot
-    # x: number of clonal snps; or the expected number of total snps
+    # x: number of clonal snps; or the expected number of total snps; or the clonal divergence
     # y: number of detected transfers; or the total length of transfer regions
-    x, y = utils.close_pair_utils.prepare_x_y(df)
+    x = df['clonal divs'].to_numpy()
+    y = df['transfer counts'].to_numpy()
+    div_cutoff = 2.e-4
+    cf = df['clonal fractions'][x < div_cutoff]
+    y = y[x < div_cutoff]
+    x = x[x < div_cutoff]
 
     if colored:
-        im = ax.scatter(x, y, s=2, c=df['clonal fractions'], label=None)
+        im = ax.scatter(x, y, s=2, c=cf, label=None)
         cbar = plt.colorbar(im)
         cbar.set_label('Clonal fraction', labelpad=10, rotation=270)
     else:
@@ -120,9 +130,9 @@ for filename in os.listdir(data_dir):
             df_save = pd.DataFrame(data={'x':x_plot, 'y':y_plot, 'sigma':sigmas})
             df_save.to_csv(os.path.join(config.analysis_directory,
                 "closely_related", "fourth_pass", "{}.csv".format(species_name)))
-
+    ax.set_xlim([0, div_cutoff])
     fig.tight_layout()
     fig.savefig(os.path.join(config.analysis_directory,
-                             "closely_related", "wall_clock_v3.1",
+                             "closely_related", "wall_clock_v4",
                              "{}.pdf".format(species_name)), dpi=300)
     plt.close()

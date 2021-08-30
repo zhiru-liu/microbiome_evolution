@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import itertools
 import os
 from utils import close_pair_utils, parallel_utils, BSMC_utils, typical_pair_utils
@@ -23,7 +24,6 @@ def compute_pileup_for_clusters(cluster_dict, get_run_start_end, genome_len, thr
     num_comparisons = 0
     for i, j in itertools.combinations(range(1, num_clusters+1), 2):
         # i, j are cluster ids
-        num_comparisons += 1
         num_pairs = 0.
         tmp_runs = np.zeros(cumu_runs.shape)
         for l, m in itertools.product(cluster_dict[i], cluster_dict[j]):
@@ -32,18 +32,55 @@ def compute_pileup_for_clusters(cluster_dict, get_run_start_end, genome_len, thr
             if all_start_end is None:
                 continue
             num_pairs += 1
-            for k, dat in enumerate(all_start_end):
-                # k represent which threshold
-                for start, end in dat:
-                    tmp_runs[start:end, k] += 1
+            for start_end in all_start_end:
+                # iterating over contigs
+                for k, dat in enumerate(start_end):
+                    # k represent which threshold
+                    for start, end in dat:
+                        tmp_runs[start:end+1, k] += 1  # in new version (as of 08.18.21) end is inclusive
         if num_pairs > 0:
+            # not couting the cluster pair if no typical pair between them
             tmp_runs /= num_pairs
+            num_comparisons += 1
         cumu_runs += tmp_runs
     cumu_runs /= num_comparisons
+    print("Performed in total %d pairwise comparisons" % num_comparisons)
     return cumu_runs
 
 
-def compute_pileup_for_within_host(dh, thresholds):
+def compute_pileup_for_cluster_between_clades(cluster1_dict, cluster2_dict, get_run_start_end, genome_len, thresholds):
+    genome_len = int(genome_len)
+    cumu_runs = np.zeros([genome_len, len(thresholds)])
+
+    num_comparisons = 0
+    print("Cluster 1 size: %d; cluster 2 size: %d" % (len(cluster1_dict), len(cluster2_dict)))
+    for i, j in itertools.product(cluster1_dict.keys(), cluster2_dict.keys()):
+        # i, j are cluster ids
+        num_pairs = 0.
+        tmp_runs = np.zeros(cumu_runs.shape)
+        for l, m in itertools.product(cluster1_dict[i], cluster2_dict[j]):
+            # l, m are sample ids
+            all_start_end = get_run_start_end(l, m, thresholds, minor_cluster=True)
+            if all_start_end is None:
+                continue
+            num_pairs += 1
+            for start_end in all_start_end:
+                # iterating over contigs
+                for k, dat in enumerate(start_end):
+                    # k represent which threshold
+                    for start, end in dat:
+                        tmp_runs[start:end+1, k] += 1  # in new version (as of 08.18.21) end is inclusive
+        if num_pairs > 0:
+            # not couting the cluster pair if no typical pair between them
+            tmp_runs /= num_pairs
+            num_comparisons += 1
+        cumu_runs += tmp_runs
+    cumu_runs /= num_comparisons
+    print("Performed in total %d pairwise comparisons" % num_comparisons)
+    return cumu_runs
+
+
+def compute_pileup_for_within_host(dh, thresholds, clade_cutoff=None, within_clade=True):
     """
     Computing same pileup dist for within host data
     :param dh: DataHoarder instance that loads within host data for a given species
@@ -60,23 +97,31 @@ def compute_pileup_for_within_host(dh, thresholds):
     for pair in single_subject_samples:
         # get the snp data
         snp_vec, coverage_arr = dh.get_snp_vector(pair)
-        if np.sum(snp_vec) / float(np.sum(coverage_arr)) > 0.03:  # removing two clade pairs
-            # TODO: problematic for other species!
+        if (clade_cutoff is not None) and within_clade:
+            if np.sum(snp_vec) / float(np.sum(coverage_arr)) > clade_cutoff:  # removing two clade pairs
+                continue
+        elif (clade_cutoff is not None) and (not within_clade):
+            if np.sum(snp_vec) / float(np.sum(coverage_arr)) <= clade_cutoff:  # removing same clade pairs
+                continue
+
+        clonal_frac = close_pair_utils.compute_clonal_fraction(snp_vec, config.first_pass_block_size)
+        if clonal_frac > config.typical_clonal_fraction_cutoff:
+            # consider only typically diverged pairs
             continue
         num_reps += 1
         # get the location in the full array
         snp_to_core = np.nonzero(coverage_arr)[0]
-        snp_genome_locs = snp_to_core[np.nonzero(snp_vec)[0]]
+        chromosomes = good_chromo[coverage_arr]
 
-        runs = parallel_utils.compute_runs_all_chromosomes(snp_vec, good_chromo[coverage_arr])
-        # filter the runs and accumulate
-        for i in range(len(thresholds)):
-            threshold = thresholds[i]
-            event_starts = snp_genome_locs[:-1][runs > threshold]
-            event_ends = snp_genome_locs[1:][runs > threshold]
-            for start, end in zip(event_starts, event_ends):
-                within_cumu_runs[start:end, i] += 1
+        all_start_end = compute_passed_starts_ends(snp_vec, chromosomes, snp_to_core, thresholds)
+
+        for start_end in all_start_end:
+            for k, dat in enumerate(start_end):
+                # k represent which threshold
+                for start, end in dat:
+                    within_cumu_runs[start:end+1, k] += 1
     within_cumu_runs /= float(num_reps)
+    print("Performed in total %d pairwise comparisons" % num_reps)
     return within_cumu_runs
 
 
@@ -102,8 +147,40 @@ def get_event_start_end_BSMC(sim_data, genome_len, idx1, idx2, thresholds):
     return all_dat
 
 
+def compute_passed_starts_ends(snp_vec, chromosomes, locations, thresholds):
+    """
+    For a bool vector, potentially concat of multiple contigs, find all the starts and ends (as given by location)
+    of runs longer than thresholds.
+    :param snp_vec:
+    :param chromosomes:
+    :param locations:
+    :param thresholds:
+    :return: List of len # chromosomes, each element of which is a list of len # thresholds, each element of which
+    is a list of # of passed events. The inner most elements are a tuple of (start, end)
+    """
+    index_offset = 0
+    all_dats = []
+    for chromo in pd.unique(chromosomes):
+        # loop over contigs
+        subvec = snp_vec[chromosomes==chromo]
+        runs, starts = parallel_utils._compute_runs_single_chromosome(subvec, return_starts=True)
+
+        all_dat = []
+        for i in range(len(thresholds)):
+            # saving all the start,end pairs in core genome coordinates for all runs passing threshold
+            threshold = thresholds[i]
+            subvec_starts = starts[runs > threshold]
+            subvec_ends = subvec_starts + runs[runs > threshold] - 1
+            event_starts = locations[subvec_starts + index_offset]
+            event_ends = locations[subvec_ends + index_offset]
+            all_dat.append(zip(event_starts, event_ends))
+        index_offset += len(subvec)
+        all_dats.append(all_dat)
+    return all_dats
+
+
 class Pileup_Helper:
-    def __init__(self, species_name, allowed_variants=["4D"], clade_cutoff=None, close_pair_cutoff=1e-3):
+    def __init__(self, species_name, allowed_variants=["4D"], clade_cutoff=None, close_pair_cutoff=0.95):
         """
         Wrapper over DataHoarder to provide pileup specific functions
         :param species_name:
@@ -117,19 +194,32 @@ class Pileup_Helper:
         div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence', 'between_hosts',
                                '%s.csv' % species_name)
         self.div_mat = np.loadtxt(div_dir, delimiter=',')
+        self.cf_mat = typical_pair_utils.load_clonal_frac_mat(species_name)
 
         clade_cutoff = clade_cutoff if clade_cutoff else 1
         # form first order clusters using clade divergence cutoff
         d = close_pair_utils.get_clusters_from_pairwise_matrix(self.div_mat, threshold=clade_cutoff)
-        clade_cluster = 1 + np.argmax(map(len, d.values()))  # keep the largest clade
+        cluster_ids = np.argsort(map(len, d.values()))
+        clade_cluster = 1 + cluster_ids[-1]  # keep the largest clade
         clade_samples = d[clade_cluster]
 
         single_subject_samples = self.dh.get_single_subject_idxs()
         self.good_samples = np.intersect1d(single_subject_samples, clade_samples)
 
+        # here only cluster highly similar strains to avoid overcounting too much
         self.close_pair_cutoff = close_pair_cutoff
         self.cluster_dict = close_pair_utils.get_clusters_from_pairwise_matrix(
-            self.div_mat[self.good_samples, :][:, self.good_samples], threshold=close_pair_cutoff)
+            1 - self.cf_mat[self.good_samples, :][:, self.good_samples],
+            threshold=1-close_pair_cutoff)
+        print("%s has %d closely-related clusters" % (species_name, len(self.cluster_dict)))
+
+        if len(cluster_ids) > 1:
+            clade_cluster = 1 + cluster_ids[-2]  # keep the largest clade
+            clade_samples = d[clade_cluster]
+            self.minor_clade_samples = np.intersect1d(single_subject_samples, clade_samples)
+            self.minor_cluster_dict = close_pair_utils.get_clusters_from_pairwise_matrix(
+                1 - self.cf_mat[self.minor_clade_samples, :][:, self.minor_clade_samples],
+                threshold=1-close_pair_cutoff)
 
     def update_close_pair_cutoff(self, new_cutoff):
         self.close_pair_cutoff = new_cutoff
@@ -141,27 +231,36 @@ class Pileup_Helper:
         # cluster id indexes only the good samples
         return self.good_samples[cluster_id]
 
-    def get_event_start_end(self, idx1, idx2, thresholds):
+    def cluster_id_to_minor_sample_id(self, cluster_id):
+        return self.minor_clade_samples[cluster_id]
+
+    def get_event_start_end(self, idx1, idx2, thresholds, cf_cutoff=None, minor_cluster=False):
+        """
+        :param idx1: cluster index of the first sample
+        :param idx2: cluster index of the second sample
+        :param thresholds: list of run length thresholds
+        :param cf_cutoff: if not supplied, will use default value supplied in config. use this cutoff to skip
+        pairs with cf too high
+        :param minor_cluster: if true, idx2 will be interpreted as the index for the minor clade
+        :return:
+        """
         i1 = self.cluster_id_to_sample_id(idx1)
-        i2 = self.cluster_id_to_sample_id(idx2)
+        if minor_cluster:
+            i2 = self.cluster_id_to_minor_sample_id(idx2)
+        else:
+            i2 = self.cluster_id_to_sample_id(idx2)
         pair = (i1, i2)
         # get the snp data
         snp_vec, coverage_arr = self.dh.get_snp_vector(pair)
         # check whether pair has lots of clonal regions
         clonal_frac = close_pair_utils.compute_clonal_fraction(snp_vec, config.first_pass_block_size)
-        if clonal_frac > config.typical_clonal_fraction_cutoff:
+        cutoff = cf_cutoff if cf_cutoff else config.typical_clonal_fraction_cutoff
+        if clonal_frac > cutoff:
+            # consider only typically diverged pairs
             return None
 
         # get the location in the full array
         snp_to_core = np.nonzero(coverage_arr)[0]
-        snp_genome_locs = snp_to_core[np.nonzero(snp_vec)[0]]
 
-        runs = parallel_utils.compute_runs_all_chromosomes(snp_vec, self.good_chromo[coverage_arr])
-
-        all_dat = []
-        for i in range(len(thresholds)):
-            threshold = thresholds[i]
-            event_starts = snp_genome_locs[:-1][runs > threshold]
-            event_ends = snp_genome_locs[1:][runs > threshold]
-            all_dat.append(zip(event_starts, event_ends))
-        return all_dat
+        chromosomes = self.good_chromo[coverage_arr]
+        return compute_passed_starts_ends(snp_vec, chromosomes, snp_to_core, thresholds)

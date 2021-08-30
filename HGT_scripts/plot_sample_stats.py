@@ -27,7 +27,7 @@ num_within_samples = sample_df['num_good_within_samples']
 ys = 0-np.arange(0,len(num_qp_samples))
 
 haploid_axis.barh(ys+0.5, num_qp_samples,color=haploid_color,linewidth=0,label='QP',zorder=1)
-haploid_axis.barh(ys+0.5, num_samples,color=light_haploid_color,linewidth=0,label='non-QP',zorder=0)
+haploid_axis.barh(ys+0.5, num_samples,color=light_haploid_color,linewidth=0,label='hard non-QP',zorder=0)
 haploid_axis.barh(ys+0.5, num_within_samples,left=num_qp_samples,color=good_witin_color,linewidth=0,label='simple non-QP')
 haploid_axis.set_xlim([0,800])
 haploid_axis.set_xticks([0,200,400,600,800])
