@@ -73,12 +73,18 @@ def plot_cvs_comparison(ax, real_thresholds, sim_thresholds, real_cvs, sim_cvs):
             l = lambdas[j]
             idx = i * len(lambdas) + j
             mean_cv = np.mean(sim_cvs[idx:idx + num_reps, :], axis=0)
-            ax.plot(sim_thresholds, mean_cv, marker=next(markers), color=c, label='r/mu=%.1f l=%d' % (rbymu, l))
+            ax.plot(sim_thresholds, mean_cv, marker=next(markers), color=c)
+        ax.plot(-5000, 0.5, '-', color=c, label='r/mu=%.1f' % rbymu)
 
-    ax.plot(real_thresholds, real_cvs, 'r--', label="B. vulgatus")
+    ax.plot(-5000, 0.5, marker='^', color='grey', label='l=5000')
+    ax.plot(-5000, 0.5, marker='x', color='grey', label='l=10000')
+    ax.plot(real_thresholds, real_cvs, 'r.--', label="B. vulgatus")
+
+    ax.set_xlim([1000, 5000])
     ax.legend(bbox_to_anchor=(1, 1))
     ax.set_xlabel("Sharing threshold (4D syn sites)")
     ax.set_ylabel("coefficient of variation")
+
 
 if __name__ == "__main__":
     # set up figure
@@ -106,7 +112,7 @@ if __name__ == "__main__":
 
     # loading necessary data
     real_data_save_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', 'Bacteroides_vulgatus_57955')
-    thresholds = np.loadtxt(os.path.join(real_data_save_path, 'thresholds.txt'))
+    thresholds = np.loadtxt(os.path.join(real_data_save_path, 'between_host_thresholds.txt'))
 
     spectra_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'local_hap', 'local_haplotype_spectra.json')
     all_hap_spectra = json.load(open(spectra_path, 'r'))
@@ -117,15 +123,16 @@ if __name__ == "__main__":
     sim_thresholds = np.loadtxt(os.path.join(threshold_path))
 
     # plot one species
-    ind_to_plot = [0, 3, 6] # only showing three thresholds
+    ind_to_plot = [1, 4]  # only showing three thresholds
     real_cumu_runs = plot_single_side(
         os.path.join(real_data_save_path, 'between_host.csv'),
-        thresholds, pileup_ax_real, ind_to_plot=ind_to_plot)
+        thresholds, pileup_ax_real, ind_to_plot=ind_to_plot, xlabel=False)
 
     # plot one simulation
+    ind_to_plot = [0, 3]  # only showing three thresholds
     save_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'b_vulgatus')
-    plot_single_side(os.path.join(save_path, '4.txt'), thresholds, pileup_ax_sim,
-                     ind_to_plot=ind_to_plot, legend=False, xlabel=False)
+    plot_single_side(os.path.join(save_path, '4.txt'), sim_thresholds, pileup_ax_sim,
+                     ind_to_plot=ind_to_plot)
 
     # plot haplotype spectra
     plot_haplotype_spectrum(spectrum_axes, all_hap_spectra, ['a', 'b', 'c', 'neutral'])
@@ -144,6 +151,9 @@ if __name__ == "__main__":
     pileup_ax_real.set_title("Empirical")
     pileup_ax_sim.set_title("Simulated")
     pileup_ax_sim.set_xlim(pileup_ax_real.get_xlim())
+
+    histo_ax_real.set_yticklabels([])
+    histo_ax_sim.set_yticklabels([])
 
     # finally saving figure
     fig.savefig('test_pileup.pdf', bbox_inches='tight')

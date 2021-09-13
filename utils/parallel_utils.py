@@ -141,7 +141,7 @@ def get_core_genome_contig_lengths(species_name, allowed_variants=['4D']):
 
     core_genes = core_gene_utils.get_sorted_core_genes(species_name)
     # len = total number of snps
-    general_mask = get_general_site_mask(
+    general_mask = _get_general_site_mask(
         gene_names, variants, pvalues, core_genes, allowed_variants=allowed_variants)
     good_chromo = chromosomes[general_mask]
     return get_contig_lengths(good_chromo)

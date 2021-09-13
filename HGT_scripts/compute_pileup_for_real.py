@@ -73,7 +73,17 @@ if __name__ == '__main__':
     for species_name in contig_data:
         if contig_data[species_name] > 50:
             continue
-        theta = typical_pair_utils.compute_theta(species_name)
-        thresholds = np.array([10, 20, 30, 40]) / theta
-        compute_between_host(species_name, thresholds)
-        compute_within_host(species_name, thresholds)
+        if 'vulgatus' in species_name:
+            within_theta, between_theta = typical_pair_utils.compute_theta(species_name, clade_cutoff=0.03)
+            thresholds = np.array([10, 15, 20, 25, 30, 35, 40, 45]) / within_theta
+            compute_between_host(species_name, thresholds)
+            compute_within_host(species_name, thresholds)
+
+            thresholds = np.array([10, 20, 30, 40]) / between_theta
+            compute_B_vulgatus_between_clade(thresholds)
+            compute_within_host(species_name, thresholds, b_vulgatus_between_clade=True)
+        else:
+            theta = typical_pair_utils.compute_theta(species_name)
+            thresholds = np.array([10, 20, 30, 40]) / theta
+            compute_between_host(species_name, thresholds)
+            compute_within_host(species_name, thresholds)

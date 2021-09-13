@@ -214,7 +214,7 @@ class Pileup_Helper:
         print("%s has %d closely-related clusters" % (species_name, len(self.cluster_dict)))
 
         if len(cluster_ids) > 1:
-            clade_cluster = 1 + cluster_ids[-2]  # keep the largest clade
+            clade_cluster = 1 + cluster_ids[-2]  # keep the second largest clade
             clade_samples = d[clade_cluster]
             self.minor_clade_samples = np.intersect1d(single_subject_samples, clade_samples)
             self.minor_cluster_dict = close_pair_utils.get_clusters_from_pairwise_matrix(

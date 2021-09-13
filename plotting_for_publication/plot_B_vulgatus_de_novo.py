@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import sys
+import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -57,8 +58,12 @@ def plot_local_polymorphism(axes, sample_pair):
 
     axes[0].plot(np.convolve(intermediate_snvs_before, np.ones(1000)/1000.))
     axes[1].plot(np.convolve(intermediate_snvs_after, np.ones(1000)/1000.))
-    axes[0].set_xlabel([])
+    axes[0].set_xlabel('')
     axes[0].set_xticklabels([])
+    axes[0].set_ylim([-0.002, 0.06])
+    axes[1].set_ylim([-0.002, 0.06])
+    axes[1].set_xlabel("Core genome synonymous site location")
+    axes[1].set_ylabel("Intermediate frequency \nSNV density")
 
 
 def plot_allele_freq_zoomin(axes, histo_axes, sample_pair):
@@ -79,8 +84,9 @@ def plot_allele_freq_zoomin(axes, histo_axes, sample_pair):
     # get raw allele frequencies polarized by first time pt
     a_before, d_before = filter_raw_data(idx1)
     a_after, d_after = filter_raw_data(idx2)
-    good_sites_before = (d_before > 0)
-    good_sites_after = (d_after > 0)
+    # good_sites_before = (d_before > 0)
+    # good_sites_after = (d_after > 0)
+    good_sites = (d_before > 0) & (d_after > 0)
     freq_before = np.nan_to_num(a_before / d_before.astype(float))
     freq_after = np.nan_to_num(a_after / d_after.astype(float))
     to_flip = freq_before > 0.5
@@ -92,72 +98,94 @@ def plot_allele_freq_zoomin(axes, histo_axes, sample_pair):
     histo_axes[1].hist(freq_after, orientation='horizontal', bins=100)
     histo_axes[0].set_ylim([0, 1])
     histo_axes[1].set_ylim([0, 1])
-    histo_axes[0].set_xlim([0, 2000])
-    histo_axes[1].set_xlim([0, 2000])
+    histo_axes[0].set_xlim([0, 1000])
+    histo_axes[1].set_xlim([0, 1000])
+    histo_axes[0].set_xticklabels([])
+    histo_axes[1].set_xlabel('Site Frequency Spectrum')
 
-    good_sites_before = good_sites_before[start:end]
-    good_sites_after = good_sites_after[start:end]
+    # good_sites_before = good_sites_before[start:end]
+    # good_sites_after = good_sites_after[start:end]
+    good_sites = good_sites[start:end]
     freq_before = freq_before[start:end]
     freq_after = freq_after[start:end]
-    freq_before = freq_before[good_sites_before]
-    freq_after = freq_after[good_sites_after]
+    freq_before = freq_before[good_sites]
+    freq_after = freq_after[good_sites]
 
-    xs_before = snp_info[1][start:end][good_sites_before]  # locations
-    xs_after = snp_info[1][start:end][good_sites_after]  # locations
-    # xs = np.arange(len(freq_before))
-    axes[0].plot(xs_before[freq_before < 0.1], freq_before[freq_before < 0.1], '.', markersize=1,
+    # finding the minimal and maximal region that engaged in recombination
+    freq_change_sites = np.where((freq_before > 0.2) & (freq_after < 0.2))[0]
+    region_start = freq_change_sites[0]
+    region_end = freq_change_sites[-1]
+    print("minimal spanning region is %d to %d" % (region_start, region_end))
+    minimal_genes = np.unique(snp_info[2][start:end][good_sites][region_start:region_end])
+
+    remained_snps = np.where(freq_after > 0.5)[0]
+    region_start = max(remained_snps[remained_snps < 10000])
+    region_end = min(remained_snps[remained_snps > 30000])
+    print("maximal spanning region is %d to %d" % (region_start, region_end))
+    maximal_genes = np.unique(snp_info[2][start:end][good_sites][region_start:region_end])[1:-1]
+
+
+    # xs_before = snp_info[1][start:end][good_sites_before]  # locations
+    # xs_after = snp_info[1][start:end][good_sites_after]  # locations
+    xs = np.arange(len(freq_before))
+    axes[0].plot(xs[freq_before < 0.1], freq_before[freq_before < 0.1], '.', markersize=2,
                  label='Alt allele frequency', rasterized=True, color=mpl_colors[0])
-    axes[0].plot(xs_before[freq_before > 0.1], freq_before[freq_before > 0.1], '.', color=mpl_colors[0])
+    axes[0].plot(xs[freq_before > 0.1], freq_before[freq_before > 0.1], '.', markersize=2, color=mpl_colors[0])
 
-    axes[1].plot(xs_after[freq_after < 0.1], freq_after[freq_after < 0.1], '.', markersize=1,
+    axes[1].plot(xs[freq_after < 0.1], freq_after[freq_after < 0.1], '.', markersize=2,
                  label='Alt allele frequency', rasterized=True, color=mpl_colors[0])
-    axes[1].plot(xs_after[freq_after > 0.1], freq_after[freq_after > 0.1], '.', color=mpl_colors[0])
+    axes[1].plot(xs[freq_after > 0.1], freq_after[freq_after > 0.1], '.', markersize=2, color=mpl_colors[0])
 
-    non_core = np.invert(np.isin(snp_info[2][start:end], core_genes)).astype(int)
+    non_core = np.invert(np.isin(snp_info[2][start:end][good_sites], core_genes)).astype(int)
     non_core_starts = np.nonzero((non_core[1:] - non_core[:-1]) > 0)[0]
     non_core_ends = np.nonzero((non_core[1:] - non_core[:-1]) < 0)[0]
     for i in range(len(non_core_starts)):
-        start_idx = snp_info[1][start:end][non_core_starts[i]]
-        end_idx = snp_info[1][start:end][non_core_ends[i]]
-        axes[0].axvspan(start_idx, end_idx, alpha=0.1,
+        # start_idx = snp_info[1][start:end][non_core_starts[i]]
+        # end_idx = snp_info[1][start:end][non_core_ends[i]]
+        axes[0].axvspan(non_core_starts[i], non_core_ends[i], alpha=0.1,
                         color='b', label='_' * i + 'Non-core sites', linewidth=0)
-        axes[1].axvspan(start_idx, end_idx, alpha=0.1,
+        axes[1].axvspan(non_core_starts[i], non_core_ends[i], alpha=0.1,
                         color='b', label='_' * i + 'Non-core sites', linewidth=0)
 
-    N = 1
-    copy_num = d_before[start:end] / mean_depth_before
+    N = 100
+    copy_num = d_before[start:end][good_sites] / mean_depth_before
     local_copy_before = np.convolve(copy_num, np.ones((N,)) / N, mode='same')
-    copy_num = d_after[start:end] / mean_depth_after
+    copy_num = d_after[start:end][good_sites] / mean_depth_after
     local_copy_after = np.convolve(copy_num, np.ones((N,)) / N, mode='same')
 
-    axes[0].plot(snp_info[1][start:end], local_copy_before, 'grey', label='Local rel copynumber')
-    axes[1].plot(snp_info[1][start:end], local_copy_after, 'grey')
+    axes[0].plot(local_copy_before, 'grey', label='Local rel copynumber')
+    axes[1].plot(local_copy_after, 'grey')
 
     axes[0].set_xticklabels([])
-    axes[1].set_xlabel('Covered site index')
+    axes[1].set_xlabel('Site index in covered coding region')
     axes[0].legend(loc='upper right')
-    return
+    return minimal_genes, maximal_genes
 
+
+def save_interesting_genes(genes, path):
+    gene_ids = np.array(['fig|'+gene for gene in genes])
+    all_genes = pd.read_csv(os.path.join(config.data_directory, 'genome_features', '%s.csv' % species_name))
+    gene_data = all_genes[all_genes['PATRIC ID'].isin(gene_ids)]
+    gene_data.to_csv(path)
 
 # setting up figures
 mpl.rcParams['font.size'] = 7
 mpl.rcParams['lines.linewidth'] = 1
-mpl.rcParams['legend.frameon'] = False
 mpl.rcParams['legend.fontsize'] = 'small'
 
 fig = plt.figure(figsize=(7, 5.5))
 
-outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[2, 3.5], hspace=0.2, figure=fig)
+outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[2, 3.5], hspace=0.4, figure=fig)
 
-top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1.5,2],wspace=0,subplot_spec=outer_grid[0])
+top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1.5,1],wspace=0,subplot_spec=outer_grid[0])
 
 local_div_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.2, subplot_spec=top_grid[1])
 
 bottom_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[4, 1], wspace=0.2, subplot_spec=outer_grid[1])
 
-zoomin_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.2, subplot_spec=bottom_grid[0])
+zoomin_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.1, subplot_spec=bottom_grid[0])
 
-histo_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.2, subplot_spec=bottom_grid[-1])
+histo_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.1, subplot_spec=bottom_grid[-1])
 
 # adding axes
 local_ax1 = fig.add_subplot(local_div_grid[0])
@@ -169,7 +197,10 @@ histo_ax1 = fig.add_subplot(histo_grid[0])
 histo_ax2= fig.add_subplot(histo_grid[1])
 
 # plotting
-plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], [histo_ax1, histo_ax2], ['700114218', '700171115'])
+minimal_genes, maximal_genes = plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], [histo_ax1, histo_ax2], ['700114218', '700171115'])
 plot_local_polymorphism([local_ax1, local_ax2], ['700114218', '700171115'])
 
-fig.savefig('test_denovo.pdf', bbox_inches="tight")
+save_interesting_genes(minimal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "minimal.csv"))
+save_interesting_genes(maximal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "maximal.csv"))
+
+fig.savefig('test_denovo.pdf', bbox_inches="tight", dpi=600)
