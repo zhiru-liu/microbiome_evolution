@@ -16,6 +16,12 @@ def plot_example_run_length_dist(dist_ax, snp_vec_axes, within_dh, between_dh, w
     within_example_runs = parallel_utils.compute_runs_all_chromosomes(within_snp_vec, good_chromo[snp_mask])
     within_div = (np.sum(within_snp_vec) / float(len(within_snp_vec)))
 
+    print("Within div %f" % within_div)
+    sort_idx = np.argsort(within_example_runs)
+    de_novo_len = within_example_runs[sort_idx[-3]]
+    print("Within de novo event length %d" % de_novo_len)
+    print("Independent null p-val %f" % np.exp(-1. * de_novo_len * within_div))
+
     between_snp_vec1, snp_mask = between_dh.get_snp_vector(between_pair1)
     between_example_runs1 = parallel_utils.compute_runs_all_chromosomes(between_snp_vec1, good_chromo[snp_mask])
 

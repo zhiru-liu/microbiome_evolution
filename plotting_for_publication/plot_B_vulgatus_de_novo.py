@@ -94,8 +94,8 @@ def plot_allele_freq_zoomin(axes, histo_axes, sample_pair):
     freq_after[to_flip] = 1 - freq_after[to_flip]
 
     # plot the full site frequency spectrum
-    histo_axes[0].hist(freq_before, orientation='horizontal', bins=100)
-    histo_axes[1].hist(freq_after, orientation='horizontal', bins=100)
+    histo_axes[0].hist(freq_before[good_sites], orientation='horizontal', bins=100)
+    histo_axes[1].hist(freq_after[good_sites], orientation='horizontal', bins=100)
     histo_axes[0].set_ylim([0, 1])
     histo_axes[1].set_ylim([0, 1])
     histo_axes[0].set_xlim([0, 1000])

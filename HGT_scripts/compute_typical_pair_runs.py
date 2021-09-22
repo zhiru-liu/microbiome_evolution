@@ -35,10 +35,10 @@ def process_B_vulgatus():
     within_dh = parallel_utils.DataHoarder(species_name, mode='within', allowed_variants=['4D'])
     between_dh = parallel_utils.DataHoarder(species_name, mode='QP', allowed_variants=['4D'])
     within_same_clade_pairs, within_diff_clade_pairs = typical_pair_utils.generate_within_sample_idxs(
-        within_dh, clade_cutoff=0.03)
+        within_dh, clade_cutoff=0.03, clonal_frac_cutoff=0.1)
     # compute all qualified pairs
     between_same_clade_pairs, between_diff_clade_pairs = typical_pair_utils.generate_between_sample_idxs(
-        between_dh, num_pairs=1e9, clade_cutoff=0.03)
+        between_dh, num_pairs=1e9, clade_cutoff=0.03, clonal_frac_cutoff=0.1)
 
     within_runs_data = typical_pair_utils.compute_runs(within_dh, within_same_clade_pairs)
     save_path = os.path.join(config.analysis_directory, 'typical_pairs', 'runs_data', 'within_hosts', '{}_same_clade.pickle'.format(species_name))

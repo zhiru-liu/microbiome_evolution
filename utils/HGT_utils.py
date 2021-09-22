@@ -257,10 +257,11 @@ def find_sfs_peaks_and_cutoff(sample, sfs_map):
     Return the major allele frequency that clearly separates the two-strain peak from the main peak
     :param sample: The name of the sample
     :param sfs_map: The map returned by parse_midas_data.parse_within_sample_sfs
-    :return: The list of peak_idx, and the frequency that can be used as cutoff,
+    :return: The list of peak frequencies; and the frequency that can be used as cutoff,
     if there's no clear separation, return None
     """
     fs, pfs = sfs_utils.calculate_binned_sfs_from_sfs_map(sfs_map[sample], folding='major')
+    df = fs[1] - fs[0]  # bin size
     # For peak finding, only use the polymorphic sites
     pfs = pfs[fs < 0.95]
     fs = fs[fs < 0.95]
@@ -269,7 +270,8 @@ def find_sfs_peaks_and_cutoff(sample, sfs_map):
     within_sites, between_sites, total_sites = sfs_utils.calculate_polymorphism_rates_from_sfs_map(sfs_map[sample])
     between_line = between_sites * 1.0 / total_sites / ((fs > 0.2) * (fs < 0.5)).sum()
     pmax = np.max([pfs[(fs > 0.1) * (fs < 0.95)].max(), between_line])
-    return _find_sfs_peaks_and_cutoff(fs, pfs, pmax)
+    peak_idx, right_freq = _find_sfs_peaks_and_cutoff(fs, pfs, pmax)
+    return fs[peak_idx]-df/2, right_freq
 
 
 def _find_sfs_peaks_and_cutoff(fs, pfs, pmax):

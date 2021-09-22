@@ -6,7 +6,7 @@ sys.path.append("..")
 from utils import close_pair_utils, parallel_utils
 import config
 
-def plot_one_species(x, y, asexual_line=True, same_ylim=False):
+def plot_one_species(x, y, asexual_line=True, same_ylim=False, logscale=True):
     height = 6
     ratio = 5
 
@@ -37,8 +37,9 @@ def plot_one_species(x, y, asexual_line=True, same_ylim=False):
         ax_joint.set_ylim([-1e-3, max(y) + 1e-3])
     ax_joint.set_xlim([-1e-2, 1 + 1e-2])
 
-    ax_marg_x.set_yscale('log')
-    ax_marg_y.set_xscale('log')
+    if logscale:
+        ax_marg_x.set_yscale('log')
+        ax_marg_y.set_xscale('log')
 
     ax_joint.set_xlabel('Clonal fraction')
     ax_joint.set_ylabel('Pairwise divergence')

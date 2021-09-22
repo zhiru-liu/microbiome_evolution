@@ -80,6 +80,10 @@ def get_pairwise_distance_matrix(sim_data, genome_len):
     return pd_mat
 
 
+def get_pairwise_distance_matrix_from_hap(haplotype):
+    return
+
+
 def get_pairwise_clonal_fraction_matrix(sim_data, genome_len):
     sample_size = sim_data.shape[1] - 1
     cf_mat = np.ones((sample_size, sample_size))

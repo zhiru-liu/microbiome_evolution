@@ -205,7 +205,7 @@ def compute_good_sample_stats():
                 continue
             print("processing %s" % species_name)
             qp_mask, _ = get_QP_sample_mask(species_name)
-            good_within_mask, _, _ = get_single_peak_sample_mask(species_name)
+            good_within_mask, _, _, _= get_single_peak_sample_mask(species_name)
             num_desired_samples = len(diversity_utils.calculate_highcoverage_samples(species_name))
 
             writer.writerow([species_name, len(qp_mask), num_desired_samples, np.sum(qp_mask), np.sum(good_within_mask)])
@@ -234,7 +234,7 @@ class DataHoarder:
             print("Keeping only QP samples, which is %d in total" %
                   np.sum(self.sample_mask))
         elif (mode == "within"):
-            self.sample_mask, sample_names, self.peak_cutoffs = get_single_peak_sample_mask(species_name)
+            self.sample_mask, sample_names, self.peak_cutoffs, self.major_freqs = get_single_peak_sample_mask(species_name)
             self.good_samples = sample_names[self.sample_mask]
             self.mode = mode
             print("Keeping only simple within host samples, which is %d in total" %
@@ -432,34 +432,47 @@ def get_within_sample_snp_vector(snp_arr, coverage_arr, sample_id):
     return snp_arr[mask, sample_id], mask
 
 
-def _compute_runs_single_chromosome(snp_vec, locations=None, return_starts=False):
+def _compute_runs_single_chromosome(snp_vec, locations=None, return_locs=False):
     # run includes start->first snp and last snp->end
     # get the locations of snps in the vector
     padded_vec = np.ones(len(snp_vec) + 2)
     padded_vec[1:-1] = snp_vec
     site_locations = np.nonzero(padded_vec)[0]
     if locations is not None:
-        locs = locations[site_locations]
+        padded_locs = np.zeros(len(locations) + 2)
+        padded_locs[0] = locations[0] - 1
+        padded_locs[1:-1] = locations
+        padded_locs[-1] = locations[-1] + 1
+        locs = padded_locs[site_locations]
     else:
         locs = site_locations
-    runs = locs[1:] - locs[:-1] - 1
+    runs = site_locations[1:] - site_locations[:-1] - 1
     starts = locs[:-1][runs > 0]
+    ends = locs[1:][runs > 0]
     runs = runs[runs > 0]
-    if return_starts:
-        return runs, starts
+    if return_locs:
+        return runs, starts, ends
     return runs
 
 
-def compute_runs_all_chromosomes(snp_vec, chromosomes, locations=None):
+def compute_runs_all_chromosomes(snp_vec, chromosomes, locations=None, return_locs=False):
     all_runs = []
+    all_starts = []
+    all_ends = []
     for chromo in pd.unique(chromosomes):
         subvec = snp_vec[chromosomes==chromo]
         if locations is not None:
             subloc = locations[chromosomes==chromo]
         else:
             subloc = None
-        all_runs.append(_compute_runs_single_chromosome(subvec, subloc))
-    return np.concatenate(all_runs)
+        res = _compute_runs_single_chromosome(subvec, subloc, return_locs=True)
+        all_runs.append(res[0])
+        all_starts.append(res[1])
+        all_ends.append(res[2])
+    if return_locs:
+        return np.concatenate(all_runs), np.concatenate(all_starts), np.concatenate(all_ends)
+    else:
+        return np.concatenate(all_runs)
 
 
 def get_sample_names(species_name):
@@ -523,10 +536,12 @@ def get_single_peak_sample_mask(species_name):
     results = [HGT_utils.find_sfs_peaks_and_cutoff(
         sample, sfs_map) for sample in sample_names[mask]]
     cutoffs = np.array([res[1] for res in results])
+    major_freqs = np.array([res[0][0] for res in results])
     clean_peak_mask = np.array([cutoff is not None for cutoff in cutoffs])
     mask[mask] = clean_peak_mask
     good_cutoffs = cutoffs[clean_peak_mask]
-    return mask, sample_names, good_cutoffs.astype(float)
+    good_major_freqs = major_freqs[clean_peak_mask]
+    return mask, sample_names, good_cutoffs.astype(float), good_major_freqs
 
 
 def get_contig_boundary(filtered_chromosomes):
