@@ -2,6 +2,7 @@ import zarr
 import dask.array as da
 import numpy as np
 import pandas as pd
+from scipy import stats
 import time
 import os
 import bz2
@@ -182,9 +183,8 @@ def get_within_host_filtered_snps(alt_arr, depth_arr, site_mask, sample_mask, cu
     polarized_hap = selected_alts >= 0.5 * selected_depths
     polarized_hap = polarized_hap.compute()
 
-    covered_mask = selected_depths > 0
-    covered_mask = covered_mask.compute()
-    return polarized, polarized_hap, covered_mask
+    selected_depths = selected_depths.compute()
+    return polarized, polarized_hap, selected_depths
 
 
 def compute_good_sample_stats():
@@ -271,7 +271,7 @@ class DataHoarder:
                     rechunked_alt_arr, rechunked_depth_arr, self.general_mask, self.sample_mask)
             print("Finish loading sites, took %d secs" % (time.time() - t0))
         else:
-            self.snp_arr, self.naive_haplotype, self.covered_arr = get_within_host_filtered_snps(
+            self.snp_arr, self.naive_haplotype, self.depth_arr = get_within_host_filtered_snps(
                     rechunked_alt_arr, rechunked_depth_arr, self.general_mask,
                     self.sample_mask, self.peak_cutoffs)
             print("Finish loading sites, took %d secs" % (time.time() - t0))
@@ -370,11 +370,60 @@ class DataHoarder:
 
     def get_snp_vector(self, idx):
         if self.mode == 'QP':
-            return get_two_QP_sample_snp_vector(
-                    self.snp_arr, self.covered_arr, idx)
+            return self.get_two_QP_sample_snp_vector(idx)
         else:
-            return get_within_sample_snp_vector(
-                    self.snp_arr, self.covered_arr, idx)
+            return self.get_within_sample_snp_vector(idx)
+
+    def get_two_QP_sample_snp_vector(self, sample_ids):
+        id1 = sample_ids[0]
+        id2 = sample_ids[1]
+        mask = self.covered_arr[:, id1] & self.covered_arr[:, id2]
+        vec = self.snp_arr[:, id1] != self.snp_arr[:, id2]
+        return vec[mask], mask
+
+    def get_within_sample_snp_vector(self, sample_id, no_filter=False):
+        depths = self.depth_arr[:, sample_id]
+        # mask = coverage_arr[:, sample_id]
+        if no_filter:
+            mask = depths > 0
+        else:
+            mask, sample_score = self.get_within_host_covered_genes_mask(self.major_freqs[sample_id], depths)
+            if sample_score <= config.sample_zscore_cutoff:
+                # sample does not support filtering gene loss regions
+                return None, None
+        return self.snp_arr[mask, sample_id], mask
+
+    def _get_median_coverage_df(self, depths):
+        # only works for within host
+        if len(depths) != np.sum(self.general_mask):
+            raise ValueError("Input must have the same size as the core genome")
+        depth_df = pd.DataFrame()
+        depth_df['depths'] = depths.reshape((-1,))
+        depth_df['core genes'] = self.gene_names[self.general_mask]
+        median_coverage = depth_df.groupby('core genes').median()
+
+        # sort dataframe by gene id
+        sorted_core_genes = depth_df['core genes'].unique()
+        sort_key = {gene: x for (x, gene) in enumerate(sorted_core_genes)}
+        median_coverage['order'] = median_coverage.index.map(sort_key)
+        median_coverage.sort_values(by='order', inplace=True)
+
+        median_coverage['smoothed depths'] = circular_window_smoothening(median_coverage['depths'], 500)
+        median_coverage['relative copy number'] = median_coverage['depths'] / median_coverage['smoothed depths']
+        median_coverage['zscores'] = stats.zscore(median_coverage['relative copy number'])
+        return depth_df, median_coverage
+
+    def get_within_host_covered_genes_mask(self, major_strain_freq, depths):
+        # compute regions that pass the coverage test
+        # also assign a zscore for this sample (the zscore of hypothetical gene loss event)
+        # can use the sample zscore to filter out samples that cannot reliably screen out gene loss regions
+        depth_df, median_coverage = self._get_median_coverage_df(depths)
+        mean_score = median_coverage['relative copy number'].mean()
+        std_score = median_coverage['relative copy number'].std()
+        sample_score = np.abs((major_strain_freq - mean_score) / std_score)
+        good_genes = median_coverage[np.abs(median_coverage['zscores']) < config.coverage_zscore_cutoff].index
+        mask = depth_df['core genes'].isin(good_genes)
+        return mask, sample_score
 
     def sample_local_T_pairwise(self, l):
         # l is the size of the chunk for T estimation
@@ -417,19 +466,29 @@ class DataHoarder:
     The next few functions are not limited to zarr arr, so should be moved
     to another file eventually
 '''
-
-
-def get_two_QP_sample_snp_vector(snp_arr, coverage_arr, sample_ids):
-    id1 = sample_ids[0]
-    id2 = sample_ids[1]
-    mask = coverage_arr[:, id1] & coverage_arr[:, id2]
-    vec = snp_arr[:, id1] != snp_arr[:, id2]
-    return vec[mask], mask
-
-
-def get_within_sample_snp_vector(snp_arr, coverage_arr, sample_id):
-    mask = coverage_arr[:, sample_id]
-    return snp_arr[mask, sample_id], mask
+def circular_window_smoothening(signal, window_size):
+    """
+    Perform a sliding window average but treat the two ends as periodic boundaries
+    :param signal: a numpy array of the signal to be smoothened
+    :param window_size: even windows will be converted to an odd window. Sizes > signal length will be treated
+    as signal length; sizes <= 1 have no effect
+    :return: smoothened signal
+    """
+    if window_size <= 1:
+        return signal
+    if window_size >= len(signal):
+        window_size = len(signal)
+    if window_size % 2 == 0:
+        half_size = window_size / 2
+    else:
+        half_size = (window_size - 1) / 2
+    half_size = int(half_size)
+    padded_signal = np.zeros(signal.shape[0] + 2 * half_size)
+    padded_signal[:half_size] = signal[-half_size:]
+    padded_signal[-half_size:] = signal[:half_size]
+    padded_signal[half_size:-half_size] = signal
+    total_window = 2 * half_size + 1
+    return np.convolve(padded_signal, np.ones(total_window) / float(total_window), mode='valid')
 
 
 def _compute_runs_single_chromosome(snp_vec, locations=None, return_locs=False):
@@ -524,7 +583,7 @@ def get_single_peak_sample_mask(species_name):
     if not os.path.exists(single_peak_dir):
         print("No single peak samples found for {}".format(species_name))
         mask = np.zeros(len(sample_names)).astype(bool)
-        return mask, sample_names, np.array([])
+        return mask, sample_names, np.array([]), np.array([])
     else:
         single_peak_samples = set([f.split('.')[0] for f in os.listdir(single_peak_dir) if not f.startswith('.')])
         allowed_samples = single_peak_samples & highcoverage_samples - blacklist

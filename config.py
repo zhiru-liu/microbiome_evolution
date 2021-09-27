@@ -73,6 +73,10 @@ empirical_histogram_bins = 40
 # for typical pair analysis
 typical_clonal_fraction_cutoff = 0.1
 
+# for within host pipeline
+coverage_zscore_cutoff = 2
+sample_zscore_cutoff = 2
+
 # Comment this out
 #from parsers.parse_HMP_data import *
 # and uncomment this

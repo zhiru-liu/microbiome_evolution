@@ -19,7 +19,11 @@ for filename in os.listdir(os.path.join(run_data_dir, 'between_hosts')):
     species_name = filename.split('.')[0]
 
     save_path = os.path.join(run_data_dir, 'within_hosts', '{}.pickle'.format(species_name))
-    within_runs_data = pickle.load(open(save_path, 'rb'))
+    try:
+        within_runs_data = pickle.load(open(save_path, 'rb'))
+    except IOError:
+        print("%s within-host has not been processed yet" % species_name)
+        continue
     save_path = os.path.join(run_data_dir, 'between_hosts', '{}.pickle'.format(species_name))
     between_runs_data = pickle.load(open(save_path, 'rb'))
 

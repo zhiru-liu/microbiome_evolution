@@ -17,7 +17,7 @@ variants = res[3]
 pvalues = res[4]
 
 core_genes = core_gene_utils.get_sorted_core_genes(species_name)
-general_mask = parallel_utils.get_general_site_mask(
+general_mask = parallel_utils._get_general_site_mask(
     gene_names, variants, pvalues, core_genes, allowed_variants=['4D'])
 
 good_genes = gene_names[general_mask]
@@ -40,14 +40,14 @@ between_path = os.path.join(base_path, 'between_host.csv')
 thresholds = np.loadtxt(os.path.join(base_path, 'between_host_thresholds.txt'))
 
 between_cumu_runs, within_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
-    between_path, within_path, axes[1], threshold_lens=thresholds, ind_to_plot=[0, 2, 3], ylim=0.3)
+    between_path, within_path, axes[1], threshold_lens=thresholds, ind_to_plot=[1, 2, 3], ylim=0.3)
 
 base_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', 'Bacteroides_vulgatus_57955')
 within_path = os.path.join(base_path, 'within_host.csv')
 between_path = os.path.join(base_path, 'between_host.csv')
-within_thresholds = np.loadtxt(os.path.join(base_path, 'thresholds.txt'))
+within_thresholds = np.loadtxt(os.path.join(base_path, 'within_host_thresholds.txt'))
 bh_between_cumu_runs, bh_within_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
-    between_path, within_path, axes[0], threshold_lens=within_thresholds, ind_to_plot=[3, 5, 7], ylim=0.3)
+    between_path, within_path, axes[0], threshold_lens=within_thresholds, ind_to_plot=[0, 2, 4], ylim=0.3)
 
 axes[0].get_xaxis().set_visible(False)
 axes[0].set_ylabel('same-clade\nsharing fraction')

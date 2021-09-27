@@ -97,6 +97,9 @@ def compute_pileup_for_within_host(dh, thresholds, clade_cutoff=None, within_cla
     for pair in single_subject_samples:
         # get the snp data
         snp_vec, coverage_arr = dh.get_snp_vector(pair)
+        if snp_vec is None:
+            # sample did not pass coverage filter
+            continue
         if (clade_cutoff is not None) and within_clade:
             if np.sum(snp_vec) / float(np.sum(coverage_arr)) > clade_cutoff:  # removing two clade pairs
                 continue
@@ -163,7 +166,7 @@ def compute_passed_starts_ends(snp_vec, chromosomes, locations, thresholds):
     for chromo in pd.unique(chromosomes):
         # loop over contigs
         subvec = snp_vec[chromosomes==chromo]
-        runs, starts = parallel_utils._compute_runs_single_chromosome(subvec, return_starts=True)
+        runs, starts, ends = parallel_utils._compute_runs_single_chromosome(subvec, return_locs=True)
 
         all_dat = []
         for i in range(len(thresholds)):
