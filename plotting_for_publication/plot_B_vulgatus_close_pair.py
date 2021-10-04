@@ -43,18 +43,21 @@ outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[3, 2.5], hspace=
 
 top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[2,1.5],wspace=0,subplot_spec=outer_grid[0])
 
-top_right_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1,1],hspace=0.2,subplot_spec=top_grid[1])
+top_right_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.37, 2],hspace=0.4,subplot_spec=top_grid[1])
+example_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1,1],hspace=0.2,subplot_spec=top_right_grid[1])
 
-bottom_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1, 1], wspace=0.3, subplot_spec=outer_grid[1])
+bottom_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1, 1], wspace=0.2, subplot_spec=outer_grid[1])
 
 # adding axes
 ct_ax = fig.add_subplot(bottom_grid[0])
 
 len_dist_ax = fig.add_subplot(bottom_grid[1])
 
-ex1_ax = fig.add_subplot(top_right_grid[0])
+ex0_ax = fig.add_subplot(top_right_grid[0])
 
-ex2_ax = fig.add_subplot(top_right_grid[1])
+ex1_ax = fig.add_subplot(example_grid[0])
+
+ex2_ax = fig.add_subplot(example_grid[1])
 
 ######################################################################
 # example species
@@ -66,6 +69,29 @@ within_color = '#2b83ba'
 # between_color = 'tab:orange'
 between_color = '#fdae61'
 snp_color = 'tab:red'
+
+
+def plot_typical_pair(ax, dh, pair):
+    cache_file = "cached_close_pair_{}.csv".format(pair)
+    if os.path.exists(cache_file):
+        snp_vec = np.loadtxt(cache_file)
+    else:
+        snp_vec, _ = dh.get_snp_vector(pair)
+        np.savetxt(cache_file, snp_vec)
+
+    window_size = 1000
+    local_pi = np.convolve(snp_vec, np.ones(window_size) / float(window_size), mode='same')
+    snp_locs = np.nonzero(snp_vec)[0]
+    shown_snp_locs = snp_locs
+
+    ax.plot(local_pi, label='local heterozygosity', color=pi_color, linewidth=1)
+    ax.plot(shown_snp_locs, np.zeros(shown_snp_locs.shape), '|', color=snp_color, label='individual snps', markersize=2)
+    ax.set_ylim([-0.005, 0.05])
+    ax.set_yticks((0.0, 0.04))
+    labels = ['0.0', '0.04']
+    ax.set_xlim([0, 260000])
+    ax.set_xlabel('Synonymous core genome location')
+    ax.legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1))
 
 
 def plot_example_pair(ax, dh, pair, full_df, if_legend=True):
@@ -110,13 +136,16 @@ def plot_example_pair(ax, dh, pair, full_df, if_legend=True):
     # ax.set_title(pair)
     ax.set_ylim([-0.035, 0.10])
 
-    ax.set_xlim([0, len(snp_vec)])
+    ax.set_xlim([0, 260000])
     ax.set_xlabel('Synonymous core genome location')
 
 
-plot_example_pair(ex1_ax, None, (128, 170), full_df)
+plot_typical_pair(ex0_ax, None, (0, 128))
+plot_example_pair(ex1_ax, None, (128, 170), full_df, if_legend=False)
 plot_example_pair(ex2_ax, None, (39, 74), full_df, if_legend=False)
+ex0_ax.set_xticklabels([])
 ex1_ax.set_xticklabels([])
+ex0_ax.set_xlabel('')
 ex1_ax.set_xlabel('')
 
 
@@ -188,4 +217,5 @@ len_dist_ax.set_xlabel('Transfer length / bps')
 len_dist_ax.set_ylabel('Survival prob')
 # len_dist_ax.set_title('Real length distribution')
 
+fig.patch.set_alpha(0.0)
 fig.savefig('test_close_pair.pdf', bbox_inches="tight")
