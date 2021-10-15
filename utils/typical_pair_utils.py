@@ -6,6 +6,18 @@ from utils import close_pair_utils, parallel_utils
 import config
 
 
+def load_single_subject_sample_idxs(species_name):
+    """
+    Load the idxs of single subject samples in the correct order
+    Can apply directly to clonal fraction mat or div mat
+    :param species_name:
+    :return: a list of indices
+    """
+    sample_mask, sample_names = parallel_utils.get_QP_sample_mask(species_name)
+    good_samples = sample_names[sample_mask]
+    return parallel_utils.get_single_subject_idxs_from_list(good_samples)
+
+
 def load_clonal_frac_mat(species_name, desired_samples=None, between_hosts=True):
     """
     Load precomputed clonal fraction matrix. If desired_samples is supplied, will sort

@@ -17,7 +17,7 @@ mpl.rcParams['lines.linewidth'] = 0.5
 ######################################################################
 
 species_name = 'Bacteroides_vulgatus_57955'
-# dh = parallel_utils.DataHoarder(species_name, mode="QP")
+dh = parallel_utils.DataHoarder(species_name, mode="QP")
 
 save_path = os.path.join(config.analysis_directory,
                          "closely_related", "debug", "{}_two_clades.pickle".format(species_name))
@@ -140,9 +140,9 @@ def plot_example_pair(ax, dh, pair, full_df, if_legend=True):
     ax.set_xlabel('Synonymous core genome location')
 
 
-plot_typical_pair(ex0_ax, None, (0, 128))
-plot_example_pair(ex1_ax, None, (128, 170), full_df, if_legend=False)
-plot_example_pair(ex2_ax, None, (39, 74), full_df, if_legend=False)
+plot_typical_pair(ex0_ax, dh, (0, 128))
+plot_example_pair(ex1_ax, dh, (128, 170), full_df, if_legend=False)
+plot_example_pair(ex2_ax, dh, (39, 74), full_df, if_legend=False)
 ex0_ax.set_xticklabels([])
 ex1_ax.set_xticklabels([])
 ex0_ax.set_xlabel('')
