@@ -1,35 +1,31 @@
 import numpy as np
-import itertools
-import random
 import os
-import pickle
 import sys
 import matplotlib.pyplot as plt
 from scipy.stats import ks_2samp
 sys.path.append("..")
-from utils import typical_pair_utils
 import config
 
 
-run_data_dir = os.path.join(config.analysis_directory, 'typical_pairs', 'runs_data')
-plot_dir = os.path.join(config.analysis_directory, 'typical_pairs', 'max_runs')
-for filename in os.listdir(os.path.join(run_data_dir, 'between_hosts')):
+max_run_dir = os.path.join(config.analysis_directory, 'typical_pairs', 'max_runs')
+plot_dir = os.path.join(config.analysis_directory, 'typical_pairs', 'max_runs_plots')
+processed = set()
+for filename in os.listdir(os.path.join(max_run_dir)):
     if filename.startswith('.'):
         continue
-    species_name = filename.split('.')[0]
-
-    save_path = os.path.join(run_data_dir, 'within_hosts', '{}.pickle'.format(species_name))
-    try:
-        within_runs_data = pickle.load(open(save_path, 'rb'))
-    except IOError:
-        print("%s within-host has not been processed yet" % species_name)
+    species_name = '_'.join(filename.split('_')[:-1])
+    if species_name in processed:
         continue
-    save_path = os.path.join(run_data_dir, 'between_hosts', '{}.pickle'.format(species_name))
-    between_runs_data = pickle.load(open(save_path, 'rb'))
+    else:
+        processed.add(species_name)
 
-    within_host_max_runs = typical_pair_utils.compute_max_runs(within_runs_data)
-    between_host_max_runs = typical_pair_utils.compute_max_runs(between_runs_data)
-    ks_dist, p_val = ks_2samp(within_host_max_runs, between_host_max_runs)
+    within_host_max_runs = np.loadtxt(os.path.join(max_run_dir, species_name + '_within.txt'), ndmin=1)
+    between_host_max_runs = np.loadtxt(os.path.join(max_run_dir, species_name + '_between.txt'))
+    # in order to use one sided ks test, need to use python3's scipy
+    if len(within_host_max_runs) == 0:
+        print("Skipping {}: no within host data".format(species_name))
+        continue
+    ks_dist, p_val = ks_2samp(within_host_max_runs, between_host_max_runs, alternative='less')
 
     fig, ax = plt.subplots(figsize=(3, 2))
     ax.hist([between_host_max_runs, within_host_max_runs], bins=100, density=True,

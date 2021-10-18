@@ -74,5 +74,5 @@ if __name__ == "__main__":
                                  'same_ylim', '{}.pdf'.format(species_name))
         f, axes = plot_one_species(x, y, asexual_line=True, same_ylim=True)
 
-        f.savefig(save_path)
+        f.savefig(save_path, dpi=600)
         plt.close()
