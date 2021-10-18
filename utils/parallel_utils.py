@@ -215,6 +215,20 @@ def compute_good_sample_stats():
     return pd.read_csv(csvpath)
 
 
+def get_single_subject_idxs_from_list(all_samples):
+    # compute the index of single subject samples in a list of samples
+    sub_sam_map = parse_HMP_data.parse_subject_sample_map()
+    sam_sub_map = sample_utils.calculate_sample_subject_map(sub_sam_map)
+    subs = list(map(sam_sub_map.get, all_samples))
+    seen = set()
+    good_idxs = []
+    for i, sub in enumerate(subs):
+        if sub not in seen:
+            good_idxs.append(i)
+            seen.add(sub)
+    return np.array(good_idxs)
+
+
 '''
     A class for holding relevant data of a species for analysis
 '''
@@ -357,16 +371,7 @@ class DataHoarder:
         return prev_mask & snp_mask
 
     def get_single_subject_idxs(self):
-        sub_sam_map = parse_HMP_data.parse_subject_sample_map()
-        sam_sub_map = sample_utils.calculate_sample_subject_map(sub_sam_map)
-        subs = list(map(sam_sub_map.get, self.good_samples))
-        seen = set()
-        good_idxs = []
-        for i, sub in enumerate(subs):
-            if sub not in seen:
-                good_idxs.append(i)
-                seen.add(sub)
-        return np.array(good_idxs)
+        return get_single_subject_idxs_from_list(self.good_samples)
 
     def get_snp_vector(self, idx):
         if self.mode == 'QP':

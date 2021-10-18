@@ -3,10 +3,11 @@ import os
 import sys
 import matplotlib.pyplot as plt
 sys.path.append("..")
-from utils import close_pair_utils, parallel_utils
+from utils import close_pair_utils, parallel_utils, typical_pair_utils
 import config
 
-def plot_one_species(x, y, asexual_line=True, same_ylim=False, logscale=True):
+
+def plot_one_species(x, y, asexual_line=True, same_ylim=None, logscale=True):
     height = 6
     ratio = 5
 
@@ -31,8 +32,8 @@ def plot_one_species(x, y, asexual_line=True, same_ylim=False, logscale=True):
     ax_marg_x.hist(x, bins=100, alpha=0.6)
     ax_marg_y.hist(y, orientation='horizontal', bins=100, alpha=0.6)
 
-    if same_ylim:
-        ax_joint.set_ylim([-1e-3, 0.05])
+    if same_ylim is not None:
+        ax_joint.set_ylim([-1e-3, same_ylim])
     else:
         ax_joint.set_ylim([-1e-3, max(y) + 1e-3])
     ax_joint.set_xlim([-1e-2, 1 + 1e-2])
@@ -60,19 +61,26 @@ if __name__ == "__main__":
     for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
         if species_name.startswith('.'):
             continue
+        if 'shahii' not in species_name:
+            # plotting specific species
+            continue
 
+        single_sub_idxs = typical_pair_utils.load_single_subject_sample_idxs(species_name)
         clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
                                        'between_hosts', '%s.csv' % species_name)
         clonal_frac_mat = np.loadtxt(clonal_frac_dir, delimiter=',')
+        clonal_frac_mat = clonal_frac_mat[single_sub_idxs, :][:, single_sub_idxs]
+
         div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
                                'between_hosts', '%s.csv' % species_name)
         div_mat = np.loadtxt(div_dir, delimiter=',')
+        div_mat = div_mat[single_sub_idxs, :][:, single_sub_idxs]
 
         x = clonal_frac_mat[np.triu_indices(clonal_frac_mat.shape[0], 1)]
         y = div_mat[np.triu_indices(div_mat.shape[0], 1)]
         save_path = os.path.join(config.analysis_directory, 'clonal_frac_pairwise_div_joint',
-                                 'same_ylim', '{}.pdf'.format(species_name))
-        f, axes = plot_one_species(x, y, asexual_line=True, same_ylim=True)
+                                 'customized', '{}.pdf'.format(species_name))
+        f, axes = plot_one_species(x, y, asexual_line=True, same_ylim=0.02)
 
         f.savefig(save_path, dpi=600)
         plt.close()
