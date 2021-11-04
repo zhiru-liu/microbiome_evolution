@@ -42,7 +42,7 @@ def plot_one_species(x, y, asexual_line=True, same_ylim=None, logscale=True):
         ax_marg_x.set_yscale('log')
         ax_marg_y.set_xscale('log')
 
-    ax_joint.set_xlabel('Clonal fraction')
+    ax_joint.set_xlabel('Identical fraction')
     ax_joint.set_ylabel('Pairwise divergence')
     return f, (ax_joint, ax_marg_x, ax_marg_y)
 
@@ -61,9 +61,9 @@ if __name__ == "__main__":
     for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
         if species_name.startswith('.'):
             continue
-        if 'shahii' not in species_name:
-            # plotting specific species
-            continue
+        # if 'shahii' not in species_name:
+        #     # plotting specific species
+        #     continue
 
         single_sub_idxs = typical_pair_utils.load_single_subject_sample_idxs(species_name)
         clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
@@ -79,8 +79,8 @@ if __name__ == "__main__":
         x = clonal_frac_mat[np.triu_indices(clonal_frac_mat.shape[0], 1)]
         y = div_mat[np.triu_indices(div_mat.shape[0], 1)]
         save_path = os.path.join(config.analysis_directory, 'clonal_frac_pairwise_div_joint',
-                                 'customized', '{}.pdf'.format(species_name))
-        f, axes = plot_one_species(x, y, asexual_line=True, same_ylim=0.02)
+                                 'default', '{}.pdf'.format(species_name))
+        f, axes = plot_one_species(x, y, asexual_line=True, same_ylim=None)
 
         f.savefig(save_path, dpi=600)
         plt.close()

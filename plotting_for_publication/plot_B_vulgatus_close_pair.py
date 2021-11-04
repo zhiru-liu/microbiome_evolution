@@ -5,6 +5,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import pickle
+import pandas as pd
+from itertools import compress
 sys.path.append("..")
 import config
 from utils import close_pair_utils, parallel_utils
@@ -17,22 +19,17 @@ mpl.rcParams['lines.linewidth'] = 0.5
 ######################################################################
 
 species_name = 'Bacteroides_vulgatus_57955'
-dh = parallel_utils.DataHoarder(species_name, mode="QP")
+# dh = parallel_utils.DataHoarder(species_name, mode="QP")
+dh = None
 
 save_path = os.path.join(config.analysis_directory,
                          "closely_related", "debug", "{}_two_clades.pickle".format(species_name))
-dat = pickle.load(open(save_path, 'rb'))
 
-within_counts, between_counts, full_df = close_pair_utils.merge_and_filter_transfers(dat, separate_clade=True)
-full_df.to_pickle(
-    os.path.join(config.analysis_directory, "closely_related", 'third_pass', species_name + '_all_transfers_two_clades.pickle'))
+clonal_divs, within_counts, between_counts, full_df = close_pair_utils.prepare_HMM_results_for_B_vulgatus(
+    save_path, 0.75, cache_intermediate=True)
+within_lens = full_df[full_df['types']==0]['lengths'].to_numpy().astype(int)
+between_lens = full_df[full_df['types']==1]['lengths'].to_numpy().astype(int)
 
-clonal_snps = np.array(dat['clonal snps'])
-clonal_lens = np.array(dat['clonal lengths'])
-clonal_divs = clonal_snps / clonal_lens.astype(float)
-
-within_lens = full_df[full_df['types'] == 0]['lengths'].to_numpy().astype(int)
-between_lens = full_df[full_df['types'] == 1]['lengths'].to_numpy().astype(int)
 BLOCK_SIZE = 10
 print("Mean within transfer length: {}".format(np.mean(within_lens) * BLOCK_SIZE))
 print("Mean between transfer length: {}".format(np.mean(between_lens) * BLOCK_SIZE))
@@ -162,7 +159,18 @@ plt_colors = plt_prop_cycle.by_key()['color']
 
 s1 = ct_ax.scatter(clonal_divs, within_counts, s=2, c=within_color, label='Within clade transfers')
 s2 = ct_ax.scatter(clonal_divs, -np.array(between_counts), s=2, c=between_color, label='Between clade transfers')
-ct_ax.plot(clonal_divs, np.zeros(clonal_snps.shape), 'k-')
+trend_directory = os.path.join(config.plotting_intermediate_directory, "B_vulgatus_trend_line.csv")
+if os.path.exists(trend_directory):
+    # add trend line
+    trend_data = pd.read_csv(trend_directory)
+    ct_ax.plot(trend_data['within_x'], trend_data['within_y'])
+    ct_ax.plot(trend_data['between_x'], -trend_data['between_y'])
+    ct_ax.fill_between(trend_data['within_x'], trend_data['within_y'] - trend_data['within_sigma'],
+                       trend_data['within_y'] + trend_data['within_sigma'], alpha=0.25)
+    ct_ax.fill_between(trend_data['between_x'], - trend_data['between_y'] - trend_data['between_sigma'],
+                       - trend_data['between_y'] + trend_data['between_sigma'], alpha=0.25)
+
+ct_ax.plot(clonal_divs, np.zeros(clonal_divs.shape), 'k-')
 
 ct_ax.set_xlim([0, 2e-4])
 ct_ax.set_ylim([-20, 40])
@@ -174,7 +182,7 @@ ct_ax.set_yticklabels(['20', '10', '0', '10', '20', '30'])
 ct_ax.xaxis.major.formatter._useMathText = True
 
 ct_ax.set_ylabel("Number of transfers")
-ct_ax.set_xlabel("Clonal snps")
+ct_ax.set_xlabel("Clonal divergence")
 
 # fig.text(0.04, 0.5, 'Number of transfers', va='center', rotation='vertical')
 
@@ -218,4 +226,4 @@ len_dist_ax.set_ylabel('Survival prob')
 # len_dist_ax.set_title('Real length distribution')
 
 fig.patch.set_alpha(0.0)
-fig.savefig('test_close_pair.pdf', bbox_inches="tight")
+fig.savefig('test_close_pair_cf_0.75.pdf', bbox_inches="tight")

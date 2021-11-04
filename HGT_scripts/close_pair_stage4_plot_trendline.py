@@ -68,71 +68,80 @@ def find_weighted_residual_dist(x, y_res, x_obs, k=25, qs=[0.66]):
     return f_int(qs)
 
 
-trend_line = True
-colored = True  # whether to use clonal fraction for color code
-second_pass_dir = os.path.join(config.analysis_directory, "closely_related", "second_pass")
-data_dir = os.path.join(config.analysis_directory, "closely_related", "third_pass")
+def prepare_trend_line(x, y):
+    x_plot, y_plot, bs_mean, bs_std = lowess_summary(x, y)
 
-for filename in os.listdir(second_pass_dir):
-    if filename.startswith('.'):
-        continue
-    species_name = filename.split('.')[0]
-    print("Processing {}".format(species_name))
-    filepath = os.path.join(data_dir, "%s.pickle" % species_name)
-    if not os.path.exists(filepath):
-        print("Intermediate file not found for {}, skipping".format(species_name))
-        continue
-    df = pd.read_pickle(filepath)
-    if df.shape[0] < 10:
-        print("Skipping; Only {} pairs".format(df.shape[0]))
-        continue
-
-    fig, ax = plt.subplots(1, 1, figsize=(4, 3))
-
-    # we have different choices of x&y values to plot
-    # x: number of clonal snps; or the expected number of total snps; or the clonal divergence
-    # y: number of detected transfers; or the total length of transfer regions
-    x = df['clonal divs'].to_numpy()
-    y = df['transfer counts'].to_numpy()
-    div_cutoff = 2.e-4
-    cf = df['clonal fractions'][x < div_cutoff]
-    y = y[x < div_cutoff]
-    x = x[x < div_cutoff]
-
-    if colored:
-        im = ax.scatter(x, y, s=2, c=cf, label=None)
-        cbar = plt.colorbar(im)
-        cbar.set_label('Clonal fraction', labelpad=10, rotation=270)
+    k = int(len(x)*0.2)  # number of neighbor points to choose
+    if k >= 7:
+        lowess = sm.nonparametric.lowess
+        order = np.argsort(x)
+        x = x[order]
+        y = y[order]
+        y_fit = lowess(y, x, return_sorted=False).T
+        sigmas = []
+        for x_obs in x_plot:
+            sigmas.append(find_weighted_residual_dist(x, y_fit - y, x_obs, k=k))
+        sigmas = np.array(sigmas).squeeze()
     else:
-        im = ax.scatter(x, y, s=2, label=None)
+        sigmas = None
+    return x_plot, y_plot, sigmas
 
-    ax.set_title(species_name)
-    ax.set_xlabel("Expected clonal snps")
-    ax.set_ylabel("Num detected transfers")
-    if trend_line:
-        x_plot, y_plot, bs_mean, bs_std = lowess_summary(x, y)
 
-        ax.plot(x_plot, y_plot)
+if __name__ == "__main__":
+    trend_line = True
+    colored = True  # whether to use clonal fraction for color code
+    second_pass_dir = os.path.join(config.analysis_directory, "closely_related", "second_pass")
+    data_dir = os.path.join(config.analysis_directory, "closely_related", "third_pass")
 
-        k = int(len(x)*0.2)  # number of neighbor points to choose
-        if k >= 7:
-            lowess = sm.nonparametric.lowess
-            order = np.argsort(x)
-            x = x[order]
-            y = y[order]
-            y_fit = lowess(y, x, return_sorted=False).T
-            sigmas = []
-            for x_obs in x_plot:
-                sigmas.append(find_weighted_residual_dist(x, y_fit - y, x_obs, k=k))
-            sigmas = np.array(sigmas).squeeze()
-            ax.fill_between(x_plot, y_plot - sigmas,
-                            y_plot + sigmas, alpha=0.25)
-            df_save = pd.DataFrame(data={'x':x_plot, 'y':y_plot, 'sigma':sigmas})
-            df_save.to_csv(os.path.join(config.analysis_directory,
-                "closely_related", "fourth_pass", "{}.csv".format(species_name)))
-    ax.set_xlim([0, div_cutoff])
-    fig.tight_layout()
-    fig.savefig(os.path.join(config.analysis_directory,
-                             "closely_related", "wall_clock_v4",
-                             "{}.pdf".format(species_name)), dpi=300)
-    plt.close()
+    for filename in os.listdir(second_pass_dir):
+        if filename.startswith('.'):
+            continue
+        species_name = filename.split('.')[0]
+        print("Processing {}".format(species_name))
+        filepath = os.path.join(data_dir, "%s.pickle" % species_name)
+        if not os.path.exists(filepath):
+            print("Intermediate file not found for {}, skipping".format(species_name))
+            continue
+        df = pd.read_pickle(filepath)
+        if df.shape[0] < 10:
+            print("Skipping; Only {} pairs".format(df.shape[0]))
+            continue
+
+        fig, ax = plt.subplots(1, 1, figsize=(4, 3))
+
+        # we have different choices of x&y values to plot
+        # x: number of clonal snps; or the expected number of total snps; or the clonal divergence
+        # y: number of detected transfers; or the total length of transfer regions
+        x = df['clonal divs'].to_numpy()
+        y = df['transfer counts'].to_numpy()
+        div_cutoff = 2.e-4
+        cf = df['clonal fractions'][x < div_cutoff]
+        y = y[x < div_cutoff]
+        x = x[x < div_cutoff]
+
+        if colored:
+            im = ax.scatter(x, y, s=2, c=cf, label=None)
+            cbar = plt.colorbar(im)
+            cbar.set_label('Clonal fraction', labelpad=10, rotation=270)
+        else:
+            im = ax.scatter(x, y, s=2, label=None)
+
+        ax.set_title(species_name)
+        ax.set_xlabel("Expected clonal snps")
+        ax.set_ylabel("Num detected transfers")
+        if trend_line:
+            x_plot, y_plot, sigmas = prepare_trend_line(x, y)
+
+            ax.plot(x_plot, y_plot)
+            if sigmas is not None:
+                ax.fill_between(x_plot, y_plot - sigmas,
+                                y_plot + sigmas, alpha=0.25)
+                df_save = pd.DataFrame(data={'x':x_plot, 'y':y_plot, 'sigma':sigmas})
+                df_save.to_csv(os.path.join(config.analysis_directory,
+                    "closely_related", "fourth_pass", "{}.csv".format(species_name)))
+        ax.set_xlim([0, div_cutoff])
+        fig.tight_layout()
+        fig.savefig(os.path.join(config.analysis_directory,
+                                 "closely_related", "wall_clock_v4",
+                                 "{}.pdf".format(species_name)), dpi=300)
+        plt.close()

@@ -1,7 +1,11 @@
 import numpy as np
 import pandas as pd
 import random
+import pickle
+import os
+from itertools import compress
 import scipy.cluster.hierarchy as hierarchy
+import config
 
 
 def find_close_pairs(cutoff, div_mat, good_idxs):
@@ -368,7 +372,7 @@ def merge_and_filter_transfers(data, separate_clade=False, merge_threshold=100, 
     counts = np.array(counts)
     full_df = pd.concat(all_dfs)
     if separate_clade:
-        return within_counts, between_counts, full_df
+        return np.array(within_counts), np.array(between_counts), full_df
     else:
         return counts, full_df
 
@@ -454,3 +458,50 @@ def get_empirical_div_dist(local_divs, genome_divs, num_bins, separate_clades, c
     else:
         counts, _ = np.histogram(local_divs, bins=bins)
     return divs, counts
+
+
+def prepare_HMM_results_for_B_vulgatus(save_path, cf_cutoff, cache_intermediate=True,
+                                       merge_threshold=0, filter_threshold=5):
+    """
+    Handy function to extract useful data from HMM raw results
+    Filtering genome pairs according to the clonal fraction, such that can control the degree of
+    overlapping
+    :param save_path: save path of the second stage analysis of HMM
+    :param cf_cutoff: default set in config.clonal_fraction_cutoff
+    :param cache_intermediate: whether save intermediate files such as transfer counts and transfer lengths. Need to set
+    this in order to compute trend line with another script
+    :param merge_threshold: whether merge extreme close transfers
+    :param filter_threshold: whether filter extreme short transfers
+    :return: x, y1, y2 for scatter plot of transfer counts; transfer length data
+    """
+    dat = pickle.load(open(save_path, 'rb'))
+
+    within_counts, between_counts, full_df = merge_and_filter_transfers(dat, separate_clade=True,
+                                            merge_threshold=merge_threshold, filter_threshold=filter_threshold)
+    if cache_intermediate:
+        full_df.to_pickle(
+            os.path.join(config.analysis_directory, "closely_related", 'third_pass',
+                         'Bacteroides_vulgatus_57955' + '_all_transfers_two_clades.pickle'))
+
+    # compute the total length of transferred regions
+    pair_to_total_length = full_df.groupby('pairs')['lengths'].sum().to_dict()
+    full_lengths = np.array([pair_to_total_length.get(x, 0) for x in dat['pairs']]) * config.second_pass_block_size
+    clonal_fractions = 1 - full_lengths / np.array(dat['genome lengths']).astype(float)
+
+    clonal_snps = np.array(dat['clonal snps'])
+    clonal_lens = np.array(dat['clonal lengths'])
+    clonal_divs = clonal_snps / clonal_lens.astype(float)
+    mask = clonal_fractions > cf_cutoff
+
+    x = clonal_divs[mask]
+    y1 = within_counts[mask]
+    y2 = between_counts[mask]
+    if cache_intermediate:
+        intermediate_data = pd.DataFrame({'clonal divs': x, 'within counts': y1,
+                                          'between counts': y2})
+        intermediate_data.to_csv(os.path.join(config.plotting_intermediate_directory, 'B_vulgatus_close_pair_data.csv'))
+
+    # only keeping transfer events from pairs passing the clonal fraction threshold
+    passed_pairs = list(compress(dat['pairs'], mask))  # compress is concatenating lists
+    passed_full_df = full_df[full_df['pairs'].isin(passed_pairs)]
+    return x, y1, y2, passed_full_df

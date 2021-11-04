@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import itertools
 import os
+from collections import Counter
 from utils import close_pair_utils, parallel_utils, BSMC_utils, typical_pair_utils
 import config
 
@@ -180,6 +181,34 @@ def compute_passed_starts_ends(snp_vec, chromosomes, locations, thresholds):
         index_offset += len(subvec)
         all_dats.append(all_dat)
     return all_dats
+
+
+def enrichment_test(gene_vector, site_mask, pass_func, shuffle_size=1, shuffle_reps=1e4):
+    """
+    Perform permutation of the genome to study whether certain regions are enriched for some criteria
+    Genes are grouped in clusters and then permuted together to preserve local clustering of functions
+    :param gene_vector: original vector of genes of size genome length
+    :param site_mask: for filtering interested regions
+    :param pass_func: a function that takes a gene name and return T/F
+    :param shuffle_size: rough number of genes to be grouped together (but not exactly this number, will use array_split
+    to find an approximate size_
+    :param shuffle_reps: number of repetitions
+    :return: a list of permutation results containing the number of genes in selected regions that pass the pass_func
+    """
+    unique_genes = pd.unique(gene_vector)
+    gene_lengths = Counter(gene_vector)
+    gene_clusters = np.array_split(unique_genes, len(unique_genes)//shuffle_size)
+    passed_counts = []
+    for i in range(int(shuffle_reps)):
+        shuffled_clusters = np.random.permutation(gene_clusters)
+        shuffled_genes = np.hstack(shuffled_clusters)
+        lengths = [gene_lengths[x] for x in shuffled_genes]
+        new_gene_vector = np.repeat(shuffled_genes, lengths)
+
+        passed_genes = pd.unique(new_gene_vector[site_mask])
+        passed_count = np.sum([pass_func(x) for x in passed_genes])
+        passed_counts.append(passed_count)
+    return passed_counts
 
 
 class Pileup_Helper:
