@@ -3,6 +3,7 @@ import json
 import sys
 import os
 import pandas as pd
+import seaborn as sns
 from scipy import interpolate
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -19,10 +20,12 @@ from matplotlib.transforms import Bbox, TransformedBbox, \
 from mpl_toolkits.axes_grid1.inset_locator import BboxPatch, BboxConnector, \
     BboxConnectorPatch
 
-species_priority = json.load(open('species_plotting_priority.json', 'r'))
+species_priority = json.load(open(os.path.join(config.analysis_directory, 'species_plotting_priority.json'), 'r'))
 data_dir = os.path.join(config.analysis_directory, "closely_related")
 files_to_plot = sorted(filter(lambda x: not x.startswith('.'), os.listdir(os.path.join(data_dir, 'fourth_pass'))), key=lambda x: species_priority.get(x.split('.')[0]))
-files_to_plot.insert(10, files_to_plot.pop(2))
+# files_to_plot.insert(10, files_to_plot.pop(2))
+files_to_plot.insert(17, files_to_plot.pop(11))
+files_to_plot.insert(17, files_to_plot.pop(11))
 
 data_dir = os.path.join(config.analysis_directory, "closely_related")
 
@@ -33,13 +36,13 @@ mpl.rcParams['legend.fontsize'] = 'small'
 plot_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 fig = plt.figure(figsize=(7, 5))
-gs = gridspec.GridSpec(10, 3)
+gs = gridspec.GridSpec(11, 3)
 gs.update(hspace=0)
 ax1 = fig.add_subplot(gs[:3, 0])
 ax2 = fig.add_subplot(gs[:3, 1], sharex=ax1, sharey=ax1)
 ax3 = fig.add_subplot(gs[:3, 2], sharex=ax1, sharey=ax1)
-axm = fig.add_subplot(gs[4:7, :])
-axd = fig.add_subplot(gs[7:, :])
+axm = fig.add_subplot(gs[5:8, :])
+axd = fig.add_subplot(gs[8:, :])
 
 idx = 1
 xticks = []
@@ -49,6 +52,12 @@ connection_r = []
 
 transfer_length_data = []
 plot_loc = []
+
+
+def interpolate_curve(xval, yval, sample_locations=[2.5e-5, 5e-5, 7.5e-5, 1e-4]):
+    f = interpolate.interp1d(xval, yval, bounds_error=False)
+    return f(sample_locations)
+
 
 for filename in files_to_plot:
     species_name = ' '.join(filename.split('.')[0].split('_')[:2])
@@ -62,21 +71,64 @@ for filename in files_to_plot:
     transfer_data = pd.read_pickle(data_path)
 
     n = raw_data.shape[0]
-    if n < 100:
+    n_filtered = np.sum(raw_data['clonal fractions'] > config.clonal_fraction_cutoff)
+    if n_filtered < 100:
         continue
-    print(filename, n, raw_data['clonal snps'].max())
-    transfer_length_data.append(transfer_data['lengths'].to_numpy().astype(float) * config.second_pass_block_size)
+    print(filename, n, n_filtered, raw_data['clonal snps'].max(), raw_data['clonal divs'].max())
+
+    if 'vulgatus' in species_name:
+        # for B vulgatus, everything needs to be done twice
+        trend_directory = os.path.join(config.plotting_intermediate_directory, "B_vulgatus_trend_line.csv")
+        fitted_data = pd.read_csv(trend_directory)
+
+        # within first
+        mid = interpolate_curve(fitted_data['within_x'], fitted_data['within_y'])
+        w = interpolate_curve(fitted_data['within_x'], fitted_data['within_sigma'])
+        plot_loc.append(2 * idx)
+
+        xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
+        axm.scatter(xloc, mid, s=5)
+        axm.plot(xloc, mid, linestyle=':', linewidth=1)
+        axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
+
+        transfer_length_data.append(transfer_data[transfer_data['types']==0]['lengths'].to_numpy().astype(float) * config.second_pass_block_size)
+
+        xticks.append(idx * 2)
+        xticklabels.append(species_name + '\n(within)')
+        idx += 1
+
+        # between next
+        mid = interpolate_curve(fitted_data['between_x'], fitted_data['between_y'])
+        w = interpolate_curve(fitted_data['between_x'], fitted_data['between_sigma'])
+        plot_loc.append(2 * idx)
+
+        xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
+        axm.scatter(xloc, mid, s=5)
+        axm.plot(xloc, mid, linestyle=':', linewidth=1)
+        axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
+
+        transfer_length_data.append(transfer_data[transfer_data['types']==1]['lengths'].to_numpy().astype(float) * config.second_pass_block_size)
+
+        xticks.append(idx * 2)
+        xticklabels.append(species_name + '\n(between)')
+        idx += 1
+        continue
+
     fitted_data = pd.read_csv(os.path.join(data_dir, 'fourth_pass', filename), index_col=0)
 
     x, y = close_pair_utils.prepare_x_y(raw_data)
 
-    f1 = interpolate.interp1d(fitted_data['x'], fitted_data['y'], bounds_error=False)
-    f2 = interpolate.interp1d(fitted_data['x'], fitted_data['sigma'], bounds_error=False)
+    # using divergence as x values
+    mid = interpolate_curve(fitted_data['x'], fitted_data['y'])
+    w = interpolate_curve(fitted_data['x'], fitted_data['sigma'])
+    if np.isnan(mid).sum() > 0:
+        # data does not cover the range 0 to 1e-4
+        continue
 
     # plotting species summary
     plot_loc.append(2 * idx)
-    mid = f1([10, 20, 30, 40])
-    w = f2([10, 20, 30, 40])
+    transfer_length_data.append(transfer_data['lengths'].to_numpy().astype(float) * config.second_pass_block_size)
+
     xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
     axm.scatter(xloc, mid, s=5)
     axm.plot(xloc, mid, linestyle=':', linewidth=1)
@@ -90,37 +142,13 @@ for filename in files_to_plot:
     # axd.scatter(2 * idx, transfer_data['lengths'].median() * config.second_pass_block_size, s=5)
 
     kw = dict(linestyle=":", linewidth=1, color='grey')
-    if 'vulgatus' in species_name:
-        # for B vulgatus
-        # plot for within transfer first
-        vb1 = axd.violinplot([config.second_pass_block_size * transfer_data[transfer_data['types']==0]['lengths'].astype(float)],
-                             positions=plot_loc, vert=True, showmedians=True, showextrema=False, widths=0.8)
-        for b in vb1['bodies']:
-            # get the center
-            m = np.mean(b.get_paths()[0].vertices[:, 0])
-            # modify the paths to not go further right than the center
-            b.get_paths()[0].vertices[:, 0] = np.clip(b.get_paths()[0].vertices[:, 0], -np.inf, m)
-            b.set_facecolor(plot_colors[0])
-            b.set_alpha(0.5)
-            b.set_edgecolor('black')
-
-        vb2 = axd.violinplot([config.second_pass_block_size * transfer_data[transfer_data['types']==1]['lengths'].astype(float)],
-                             positions=plot_loc, vert=True, showmedians=True, showextrema=False, widths=0.8)
-        for b in vb2['bodies']:
-            # get the center
-            m = np.mean(b.get_paths()[0].vertices[:, 0])
-            # modify the paths to not go further left than the center
-            b.get_paths()[0].vertices[:, 0] = np.clip(b.get_paths()[0].vertices[:, 0], m, np.inf)
-            b.set_alpha(0.5)
-            b.set_facecolor(plot_colors[0])
-            b.set_edgecolor('black')
-
     if 'caccae' in species_name:
         ax1.scatter(x, y, s=1)
         ax1.plot(fitted_data['x'], fitted_data['y'])
         ax1.fill_between(fitted_data['x'], fitted_data['y'] - fitted_data['sigma'],
                          fitted_data['y'] + fitted_data['sigma'], alpha=0.25)
         ax1.set_title(species_name)
+        ax1.set_xlabel("Clonal divergence")
         axm.axvline(xloc[0] - 0.4, **kw)
         axm.axvline(xloc[-1] + 0.4, **kw)
         axd.axvline(xloc[0] - 0.4, **kw)
@@ -134,6 +162,7 @@ for filename in files_to_plot:
         ax2.fill_between(fitted_data['x'], fitted_data['y'] - fitted_data['sigma'],
                          fitted_data['y'] + fitted_data['sigma'], alpha=0.25)
         ax2.set_title(species_name)
+        ax2.set_xlabel("Clonal divergence")
         axm.axvline(xloc[0] - 0.4, **kw)
         axm.axvline(xloc[-1] + 0.4, **kw)
         axd.axvline(xloc[0] - 0.4, **kw)
@@ -145,11 +174,14 @@ for filename in files_to_plot:
         ax3.scatter(x, y, s=1)
 
         # select three examples pairs
-        example_mask = raw_data['pairs'].isin([(282, 387), (297, 331), (269, 313)])
-        ax3.scatter(x[example_mask], y[example_mask], s=1, color='r')
+        # example_mask = raw_data['pairs'].isin([(282, 387), (297, 331), (269, 313)])
+        # ax3.scatter(x[example_mask], y[example_mask], s=1, color='r')
 
         ax3.plot(fitted_data['x'], fitted_data['y'])
-        ax3.set_xlim([0, 50])
+        # ax3.set_xlim([0, 50])
+        ax3.set_xlim([0, 1e-4])
+        ax3.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
+        ax3.set_xlabel("Clonal divergence")
         ax3.fill_between(fitted_data['x'], fitted_data['y'] - fitted_data['sigma'],
                          fitted_data['y'] + fitted_data['sigma'], alpha=0.25)
         ax3.set_title(species_name)
@@ -165,11 +197,15 @@ for filename in files_to_plot:
     idx += 1
 
 # plotting all other violin plots
-violins = axd.violinplot(transfer_length_data[1:], positions=plot_loc[1:], vert=True, showmedians=True, showextrema=False,
+violins = axd.violinplot(transfer_length_data[:], positions=plot_loc[:], vert=True, showmedians=True, showextrema=False,
                          widths=0.8)
+for i, loc in enumerate(plot_loc):
+    ys = transfer_length_data[i]
+    xs = np.ones(ys.shape) * loc + np.random.normal(scale=0.05, size=ys.shape)
+    axd.scatter(xs, ys, color=plot_colors[(i) % len(plot_colors)], s=0.2, rasterized=True, alpha=0.1)
 
 for i, pc in enumerate(violins['bodies']):
-    pc.set_facecolor(plot_colors[(i + 1) % len(plot_colors)])
+    pc.set_facecolor(plot_colors[(i) % len(plot_colors)])
     pc.set_alpha(0.5)
     pc.set_edgecolor('black')
 violins['cmedians'].set_edgecolor('black')
@@ -202,4 +238,4 @@ _ = axd.set_xticks(xticks)
 _ = axd.set_xticklabels(xticklabels, rotation=90, ha='center', fontsize=5)
 
 fig.tight_layout()
-fig.savefig(os.path.join(config.analysis_directory, 'closely_related', 'summary_v4.pdf'), dpi=300)
+fig.savefig(os.path.join(config.analysis_directory, 'closely_related', 'summary_v5.pdf'), dpi=600)

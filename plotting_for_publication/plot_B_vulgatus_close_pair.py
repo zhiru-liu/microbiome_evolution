@@ -7,7 +7,7 @@ import matplotlib.gridspec as gridspec
 import pandas as pd
 sys.path.append("..")
 import config
-from utils import close_pair_utils
+from utils import close_pair_utils, parallel_utils
 
 # plotting functions
 pi_color = 'tab:grey'
@@ -16,6 +16,7 @@ within_color = '#2b83ba'
 # between_color = 'tab:orange'
 between_color = '#fdae61'
 snp_color = 'tab:red'
+
 
 def plot_typical_pair(ax, dh, pair):
     cache_file = "cached_close_pair_{}.csv".format(pair)
@@ -152,7 +153,8 @@ if __name__ == "__main__":
     save_path = config.B_vulgatus_data_path
     BLOCK_SIZE = config.second_pass_block_size
     clonal_divs, within_counts, between_counts, full_df = close_pair_utils.prepare_HMM_results_for_B_vulgatus(
-        save_path, 0.75, cache_intermediate=True)
+        save_path, config.clonal_fraction_cutoff, cache_intermediate=True)
+
     within_lens = full_df[full_df['types']==0]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
     between_lens = full_df[full_df['types']==1]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
 

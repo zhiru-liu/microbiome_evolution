@@ -114,7 +114,7 @@ if __name__ == "__main__":
         # y: number of detected transfers; or the total length of transfer regions
         x = df['clonal divs'].to_numpy()
         y = df['transfer counts'].to_numpy()
-        div_cutoff = 2.e-4
+        div_cutoff = 1.e-4
         cf = df['clonal fractions'][x < div_cutoff]
         y = y[x < div_cutoff]
         x = x[x < div_cutoff]
@@ -130,7 +130,13 @@ if __name__ == "__main__":
         ax.set_xlabel("Expected clonal snps")
         ax.set_ylabel("Num detected transfers")
         if trend_line:
-            x_plot, y_plot, sigmas = prepare_trend_line(x, y)
+            cf = df['clonal fractions']
+            # only using the sufficiently close pairs to fit trend line
+            x_fit = df['clonal divs'].to_numpy()
+            y_fit = df['transfer counts'].to_numpy()
+            x_fit = x_fit[cf >= config.clonal_fraction_cutoff]
+            y_fit = y_fit[cf >= config.clonal_fraction_cutoff]
+            x_plot, y_plot, sigmas = prepare_trend_line(x_fit, y_fit)
 
             ax.plot(x_plot, y_plot)
             if sigmas is not None:

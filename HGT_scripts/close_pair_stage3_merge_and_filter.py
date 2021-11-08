@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 sys.path.append("..")
 import config
-from utils import close_pair_utils
+from utils import close_pair_utils, parallel_utils
 
 
 ckpt_path = os.path.join(config.analysis_directory,
@@ -32,11 +32,13 @@ for filename in os.listdir(ckpt_path):
     third_pass_df['pairs'] = data['pairs']
     third_pass_df['clonal snps'] = data['clonal snps']
     third_pass_df['transfer snps'] = data['transfer snps']
-    third_pass_df['genome lengths'] = data['genome lengths']
+    third_pass_df['genome lengths'] = data['genome lengths'] # length of snp vector - taking missing data into account
     third_pass_df['clonal lengths'] = data['clonal lengths']
     third_pass_df['clonal divs'] = third_pass_df['clonal snps'] / third_pass_df['clonal lengths'].astype(float)
     third_pass_df['expected clonal snps'] = third_pass_df['clonal divs'] * third_pass_df['genome lengths']
     third_pass_df['transfer counts'] = transfer_counts
+    core_genome_len = parallel_utils.get_genome_length(species_name)
+    third_pass_df['normalized transfer counts'] = transfer_counts * 1e6 / core_genome_len # simple normalization by total core genome len
     third_pass_df['total transfer lengths'] = full_lengths
 
     # total_blocks = first_pass_df[first_pass_df['pair_idxs'].isin(data['pairs'])]['num_total_blocks']

@@ -131,6 +131,17 @@ def get_contig_lengths(good_chromo):
     return contig_lengths
 
 
+def get_genome_length(species_name, if_syn=False):
+    df = pd.read_csv(os.path.join(config.analysis_directory, 'misc', 'genome_length.csv'))
+    df = df.set_index('Species names')
+    if if_syn:
+        return df.loc[species_name, '4D synonymous site counts']
+    else:
+        return df.loc[species_name, 'Core genome length']
+
+
+
+
 def get_core_genome_contig_lengths(species_name, allowed_variants=['4D']):
     # handy function for computing the contig lengths in core genome coordinates
     data_dir = os.path.join(config.data_directory, 'zarr_snps', species_name, 'site_info.txt')
