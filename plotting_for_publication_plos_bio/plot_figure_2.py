@@ -2,6 +2,7 @@ import matplotlib
 matplotlib.use('Agg')
 import pylab
 import sys
+import os
 import numpy
 
 sys.path.append("..")
@@ -206,8 +207,13 @@ sample_sizes = []
 for species_name in reversed(sorted_species_names):
     species_names.append(species_name)
     sample_sizes.append( divergence_matrices[species_name].shape[0] )
-    
 
+
+# added by Zhiru to get the most prevelant species names
+print("Saving prevalent speices")
+with open(os.path.join(config.data_directory, 'plosbio_fig1_species.txt'), 'w') as f:
+    for species_name in species_names:
+        f.write("%s\n" % species_name)
 
     
 # sort in descending order of sample size

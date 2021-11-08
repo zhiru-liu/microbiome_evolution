@@ -70,6 +70,8 @@ clonal_fraction_cutoff = 0.8
 first_pass_block_size = 1000
 second_pass_block_size = 10
 empirical_histogram_bins = 40
+B_vulgatus_data_path = os.path.join(analysis_directory,
+                         "closely_related", "debug", "{}_two_clades.pickle".format('Bacteroides_vulgatus_57955'))
 
 # for typical pair analysis
 typical_clonal_fraction_cutoff = 0.1

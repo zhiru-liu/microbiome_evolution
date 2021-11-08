@@ -2,11 +2,12 @@ import matplotlib
 matplotlib.use('Agg')
 import pylab
 import sys
+import os
 import numpy
 from numpy.random import normal
 #from calculate_pi_matrix import calculate_self_pis
 from utils import diversity_utils, figure_utils, sample_utils, stats_utils, sfs_utils
-from parsers import parse_midas_data
+from parsers import parse_midas_data, parse_HMP_data
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from math import log10,ceil
@@ -51,8 +52,10 @@ transition_color = '#756bb1'
 
 # Load subject and sample metadata
 sys.stderr.write("Loading sample metadata...\n")
-subject_sample_map = sample_utils.parse_subject_sample_map()
-sample_order_map = sample_utils.parse_sample_order_map()
+# subject_sample_map = sample_utils.parse_subject_sample_map()
+# sample_order_map = sample_utils.parse_sample_order_map()
+subject_sample_map = parse_HMP_data.parse_subject_sample_map() # Zhiru: in this version, these two functions were moved to parse_HMP_data
+sample_order_map = parse_HMP_data.parse_sample_order_map()
 sys.stderr.write("Done!\n")
  
 
@@ -635,6 +638,12 @@ haploid_haploid_samples = []
 haploid_polyploid_samples = []
 polyploid_haploid_samples = []
 polyploid_polyploid_samples = []
+
+# added by Zhiru to get the most prevelant species names
+print("Saving prevalent speices")
+with open(os.path.join(config.data_directory, 'plosbio_fig1_species.txt'), 'w') as f:
+    for species_name in species_names:
+        f.write("%s\n" % species_name)
 
 #############
 #
