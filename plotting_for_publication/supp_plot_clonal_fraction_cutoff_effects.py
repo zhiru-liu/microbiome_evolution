@@ -18,7 +18,7 @@ median_between = []
 
 for cf_cutoff in cutoffs:
     clonal_divs, within_counts, between_counts, full_df = close_pair_utils.prepare_HMM_results_for_B_vulgatus(
-        save_path, cf_cutoff, cache_intermediate=False)
+        save_path, cf_cutoff, cache_intermediate=False, filter_threshold=5)
     number_events.append(full_df.shape[0])
     within_lens = full_df[full_df['types']==0]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
     between_lens = full_df[full_df['types']==1]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
@@ -37,7 +37,8 @@ for cf_cutoff in cutoffs:
                     bbox_inches='tight')
         plt.close()
 
-fig, axes = plt.subplots(1, 3, figsize=(6, 2))
+fig, axes = plt.subplots(1, 3, figsize=(6, 1.5))
+plt.subplots_adjust(wspace=0.3)
 axes[0].plot(cutoffs, number_events)
 axes[0].set_ylabel('num good transfers')
 axes[0].set_xlabel('clonal fraction cutoff')
@@ -53,4 +54,4 @@ axes[2].plot(cutoffs, median_between, label='between clade')
 axes[2].legend()
 axes[2].set_xlabel('clonal fraction cutoff')
 axes[2].set_ylabel('median transfer length')
-fig.savefig(os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_varying_cf', "overall_trend.pdf"))
+fig.savefig(os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_varying_cf', "overall_trend.pdf"), bbox_inches='tight')

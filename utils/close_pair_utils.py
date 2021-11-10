@@ -6,7 +6,6 @@ import os
 from itertools import compress
 import scipy.cluster.hierarchy as hierarchy
 import config
-from utils import parallel_utils
 
 
 def find_close_pairs(cutoff, div_mat, good_idxs):
@@ -494,9 +493,9 @@ def prepare_HMM_results_for_B_vulgatus(save_path, cf_cutoff, cache_intermediate=
     clonal_divs = clonal_snps / clonal_lens.astype(float)
     mask = clonal_fractions > cf_cutoff
 
-    # normalize to transfer per 1Mbp
-    core_genome_len = parallel_utils.get_genome_length('Bacteroides_vulgatus_57955')
     x = clonal_divs[mask]
+    # normalize to transfer per 1Mbp
+    core_genome_len = 2057681
     y1 = within_counts[mask] * 1e6 / core_genome_len
     y2 = between_counts[mask] * 1e6 / core_genome_len
     if cache_intermediate:

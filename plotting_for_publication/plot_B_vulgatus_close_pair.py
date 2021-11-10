@@ -19,7 +19,7 @@ snp_color = 'tab:red'
 
 
 def plot_typical_pair(ax, dh, pair):
-    cache_file = "cached_close_pair_{}.csv".format(pair)
+    cache_file = os.path.join(config.plotting_intermediate_directory, "cached_close_pair_{}.csv".format(pair))
     if os.path.exists(cache_file):
         snp_vec = np.loadtxt(cache_file)
     else:
@@ -36,13 +36,13 @@ def plot_typical_pair(ax, dh, pair):
     ax.set_ylim([-0.005, 0.05])
     ax.set_yticks((0.0, 0.04))
     labels = ['0.0', '0.04']
-    ax.set_xlim([0, 260000])
+    ax.set_xlim([0, 264000])
     ax.set_xlabel('Synonymous core genome location')
     ax.legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1))
 
 
 def plot_example_pair(ax, dh, pair, full_df, if_legend=True):
-    cache_file = "cached_close_pair_{}.csv".format(pair)
+    cache_file = os.path.join(config.plotting_intermediate_directory, "cached_close_pair_{}.csv".format(pair))
     if os.path.exists(cache_file):
         snp_vec = np.loadtxt(cache_file)
     else:
@@ -83,7 +83,7 @@ def plot_example_pair(ax, dh, pair, full_df, if_legend=True):
     # ax.set_title(pair)
     ax.set_ylim([-0.035, 0.10])
 
-    ax.set_xlim([0, 260000])
+    ax.set_xlim([0, 264000])
     ax.set_xlabel('Synonymous core genome location')
 
 
@@ -104,14 +104,14 @@ def plot_scatter(ax, x, y1, y2, if_trend_line=True):
     ax.plot(x, np.zeros(x.shape), 'k-')
 
     ax.set_xlim([0, 2e-4])
-    ax.set_ylim([-20, 40])
+    ax.set_ylim([-7.5, 17.5])
     ax.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
 
-    ax.set_yticks([-20, -10, 0, 10, 20, 30])
-    ax.set_yticklabels(['20', '10', '0', '10', '20', '30'])
+    ax.set_yticks([-5, 0, 5, 10, 15])
+    ax.set_yticklabels(['5', '0', '5', '10', '15'])
     ax.xaxis.major.formatter._useMathText = True
 
-    ax.set_ylabel("Number of transfers")
+    ax.set_ylabel("Number of transfers per 1Mbps")
     ax.set_xlabel("Clonal divergence")
 
 
@@ -188,7 +188,8 @@ if __name__ == "__main__":
     ######################################################################
 
     plot_typical_pair(ex0_ax, dh, (0, 128))
-    plot_example_pair(ex1_ax, dh, (128, 170), full_df, if_legend=False)
+    # plot_example_pair(ex1_ax, dh, (128, 170), full_df, if_legend=False)
+    plot_example_pair(ex1_ax, dh, (54, 238), full_df, if_legend=False)
     plot_example_pair(ex2_ax, dh, (39, 74), full_df, if_legend=False)
     ex0_ax.set_xticklabels([])
     ex1_ax.set_xticklabels([])
@@ -214,4 +215,4 @@ if __name__ == "__main__":
     ######################################################################
     plot_distributions(fig, len_dist_ax, within_lens, between_lens)
     fig.patch.set_alpha(0.0)
-    fig.savefig('test_close_pair_cf_0.75.pdf', bbox_inches="tight")
+    fig.savefig('test_close_pair_cf_0.8.pdf', bbox_inches="tight")

@@ -113,7 +113,7 @@ if __name__ == "__main__":
         # x: number of clonal snps; or the expected number of total snps; or the clonal divergence
         # y: number of detected transfers; or the total length of transfer regions
         x = df['clonal divs'].to_numpy()
-        y = df['transfer counts'].to_numpy()
+        y = df['normalized transfer counts'].to_numpy()
         div_cutoff = 1.e-4
         cf = df['clonal fractions'][x < div_cutoff]
         y = y[x < div_cutoff]
@@ -128,12 +128,12 @@ if __name__ == "__main__":
 
         ax.set_title(species_name)
         ax.set_xlabel("Expected clonal snps")
-        ax.set_ylabel("Num detected transfers")
+        ax.set_ylabel("Num detected transfers per 1Mbps")
         if trend_line:
             cf = df['clonal fractions']
             # only using the sufficiently close pairs to fit trend line
             x_fit = df['clonal divs'].to_numpy()
-            y_fit = df['transfer counts'].to_numpy()
+            y_fit = df['normalized transfer counts'].to_numpy()
             x_fit = x_fit[cf >= config.clonal_fraction_cutoff]
             y_fit = y_fit[cf >= config.clonal_fraction_cutoff]
             x_plot, y_plot, sigmas = prepare_trend_line(x_fit, y_fit)
@@ -146,6 +146,7 @@ if __name__ == "__main__":
                 df_save.to_csv(os.path.join(config.analysis_directory,
                     "closely_related", "fourth_pass", "{}.csv".format(species_name)))
         ax.set_xlim([0, div_cutoff])
+        ax.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
         fig.tight_layout()
         fig.savefig(os.path.join(config.analysis_directory,
                                  "closely_related", "wall_clock_v4",
