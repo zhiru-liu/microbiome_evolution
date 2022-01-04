@@ -29,7 +29,7 @@ def plot_mirror(between_cumu_runs, within_cumu_runs, ax, threshold_lens, ind_to_
 
     for i in to_plot:
         ax.plot(between_cumu_runs[:, i], linewidth=1, color=colors[color_idx],
-                label="{}".format(int(threshold_lens[i])))
+                label="%d / %d" % (threshold_lens[0][i], threshold_lens[1][i]))
         ax.plot(-within_cumu_runs[:, i], linewidth=1, color=colors[color_idx])
         color_idx += 1
     ax.hlines(0, 0, between_cumu_runs.shape[0], 'black', linewidth=1)

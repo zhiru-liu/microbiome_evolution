@@ -114,7 +114,7 @@ if __name__ == "__main__":
         # y: number of detected transfers; or the total length of transfer regions
         x = df['clonal divs'].to_numpy()
         y = df['normalized transfer counts'].to_numpy()
-        div_cutoff = 1.e-4
+        div_cutoff = 3.e-4
         cf = df['clonal fractions'][x < div_cutoff]
         y = y[x < div_cutoff]
         x = x[x < div_cutoff]

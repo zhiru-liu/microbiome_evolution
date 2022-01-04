@@ -1,9 +1,16 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 import config
 from utils import parallel_utils, close_pair_utils
+
+fontsize = 6
+mpl.rcParams['font.size'] = fontsize
+mpl.rcParams['lines.linewidth'] = 1.0
+mpl.rcParams['legend.frameon']  = False
+mpl.rcParams['legend.fontsize']  = 'small'
 
 dh = parallel_utils.DataHoarder('Bacteroides_vulgatus_57955', mode='QP', allowed_variants=['4D'])
 
@@ -35,7 +42,7 @@ def process_pairs(pairs, block_size=500, clade_div_cutoff=0.03, clonal_block_cut
     return np.array(between_counts), np.array(within_counts)
 
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(4, 3))
 block_size = 500
 total_blocks = float(np.sum(dh.general_mask) // block_size)
 print("Computing fractions for close pairs")
@@ -54,6 +61,8 @@ ax.scatter((within_counts + 0.2*np.random.normal(size=len(within_counts))) / tot
            label='intermediate pairs')
 
 ax.legend()
-ax.set_xlabel("fraction of genome covered by within tranfer")
-ax.set_ylabel("fraction of genome covered by between tranfer")
-fig.savefig(os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_extrapolation.pdf'), bbox_inches='tight')
+ax.set_xlabel(r'$f_{r}$, within')
+ax.set_ylabel(r'$f_{r}$, between')
+ax.set_xlim(xmin=-0.01)
+ax.set_ylim(ymin=-0.002)
+fig.savefig(os.path.join(config.figure_directory, 'B_vulgatus_extrapolation.pdf'), bbox_inches='tight')

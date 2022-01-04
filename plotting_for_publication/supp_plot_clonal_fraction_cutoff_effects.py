@@ -1,9 +1,16 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 from utils import close_pair_utils
 from plotting_for_publication import plot_B_vulgatus_close_pair
 import config
+
+fontsize = 6
+mpl.rcParams['font.size'] = fontsize
+mpl.rcParams['lines.linewidth'] = 1.0
+mpl.rcParams['legend.frameon'] = False
+mpl.rcParams['legend.fontsize'] = 'small'
 
 save_path = config.B_vulgatus_data_path
 cutoffs = np.arange(0.7, 0.96, 0.01)
@@ -32,13 +39,14 @@ for cf_cutoff in cutoffs:
         plt.subplots_adjust(wspace=0.3)
         plot_B_vulgatus_close_pair.plot_scatter(axes[0], clonal_divs, within_counts, between_counts, False)
         plot_B_vulgatus_close_pair.plot_distributions(fig, axes[1], within_lens, between_lens,
-                                                      inset_location=[0.7, 0.25, 0.15, 0.3])
+                                                      inset_location=[0.7, 0.3, 0.15, 0.3])
+        axes[1].set_xticks([0, 5000, 10000, 15000, 20000])
         fig.savefig(os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_varying_cf', 'cf_%.2f.pdf'%cf_cutoff),
                     bbox_inches='tight')
         plt.close()
 
-fig, axes = plt.subplots(1, 3, figsize=(6, 1.5))
-plt.subplots_adjust(wspace=0.3)
+fig, axes = plt.subplots(1, 3, figsize=(6.5, 1.3))
+plt.subplots_adjust(wspace=0.4)
 axes[0].plot(cutoffs, number_events)
 axes[0].set_ylabel('num good transfers')
 axes[0].set_xlabel('clonal fraction cutoff')

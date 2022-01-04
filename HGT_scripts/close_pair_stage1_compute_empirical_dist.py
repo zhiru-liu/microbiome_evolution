@@ -31,6 +31,9 @@ for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
     if species_name.startswith('.'):
         continue
     print('Processing ' + species_name)
+    save_path = os.path.join(config.hmm_data_directory, species_name + '.csv')
+    if os.path.exists(save_path):
+        print("%s already processed" % species_name)
     if species_name == 'Bacteroides_vulgatus_57955':
         separate_clades = True
         clade_cutoff = 0.03

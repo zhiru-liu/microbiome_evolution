@@ -63,18 +63,32 @@ def load_pairwise_div_mat(species_name, between_hosts=True):
     return div_mat
 
 
-def compute_theta(species_name, clade_cutoff=None):
+def compute_theta(species_name, clade_cutoff=[None, None], cf_cutoff=0.05, return_both=False):
+    single_sub_idxs = load_single_subject_sample_idxs(species_name)
+    return _compute_theta(species_name, single_sub_idxs,
+                          clade_cutoff=clade_cutoff, cf_cutoff=cf_cutoff, return_both=return_both)
+
+
+def _compute_theta(species_name, single_sub_idxs, clade_cutoff=[None, None], cf_cutoff=0.05, return_both=False):
     pd_mat = load_pairwise_div_mat(species_name)
+    pd_mat = pd_mat[single_sub_idxs, :][:, single_sub_idxs]
     cf_mat = load_clonal_frac_mat(species_name)
+    cf_mat = cf_mat[single_sub_idxs, :][:, single_sub_idxs]
     uptri = np.triu_indices(pd_mat.shape[0], 1)
     pds = pd_mat[uptri]
     cfs = cf_mat[uptri]
-    if clade_cutoff:
-        within_theta = np.mean(pds[(cfs < 0.05) & (pds < clade_cutoff)])
-        between_theta = np.mean(pds[(cfs < 0.05) & (pds > clade_cutoff)])
+
+    clade_cutoff[0] = 0 if clade_cutoff[0] is None else clade_cutoff[0]
+    clade_cutoff[1] = pds.max() if clade_cutoff[1] is None else clade_cutoff[1]
+
+    within_mask = (cfs < cf_cutoff) & (pds < clade_cutoff[1]) & (pds > clade_cutoff[0])
+    between_mask = (cfs < cf_cutoff) & (pds > clade_cutoff[1])
+    within_theta = np.mean(pds[within_mask])
+    if return_both:
+        between_theta = np.mean(pds[between_mask])
         return within_theta, between_theta
     else:
-        return np.mean(pds[cfs < 0.05])
+        return within_theta
 
 
 def compute_runs(dh, good_idxs):
@@ -175,3 +189,20 @@ def _filter_and_sum(vals, threshold):
 
 def compute_cumu_runs(runs_data, threshold):
     return np.array(list(map(lambda x: _filter_and_sum(x, threshold), runs_data.values())))
+
+
+def get_joint_plot_x_y(species_name):
+    single_sub_idxs = load_single_subject_sample_idxs(species_name)
+    clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
+                                   'between_hosts', '%s.csv' % species_name)
+    clonal_frac_mat = np.loadtxt(clonal_frac_dir, delimiter=',')
+    clonal_frac_mat = clonal_frac_mat[single_sub_idxs, :][:, single_sub_idxs]
+
+    div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
+                           'between_hosts', '%s.csv' % species_name)
+    div_mat = np.loadtxt(div_dir, delimiter=',')
+    div_mat = div_mat[single_sub_idxs, :][:, single_sub_idxs]
+
+    x = clonal_frac_mat[np.triu_indices(clonal_frac_mat.shape[0], 1)]
+    y = div_mat[np.triu_indices(div_mat.shape[0], 1)]
+    return x, y

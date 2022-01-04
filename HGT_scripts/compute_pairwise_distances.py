@@ -18,8 +18,7 @@ def compute_one_species(species_name, debug=False):
     clonal_frac_mat = np.ones((num_samples, num_samples))
     for i in range(num_samples):
         for j in range(i + 1, num_samples):
-            snp_vec, _ = parallel_utils.get_two_QP_sample_snp_vector(
-                    dh.snp_arr, dh.covered_arr, (i, j))
+            snp_vec, _ = dh.get_snp_vector((i, j))
             div = np.sum(snp_vec) / float(len(snp_vec))
 
             snp_blocks = close_pair_utils.to_block(snp_vec, config.first_pass_block_size)

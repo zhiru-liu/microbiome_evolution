@@ -2,12 +2,14 @@ import numpy as np
 import os
 import sys
 import matplotlib.pyplot as plt
+
+from utils.typical_pair_utils import get_joint_plot_x_y
+
 sys.path.append("..")
-from utils import close_pair_utils, parallel_utils, typical_pair_utils
 import config
 
 
-def plot_one_species(x, y, asexual_line=True, same_ylim=None, logscale=True):
+def plot_one_species(x, y, asexual_line=True, same_ylim=None, logscale=True, semilogy=False):
     height = 6
     ratio = 5
 
@@ -26,24 +28,33 @@ def plot_one_species(x, y, asexual_line=True, same_ylim=None, logscale=True):
     if asexual_line:
         xs = np.linspace(0.05, 1, 100)
         ys = -np.log(xs) / config.first_pass_block_size
-        ax_joint.plot(xs, ys, '--r', zorder=1)
+        ax_joint.plot(xs, ys, '--r', zorder=1, label='random mutations')
 
     ax_joint.scatter(x, y, s=1, zorder=2, rasterized=True)
     ax_marg_x.hist(x, bins=100, alpha=0.6)
-    ax_marg_y.hist(y, orientation='horizontal', bins=100, alpha=0.6)
-
-    if same_ylim is not None:
-        ax_joint.set_ylim([-1e-3, same_ylim])
+    if semilogy:
+        bins = np.geomspace(min(y[y>0]), max(y), 100)
     else:
-        ax_joint.set_ylim([-1e-3, max(y) + 1e-3])
-    ax_joint.set_xlim([-1e-2, 1 + 1e-2])
+        bins = 100
+    ax_marg_y.hist(y, orientation='horizontal', bins=bins, alpha=0.6)
 
     if logscale:
         ax_marg_x.set_yscale('log')
         ax_marg_y.set_xscale('log')
 
+    if semilogy:
+        ax_joint.set_yscale('log')
+    else:
+        if same_ylim is not None:
+            ax_joint.set_ylim([-1e-3, same_ylim])
+        else:
+            ax_joint.set_ylim([-1e-3, max(y) + 1e-3])
+    ax_joint.set_xlim([-1e-2, 1 + 1e-2])
+
     ax_joint.set_xlabel('Identical fraction')
     ax_joint.set_ylabel('Pairwise divergence')
+    ax_marg_y.set_xticks([10, 1000])
+    ax_joint.legend()
     return f, (ax_joint, ax_marg_x, ax_marg_y)
 
 
@@ -61,26 +72,14 @@ if __name__ == "__main__":
     for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
         if species_name.startswith('.'):
             continue
-        # if 'shahii' not in species_name:
-        #     # plotting specific species
-        #     continue
+        if 'vulgatus' not in species_name:
+            # plotting specific species
+            continue
+        x, y = get_joint_plot_x_y(species_name)
 
-        single_sub_idxs = typical_pair_utils.load_single_subject_sample_idxs(species_name)
-        clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
-                                       'between_hosts', '%s.csv' % species_name)
-        clonal_frac_mat = np.loadtxt(clonal_frac_dir, delimiter=',')
-        clonal_frac_mat = clonal_frac_mat[single_sub_idxs, :][:, single_sub_idxs]
-
-        div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
-                               'between_hosts', '%s.csv' % species_name)
-        div_mat = np.loadtxt(div_dir, delimiter=',')
-        div_mat = div_mat[single_sub_idxs, :][:, single_sub_idxs]
-
-        x = clonal_frac_mat[np.triu_indices(clonal_frac_mat.shape[0], 1)]
-        y = div_mat[np.triu_indices(div_mat.shape[0], 1)]
         save_path = os.path.join(config.analysis_directory, 'clonal_frac_pairwise_div_joint',
-                                 'default', '{}.pdf'.format(species_name))
-        f, axes = plot_one_species(x, y, asexual_line=True, same_ylim=None)
+                                 'customized', '{}.pdf'.format(species_name))
+        f, axes = plot_one_species(x, y, asexual_line=True, same_ylim=None, semilogy=True)
 
         f.savefig(save_path, dpi=600)
         plt.close()

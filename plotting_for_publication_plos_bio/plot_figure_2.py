@@ -211,7 +211,7 @@ for species_name in reversed(sorted_species_names):
 
 # added by Zhiru to get the most prevelant species names
 print("Saving prevalent speices")
-with open(os.path.join(config.data_directory, 'plosbio_fig1_species.txt'), 'w') as f:
+with open(os.path.join(config.data_directory, 'plosbio_fig2_species.txt'), 'w') as f:
     for species_name in species_names:
         f.write("%s\n" % species_name)
 

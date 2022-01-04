@@ -65,23 +65,31 @@ def plot_example_pair(ax, dh, pair, full_df, if_legend=True):
         start = row['starts'] * block_size
         end = (row['ends'] + 1) * block_size
         if row['types'] == 0:
-            within_ys[start:end] = 1
+            color = within_color
         else:
-            between_ys[start:end] = 1
+            color = between_color
+        # if row['types'] == 0:
+        #     within_ys[start:end] = 1
+        # else:
+        #     between_ys[start:end] = 1
+        ax.axvspan(start, end, facecolor=color, alpha=0.3)
 
-    ax.plot(xs, -between_ys * 0.03, color=between_color, linewidth=1)
-    ax.plot(xs, -within_ys * 0.03, color=within_color, linewidth=1)
+    ax.axvspan(-2, -1, facecolor=within_color, alpha=0.3, label='within-clade')
+    ax.axvspan(-2, -1, facecolor=between_color, alpha=0.3, label='between-clade')
+    # ax.plot(xs, -between_ys * 0.03, color=between_color, linewidth=1)
+    # ax.plot(xs, -within_ys * 0.03, color=within_color, linewidth=1)
 
-    ax.plot(local_pi, label='local heterozygosity', color=pi_color, linewidth=1)
-    ax.plot(shown_snp_locs, np.zeros(len(shown_snp_locs)), '|', color=snp_color, label='individual snps', markersize=2)
+    ax.plot(local_pi, label='SNP density', color=pi_color, linewidth=1)
+    ax.plot(shown_snp_locs, np.zeros(len(shown_snp_locs)), '|', color=snp_color, label='individual snps', markersize=2,
+            markeredgewidth=0.5)
 
     ax.set_yticks((-0.03, 0.0, 0.04, 0.08))
     labels = ['transfer', '0.0', '0.04', '0.08']
     if if_legend:
-        ax.legend()
+        ax.legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1))
     ax.set_yticklabels(labels)
     # ax.set_title(pair)
-    ax.set_ylim([-0.035, 0.10])
+    ax.set_ylim([-0.005, 0.10])
 
     ax.set_xlim([0, 264000])
     ax.set_xlabel('Synonymous core genome location')
@@ -153,22 +161,24 @@ if __name__ == "__main__":
     save_path = config.B_vulgatus_data_path
     BLOCK_SIZE = config.second_pass_block_size
     clonal_divs, within_counts, between_counts, full_df = close_pair_utils.prepare_HMM_results_for_B_vulgatus(
-        save_path, config.clonal_fraction_cutoff, cache_intermediate=True)
+        save_path, 0.8, cache_intermediate=True, merge_threshold=100)
 
     within_lens = full_df[full_df['types']==0]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
     between_lens = full_df[full_df['types']==1]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
 
     print("Mean within transfer length: {}".format(np.mean(within_lens)))
     print("Mean between transfer length: {}".format(np.mean(between_lens)))
+    print("Total number of close pairs: %d, detected transfers: %d, within transfers: %d, between transfers: %d" % (
+        len(clonal_divs), full_df.shape[0], np.sum(full_df['types'] == 0), np.sum(full_df['types'] == 1)))
 
     # mapping out grid
-    fig = plt.figure(figsize=(7, 5.5))
-    outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[3, 2.5], hspace=0.3, figure=fig)
+    fig = plt.figure(figsize=(7, 4.6))
+    outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[2.1, 2.5], hspace=0.3, figure=fig)
 
     top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[2,1.5],wspace=0,subplot_spec=outer_grid[0])
 
-    top_right_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.37, 2],hspace=0.4,subplot_spec=top_grid[1])
-    example_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1,1],hspace=0.2,subplot_spec=top_right_grid[1])
+    # top_right_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.37, 2],hspace=0.4,subplot_spec=top_grid[1])
+    example_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1,1],hspace=0.2,subplot_spec=top_grid[1])
 
     bottom_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1, 1], wspace=0.2, subplot_spec=outer_grid[1])
 
@@ -177,7 +187,7 @@ if __name__ == "__main__":
 
     len_dist_ax = fig.add_subplot(bottom_grid[1])
 
-    ex0_ax = fig.add_subplot(top_right_grid[0])
+    # ex0_ax = fig.add_subplot(top_right_grid[0])
 
     ex1_ax = fig.add_subplot(example_grid[0])
 
@@ -187,13 +197,13 @@ if __name__ == "__main__":
     # example species
     ######################################################################
 
-    plot_typical_pair(ex0_ax, dh, (0, 128))
+    # plot_typical_pair(ex0_ax, dh, (0, 128))
     # plot_example_pair(ex1_ax, dh, (128, 170), full_df, if_legend=False)
-    plot_example_pair(ex1_ax, dh, (54, 238), full_df, if_legend=False)
+    plot_example_pair(ex1_ax, dh, (54, 238), full_df, if_legend=True)
     plot_example_pair(ex2_ax, dh, (39, 74), full_df, if_legend=False)
-    ex0_ax.set_xticklabels([])
+    # ex0_ax.set_xticklabels([])
     ex1_ax.set_xticklabels([])
-    ex0_ax.set_xlabel('')
+    # ex0_ax.set_xlabel('')
     ex1_ax.set_xlabel('')
 
 
