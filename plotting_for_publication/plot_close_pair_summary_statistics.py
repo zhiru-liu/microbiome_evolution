@@ -9,6 +9,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.patches import ConnectionPatch
+from scipy.stats import gaussian_kde
 
 sys.path.append("..")
 import config
@@ -39,8 +40,8 @@ fig = plt.figure(figsize=(7, 5))
 gs = gridspec.GridSpec(11, 3)
 gs.update(hspace=0)
 ax1 = fig.add_subplot(gs[:3, 0])
-ax2 = fig.add_subplot(gs[:3, 1], sharex=ax1, sharey=ax1)
-ax3 = fig.add_subplot(gs[:3, 2], sharex=ax1, sharey=ax1)
+ax2 = fig.add_subplot(gs[:3, 1], sharey=ax1)
+ax3 = fig.add_subplot(gs[:3, 2], sharey=ax1)
 axm = fig.add_subplot(gs[5:8, :])
 axd = fig.add_subplot(gs[8:, :])
 
@@ -57,6 +58,35 @@ plot_loc = []
 def interpolate_curve(xval, yval, sample_locations=[2.5e-5, 5e-5, 7.5e-5, 1e-4]):
     f = interpolate.interp1d(xval, yval, bounds_error=False)
     return f(sample_locations)
+
+
+def plot_jitters(ax, X, ys, width, if_box=True, colorVal='tab:blue'):
+    kernel = gaussian_kde(ys)
+
+    theory_ys = np.linspace(ys.min(),ys.max(),100)
+    theory_pdf = kernel(theory_ys)
+
+    scale = width/theory_pdf.max()
+
+    xs = np.random.uniform(-1,1,size=len(ys))*kernel(ys)*scale
+
+    q25 = np.quantile(ys,0.25)
+    q50 = np.quantile(ys,0.5)
+    q75 = np.quantile(ys,0.75)
+
+    # ax.fill_betweenx(theory_ys, X-theory_pdf*scale,X+theory_pdf*scale,linewidth=0.25,facecolor=light_colorVal,edgecolor=colorVal)
+    other_width = width+0.1
+    if if_box:
+        ax.plot([X-other_width,X+other_width],[q25,q25],'-',color=colorVal,linewidth=1)
+        ax.plot([X-other_width,X+other_width],[q50,q50],'-',color=colorVal,linewidth=1)
+        ax.plot([X-other_width,X+other_width],[q75,q75],'-',color=colorVal,linewidth=1)
+        ax.plot([X-other_width,X-other_width],[q25,q75],'-',color=colorVal,linewidth=1)
+        ax.plot([X+other_width,X+other_width],[q25,q75],'-',color=colorVal,linewidth=1)
+
+    if len(ys)<900:
+        ax.plot(X+xs,ys,'.',color=colorVal,alpha=0.1,markersize=5,markeredgewidth=0.0)
+    else:
+        ax.plot(X+xs,ys,'.',color=colorVal,alpha=0.1,markersize=5,markeredgewidth=0.0, rasterized=True)
 
 
 for filename in files_to_plot:
@@ -149,6 +179,8 @@ for filename in files_to_plot:
                          fitted_data['y'] + fitted_data['sigma'], alpha=0.25)
         ax1.set_title(species_name)
         ax1.set_xlabel("Clonal divergence")
+        ax1.set_xlim([0, 1e-4])
+        ax1.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
         axm.axvline(xloc[0] - 0.4, **kw)
         axm.axvline(xloc[-1] + 0.4, **kw)
         axd.axvline(xloc[0] - 0.4, **kw)
@@ -163,6 +195,8 @@ for filename in files_to_plot:
                          fitted_data['y'] + fitted_data['sigma'], alpha=0.25)
         ax2.set_title(species_name)
         ax2.set_xlabel("Clonal divergence")
+        ax2.set_xlim([0, 2e-4])
+        ax2.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
         axm.axvline(xloc[0] - 0.4, **kw)
         axm.axvline(xloc[-1] + 0.4, **kw)
         axd.axvline(xloc[0] - 0.4, **kw)
@@ -179,7 +213,7 @@ for filename in files_to_plot:
 
         ax3.plot(fitted_data['x'], fitted_data['y'])
         # ax3.set_xlim([0, 50])
-        ax3.set_xlim([0, 1e-4])
+        ax3.set_xlim([0, 2e-4])
         ax3.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
         ax3.set_xlabel("Clonal divergence")
         ax3.fill_between(fitted_data['x'], fitted_data['y'] - fitted_data['sigma'],
@@ -201,8 +235,9 @@ violins = axd.violinplot(transfer_length_data[:], positions=plot_loc[:], vert=Tr
                          widths=0.8)
 for i, loc in enumerate(plot_loc):
     ys = transfer_length_data[i]
-    xs = np.ones(ys.shape) * loc + np.random.normal(scale=0.05, size=ys.shape)
-    axd.scatter(xs, ys, color=plot_colors[(i) % len(plot_colors)], s=0.2, rasterized=True, alpha=0.1)
+    # xs = np.ones(ys.shape) * loc + np.random.normal(scale=0.05, size=ys.shape)
+    # axd.scatter(xs, ys, color=plot_colors[(i) % len(plot_colors)], s=0.2, rasterized=True, alpha=0.1)
+    plot_jitters(axd, loc, ys, width=0.4, colorVal=plot_colors[i % len(plot_colors)])
 
 for i, pc in enumerate(violins['bodies']):
     pc.set_facecolor(plot_colors[(i) % len(plot_colors)])
@@ -232,10 +267,11 @@ _ = axd.set_xticklabels([])
 # axd.set_yticks([0, 0.25, 0.5, 0.75, 1])
 # axd.set_yscale('log')
 axd.grid(linestyle='--', axis='y')
+axd.set_xlim(axm.get_xlim())
 axd.set_ylim([0, 5900])
 
 _ = axd.set_xticks(xticks)
 _ = axd.set_xticklabels(xticklabels, rotation=90, ha='center', fontsize=5)
 
 fig.tight_layout()
-fig.savefig(os.path.join(config.analysis_directory, 'closely_related', 'summary_v5.pdf'), dpi=600)
+fig.savefig(os.path.join(config.analysis_directory, 'closely_related', 'summary_v6.pdf'), dpi=600)

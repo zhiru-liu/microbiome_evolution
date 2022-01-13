@@ -18,6 +18,7 @@ between_mean = np.mean(local_divs[genome_divs <= 0.03])
 
 
 bins = np.linspace(0, max(local_divs), 41)
+fig, ax = plt.subplots(figsize=(3, 2))
 _ = plt.hist(local_divs[genome_divs > 0.03], bins=bins, histtype='step', density=True, label='Empirical between clade')
 _ = plt.hist(local_divs[genome_divs <= 0.03], bins=bins, histtype='step', density=True, label='Empirical within clade')
 _ = plt.hist(np.random.poisson(within_mean*block_size, num_samples) / float(block_size),
@@ -26,4 +27,4 @@ _ = plt.hist(np.random.poisson(between_mean*block_size, num_samples) / float(blo
              bins=bins, histtype='step', density=True, label='Poisson between clade')
 plt.legend()
 plt.xlabel('simulated transfer block divergence')
-plt.savefig('B_vulgatus_empirical_histogram.pdf')
+plt.savefig(os.path.join(config.figure_directory, 'supp_B_vulgatus_empirical_histogram.pdf'), bbox_inches='tight')

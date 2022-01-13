@@ -143,7 +143,7 @@ def plot_distributions(fig, ax, within_lens, between_lens, inset_location=[0.7, 
 
     ax.legend()
     ax.set_xlabel('Transfer length / bps')
-    ax.set_ylabel('Survival prob')
+    ax.set_ylabel('Prob greater')
 
 
 

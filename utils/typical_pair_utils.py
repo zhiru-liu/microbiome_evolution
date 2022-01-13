@@ -191,7 +191,13 @@ def compute_cumu_runs(runs_data, threshold):
     return np.array(list(map(lambda x: _filter_and_sum(x, threshold), runs_data.values())))
 
 
-def get_joint_plot_x_y(species_name):
+def get_joint_plot_x_y(species_name, clade_cutoff=None):
+    """
+    Prepare the x and y in the joint distribution plot of pairwise divergence and identical fraction
+    :param species_name:
+    :param clade_cutoff: If provided, will be used to cluster into major clades, and provide x,y for only the biggest clade
+    :return:
+    """
     single_sub_idxs = load_single_subject_sample_idxs(species_name)
     clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
                                    'between_hosts', '%s.csv' % species_name)
@@ -203,6 +209,49 @@ def get_joint_plot_x_y(species_name):
     div_mat = np.loadtxt(div_dir, delimiter=',')
     div_mat = div_mat[single_sub_idxs, :][:, single_sub_idxs]
 
+    if clade_cutoff is not None:
+        cluster_dict = close_pair_utils.get_clusters_from_pairwise_matrix(div_mat, threshold=clade_cutoff)
+        bigger_clade_id = np.argmax(map(len, cluster_dict.values()))
+        bigger_clade_idxs = cluster_dict.values()[bigger_clade_id]
+        clonal_frac_mat = clonal_frac_mat[bigger_clade_idxs, :][:, bigger_clade_idxs]
+        div_mat = div_mat[bigger_clade_idxs, :][:, bigger_clade_idxs]
+
     x = clonal_frac_mat[np.triu_indices(clonal_frac_mat.shape[0], 1)]
     y = div_mat[np.triu_indices(div_mat.shape[0], 1)]
     return x, y
+
+
+def fit_quadratic_curve(x, y, min_x=0.1):
+    """
+    Helper function to prepare a "quadratic model" to explain the variance in y distribution using variable x
+    Of course, for our purpose x is the identical fraction and y is the pairwise divergence
+    :param min_x: sets the range of x values to be used in fitting
+    :return: the resulting quadratic function
+    """
+    xfit = x[x >= min_x]
+    yfit = y[x >= min_x]
+    # adding end point at x=0
+    xfit = np.hstack([xfit, [1]])
+    yfit = np.hstack([yfit, [0]])
+    params = np.polyfit(xfit, yfit, 2)
+
+    def F(xs):
+        res = params[0]*x**2 + params[1]*xs + params[2]
+        res[xs < min_x] = np.mean(y[x < min_x]) # fit does not extend below min x
+        return res
+    return F
+
+
+def asexual_curve(x, block_size=config.first_pass_block_size, default=0):
+    """
+    The expected behavior for the joint distribution under a random mutation model (or asexual)
+    :param x: input array
+    :param default: the value to return when x=0
+    :return: predicted y values
+    """
+    default_out = np.ones_like(x) * block_size * default
+    y = -np.log(x, out=default_out, where=x > 0) / block_size
+    return y
+
+
+

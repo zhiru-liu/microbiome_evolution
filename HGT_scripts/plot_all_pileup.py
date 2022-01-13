@@ -10,9 +10,12 @@ for species_name in os.listdir(os.path.join(config.analysis_directory, 'sharing_
         continue
     save_path = os.path.join(config.analysis_directory, 'sharing_pileup',
                              'empirical', species_name)
-    thresholds = np.loadtxt(os.path.join(save_path, 'thresholds.txt'))
-    cumu_runs = np.loadtxt(os.path.join(save_path, 'cutoff_0.001.csv'))
+    thresholds = np.loadtxt(os.path.join(save_path, 'between_host_thresholds.txt'))
+    cumu_runs = np.loadtxt(os.path.join(save_path, 'between_host.csv'))
 
+    if 'between' in species_name:
+        species_name = "Bacteroides_vulgatus_57955"
+    print("processing %s" % species_name)
     contig_lengths = parallel_utils.get_core_genome_contig_lengths(species_name)
     contig_ends = np.cumsum(contig_lengths)
 
@@ -20,8 +23,8 @@ for species_name in os.listdir(os.path.join(config.analysis_directory, 'sharing_
     print(real_cv)
 
     fig, ax = plt.subplots(figsize=(5, 2))
-    idx_to_plot = [1, 3, 5, 7]
-    for i in idx_to_plot:
+    # idx_to_plot = [0, 1, 2, 3]
+    for i in range(cumu_runs.shape[1]):
         dat = cumu_runs[:, i]
         ax.plot(dat, linewidth=1, label="threshold={:.0f}, cv={:.2f}".format(thresholds[i], real_cv[i]))
 

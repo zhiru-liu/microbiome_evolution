@@ -148,7 +148,7 @@ def get_event_start_end_BSMC(sim_data, genome_len, idx1, idx2, thresholds):
         event_starts = site_locations[:-1][runs > threshold]
         event_ends = site_locations[1:][runs > threshold]
         all_dat.append(zip(event_starts, event_ends))
-    return all_dat
+    return [all_dat]  # the outer [] is for compatibility with multi-chromosome data
 
 
 def compute_passed_starts_ends(snp_vec, chromosomes, locations, thresholds):

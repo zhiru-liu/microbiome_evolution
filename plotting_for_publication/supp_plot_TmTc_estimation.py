@@ -44,7 +44,7 @@ all_Tc = []
 all_close_frac = []
 
 # set up figure
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(6, 4))
 ax2 = ax.twinx()
 locs = np.arange(len(species_to_plot))
 debug=False
@@ -121,7 +121,7 @@ pretty_names = [figure_utils.get_pretty_species_name(name) for name in species_t
 _ = ax.set_xticklabels(pretty_names, rotation=90, ha='center', fontsize=5)
 ax.set_ylabel("recombined fraction / clonal divergence")
 ax2.set_ylim(ax.get_ylim())
-ax2.set_yticks()
+ax2.set_yticks([])
 
 fig.savefig(os.path.join(config.figure_directory, 'Tm_dist.pdf'), bbox_inches='tight', dpi=600)
 df = pd.DataFrame({'Species':species_to_plot, 'Tm':all_Tm, 'Tc':all_Tc, 'Close pair fraction':all_close_frac})

@@ -7,7 +7,7 @@ from utils import pileup_utils, parallel_utils, typical_pair_utils
 import config
 
 
-def compute_between_host(species_name, thresholds):
+def compute_between_host(species_name, thresholds, save_path=None):
     print("Processing %s" % species_name)
     if 'vulgatus' in species_name:
         # only B vulgatus need to pick out the dominant clade
@@ -15,7 +15,10 @@ def compute_between_host(species_name, thresholds):
     else:
         clade_cutoff = None
 
-    ckpt_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', species_name)
+    if save_path is None:
+        ckpt_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', species_name)
+    else:
+        ckpt_path = save_path
     if os.path.exists(ckpt_path):
         print("%s already processed. Skipping" % species_name)
         return
@@ -62,29 +65,32 @@ def compute_within_host(species_name, thresholds, b_vulgatus_between_clade=False
 
 if __name__ == '__main__':
     contig_data = json.load(open(os.path.join(config.data_directory, 'contig_counts.json'), 'r'))
-    thresholds = [1600, 2400, 3200]
-    species_name = 'Bacteroides_vulgatus_57955'
+    # thresholds = [1600, 2400, 3200]
+    # thresholds = [1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+    # species_name = 'Bacteroides_vulgatus_57955'
     # species_name = 'Eubacterium_rectale_56927'
-    compute_between_host(species_name, thresholds)
+    # save_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'B_vulgatus')
+    # compute_between_host(species_name, thresholds, save_path=save_path)
     # compute_within_host(species_name, thresholds, b_vulgatus_between_clade=False)
 
-    thresholds = [220, 340, 450]
-    compute_B_vulgatus_between_clade(thresholds)
+    # thresholds = [220, 340, 450]
+    # compute_B_vulgatus_between_clade(thresholds)
 
-    # for species_name in contig_data:
-    #     if contig_data[species_name] > 50:
-    #         continue
-    #     if 'vulgatus' in species_name:
-    #         within_theta, between_theta = typical_pair_utils.compute_theta(species_name, clade_cutoff=0.03)
-    #         thresholds = np.array([10, 15, 20, 25, 30, 35, 40, 45]) / within_theta
-    #         # compute_between_host(species_name, thresholds)
-    #         compute_within_host(species_name, thresholds)
-    #
-    #         thresholds = np.array([10, 20, 30, 40]) / between_theta
-    #         # compute_B_vulgatus_between_clade(thresholds)
-    #         compute_within_host(species_name, thresholds, b_vulgatus_between_clade=True)
-    #     else:
-    #         theta = typical_pair_utils.compute_theta(species_name)
-    #         thresholds = np.array([10, 20, 30, 40]) / theta
-    #         # compute_between_host(species_name, thresholds)
-    #         compute_within_host(species_name, thresholds)
+    for species_name in contig_data:
+        if contig_data[species_name] > 50:
+            continue
+        print("Processing %s" % species_name)
+        if 'vulgatus' in species_name:
+            within_theta, between_theta = typical_pair_utils.compute_theta(species_name, clade_cutoff=[None, 0.03], return_both=True)
+            thresholds = np.array([15, 20, 25]) / within_theta
+            # compute_between_host(species_name, thresholds)
+            compute_within_host(species_name, thresholds)
+
+            thresholds = np.array([15, 20, 25]) / between_theta
+            # compute_B_vulgatus_between_clade(thresholds)
+            compute_within_host(species_name, thresholds, b_vulgatus_between_clade=True)
+        else:
+            theta = typical_pair_utils.compute_theta(species_name)
+            thresholds = np.array([15, 20, 25]) / theta
+            # compute_between_host(species_name, thresholds)
+            compute_within_host(species_name, thresholds)

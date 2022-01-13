@@ -3,13 +3,13 @@ import os
 import sys
 import matplotlib.pyplot as plt
 
-from utils.typical_pair_utils import get_joint_plot_x_y
+from utils.typical_pair_utils import get_joint_plot_x_y, fit_quadratic_curve
 
 sys.path.append("..")
 import config
 
 
-def plot_one_species(x, y, asexual_line=True, same_ylim=None, logscale=True, semilogy=False):
+def plot_one_species(x, y, asexual_line=True, fit_line=True, same_ylim=None, logscale=True, semilogy=False):
     height = 6
     ratio = 5
 
@@ -29,6 +29,12 @@ def plot_one_species(x, y, asexual_line=True, same_ylim=None, logscale=True, sem
         xs = np.linspace(0.05, 1, 100)
         ys = -np.log(xs) / config.first_pass_block_size
         ax_joint.plot(xs, ys, '--r', zorder=1, label='random mutations')
+
+    if fit_line:
+        F = fit_quadratic_curve(x, y)
+        xs = np.linspace(0., 1, 100)
+        ys = F(xs)
+        ax_joint.plot(xs, ys, '--', color='orange', zorder=1, label='fit')
 
     ax_joint.scatter(x, y, s=1, zorder=2, rasterized=True)
     ax_marg_x.hist(x, bins=100, alpha=0.6)
@@ -58,28 +64,19 @@ def plot_one_species(x, y, asexual_line=True, same_ylim=None, logscale=True, sem
     return f, (ax_joint, ax_marg_x, ax_marg_y)
 
 
-def fit_polynomial(x, y, threshold=0.2, deg=2):
-    np.std(y[x >= threshold])
-    xfit = x[x >= threshold]
-    yfit = y[x >= threshold]
-    params = np.polyfit(xfit, yfit, deg)
-    res = params[0] * xfit ** 2 + params[1] * xfit + params[2] - yfit
-    return params, res
-
-
 if __name__ == "__main__":
     base_dir = 'zarr_snps'
     for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
         if species_name.startswith('.'):
             continue
-        if 'vulgatus' not in species_name:
-            # plotting specific species
-            continue
+        # if 'vulgatus' not in species_name:
+        #     # plotting specific species
+        #     continue
         x, y = get_joint_plot_x_y(species_name)
 
         save_path = os.path.join(config.analysis_directory, 'clonal_frac_pairwise_div_joint',
-                                 'customized', '{}.pdf'.format(species_name))
-        f, axes = plot_one_species(x, y, asexual_line=True, same_ylim=None, semilogy=True)
+                                 'default', '{}.pdf'.format(species_name))
+        f, axes = plot_one_species(x, y, asexual_line=True, fit_line=True, same_ylim=None, semilogy=False)
 
         f.savefig(save_path, dpi=600)
         plt.close()
