@@ -2,6 +2,7 @@ import numpy as np
 import json
 import sys
 import os
+import random
 import pandas as pd
 import seaborn as sns
 from scipy import interpolate
@@ -23,7 +24,8 @@ from mpl_toolkits.axes_grid1.inset_locator import BboxPatch, BboxConnector, \
 
 species_priority = json.load(open(os.path.join(config.analysis_directory, 'species_plotting_priority.json'), 'r'))
 data_dir = os.path.join(config.analysis_directory, "closely_related")
-files_to_plot = sorted(filter(lambda x: not x.startswith('.'), os.listdir(os.path.join(data_dir, 'fourth_pass'))), key=lambda x: species_priority.get(x.split('.')[0]))
+files_to_plot = sorted(filter(lambda x: (not x.startswith('.')) and ('all_transfers' not in x),
+                              os.listdir(os.path.join(data_dir, 'third_pass'))), key=lambda x: species_priority.get(x.split('.')[0]))
 # files_to_plot.insert(10, files_to_plot.pop(2))
 files_to_plot.insert(17, files_to_plot.pop(11))
 files_to_plot.insert(17, files_to_plot.pop(11))
@@ -92,6 +94,7 @@ def plot_jitters(ax, X, ys, width, if_box=True, colorVal='tab:blue'):
 for filename in files_to_plot:
     species_name = ' '.join(filename.split('.')[0].split('_')[:2])
     raw_data = pd.read_pickle(os.path.join(data_dir, 'third_pass', filename.split('.')[0] + '.pickle'))
+    filename = filename.split('.')[0] + '.csv'
 
     if 'vulgatus' in species_name:
         data_path = os.path.join(data_dir, 'third_pass', filename.split('.')[0] + '_all_transfers_two_clades.pickle')
@@ -102,7 +105,7 @@ for filename in files_to_plot:
 
     n = raw_data.shape[0]
     n_filtered = np.sum(raw_data['clonal fractions'] > config.clonal_fraction_cutoff)
-    if n_filtered < 100:
+    if n_filtered < 3:
         continue
     print(filename, n, n_filtered, raw_data['clonal snps'].max(), raw_data['clonal divs'].max())
 
@@ -111,68 +114,96 @@ for filename in files_to_plot:
         trend_directory = os.path.join(config.plotting_intermediate_directory, "B_vulgatus_trend_line.csv")
         fitted_data = pd.read_csv(trend_directory)
 
+
+        x, y1, y2, _ = close_pair_utils.prepare_HMM_results_for_B_vulgatus(save_path=config.B_vulgatus_data_path,
+            cf_cutoff=config.clonal_fraction_cutoff, mode='fraction', cache_intermediate=False)
+        x_ = x[x > 0]
+        y1_ = y1[x > 0]
+        y2_ = y2[x > 0]
+
         # within first
-        mid = interpolate_curve(fitted_data['within_x'], fitted_data['within_y'])
-        w = interpolate_curve(fitted_data['within_x'], fitted_data['within_sigma'])
+        # mid = interpolate_curve(fitted_data['within_x'], fitted_data['within_y'])
+        # w = interpolate_curve(fitted_data['within_x'], fitted_data['within_sigma'])
         plot_loc.append(2 * idx)
+        #
+        # xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
+        # axm.scatter(xloc, mid, s=5)
+        # axm.plot(xloc, mid, linestyle=':', linewidth=1)
+        # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
-        xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
-        axm.scatter(xloc, mid, s=5)
-        axm.plot(xloc, mid, linestyle=':', linewidth=1)
-        axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
+        good_runs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=0)
+        transfer_length_data.append(good_runs)
 
-        transfer_length_data.append(transfer_data[transfer_data['types']==0]['lengths'].to_numpy().astype(float) * config.second_pass_block_size)
+        # plot fraction recombined
+        rates = y1_ / x_
+        frac_recombined = rates * 1e-4
+        plot_jitters(axm, 2*idx, frac_recombined, width=0.4, colorVal=plot_colors[(idx-1) % len(plot_colors)])
 
         xticks.append(idx * 2)
         xticklabels.append(species_name + '\n(within)')
         idx += 1
 
         # between next
-        mid = interpolate_curve(fitted_data['between_x'], fitted_data['between_y'])
-        w = interpolate_curve(fitted_data['between_x'], fitted_data['between_sigma'])
+        # mid = interpolate_curve(fitted_data['between_x'], fitted_data['between_y'])
+        # w = interpolate_curve(fitted_data['between_x'], fitted_data['between_sigma'])
         plot_loc.append(2 * idx)
+        #
+        # xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
+        # axm.scatter(xloc, mid, s=5)
+        # axm.plot(xloc, mid, linestyle=':', linewidth=1)
+        # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
-        xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
-        axm.scatter(xloc, mid, s=5)
-        axm.plot(xloc, mid, linestyle=':', linewidth=1)
-        axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
+        good_runs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=1)
+        transfer_length_data.append(good_runs)
 
-        transfer_length_data.append(transfer_data[transfer_data['types']==1]['lengths'].to_numpy().astype(float) * config.second_pass_block_size)
+        rates = y2_ / x_
+        frac_recombined = rates * 1e-4
+        plot_jitters(axm, 2*idx, frac_recombined, width=0.4, colorVal=plot_colors[(idx-1) % len(plot_colors)])
 
         xticks.append(idx * 2)
         xticklabels.append(species_name + '\n(between)')
         idx += 1
         continue
 
-    fitted_data = pd.read_csv(os.path.join(data_dir, 'fourth_pass', filename), index_col=0)
 
-    x, y = close_pair_utils.prepare_x_y(raw_data)
+    ######### Plotting the scatter summary #########
+    # x, y = close_pair_utils.prepare_x_y(raw_data)
+    #
+    # # using divergence as x values
+    # mid = interpolate_curve(fitted_data['x'], fitted_data['y'])
+    # w = interpolate_curve(fitted_data['x'], fitted_data['sigma'])
+    # if np.isnan(mid).sum() > 0:
+    #     # data does not cover the range 0 to 1e-4
+    #     continue
+    #
+    # # plotting species summary
+    # plot_loc.append(2 * idx)
+    # transfer_length_data.append(transfer_data['lengths'].to_numpy().astype(float) * config.second_pass_block_size)
+    #
+    # xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
+    # axm.scatter(xloc, mid, s=5)
+    # axm.plot(xloc, mid, linestyle=':', linewidth=1)
+    # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
-    # using divergence as x values
-    mid = interpolate_curve(fitted_data['x'], fitted_data['y'])
-    w = interpolate_curve(fitted_data['x'], fitted_data['sigma'])
-    if np.isnan(mid).sum() > 0:
-        # data does not cover the range 0 to 1e-4
-        continue
 
-    # plotting species summary
+    ######### Plotting the T_m estimation ##########
     plot_loc.append(2 * idx)
-    transfer_length_data.append(transfer_data['lengths'].to_numpy().astype(float) * config.second_pass_block_size)
+    good_runs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data)
+    transfer_length_data.append(good_runs)
 
-    xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
-    axm.scatter(xloc, mid, s=5)
-    axm.plot(xloc, mid, linestyle=':', linewidth=1)
-    axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
+    x, y = close_pair_utils.prepare_x_y(raw_data, mode='fraction')
+    x_ = x[x > 0]
+    y_ = y[x > 0]
+    rates = y_ / x_
+    frac_recombined = rates * 1e-4
+    plot_jitters(axm, 2*idx, frac_recombined, width=0.4, colorVal=plot_colors[(idx-1) % len(plot_colors)])
 
-    # plotting transfer per snp
-    #     axd.scatter(xloc, np.divide(mid, [10, 20, 30, 40]), s=5)
-    #     axd.vlines(xloc, np.divide(mid-w, [10, 20, 30, 40]),
-    #                np.divide(mid+w, [10, 20, 30, 40]), alpha=0.2)
-    # plotting mean transfer length
-    # axd.scatter(2 * idx, transfer_data['lengths'].median() * config.second_pass_block_size, s=5)
-
+    ########### Plot the count vs divergence highlights ########
+    x, y = close_pair_utils.prepare_x_y(raw_data)
     kw = dict(linestyle=":", linewidth=1, color='grey')
+    xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
     if 'caccae' in species_name:
+        fitted_data = pd.read_csv(os.path.join(data_dir, 'fourth_pass', filename), index_col=0)
         ax1.scatter(x, y, s=1)
         ax1.plot(fitted_data['x'], fitted_data['y'])
         ax1.fill_between(fitted_data['x'], fitted_data['y'] - fitted_data['sigma'],
@@ -189,6 +220,7 @@ for filename in files_to_plot:
         connection_r.append(xloc[-1] + 0.4)
 
     if 'massiliensis' in species_name:
+        fitted_data = pd.read_csv(os.path.join(data_dir, 'fourth_pass', filename), index_col=0)
         ax2.scatter(x, y, s=1)
         ax2.plot(fitted_data['x'], fitted_data['y'])
         ax2.fill_between(fitted_data['x'], fitted_data['y'] - fitted_data['sigma'],
@@ -205,6 +237,7 @@ for filename in files_to_plot:
         connection_r.append(xloc[-1] + 0.4)
 
     if 'putredinis' in species_name:
+        fitted_data = pd.read_csv(os.path.join(data_dir, 'fourth_pass', filename), index_col=0)
         ax3.scatter(x, y, s=1)
 
         # select three examples pairs
@@ -231,23 +264,28 @@ for filename in files_to_plot:
     idx += 1
 
 # plotting all other violin plots
-violins = axd.violinplot(transfer_length_data[:], positions=plot_loc[:], vert=True, showmedians=True, showextrema=False,
-                         widths=0.8)
+# violins = axd.violinplot(transfer_length_data[:], positions=plot_loc[:], vert=True, showmedians=True, showextrema=False,
+#                          widths=0.8)
 for i, loc in enumerate(plot_loc):
+    points_to_plot = 1000
     ys = transfer_length_data[i]
+    if len(ys) > points_to_plot:
+        ys = np.array(random.sample(ys, points_to_plot))
     # xs = np.ones(ys.shape) * loc + np.random.normal(scale=0.05, size=ys.shape)
     # axd.scatter(xs, ys, color=plot_colors[(i) % len(plot_colors)], s=0.2, rasterized=True, alpha=0.1)
     plot_jitters(axd, loc, ys, width=0.4, colorVal=plot_colors[i % len(plot_colors)])
 
-for i, pc in enumerate(violins['bodies']):
-    pc.set_facecolor(plot_colors[(i) % len(plot_colors)])
-    pc.set_alpha(0.5)
-    pc.set_edgecolor('black')
-violins['cmedians'].set_edgecolor('black')
+# for i, pc in enumerate(violins['bodies']):
+#     pc.set_facecolor(plot_colors[(i) % len(plot_colors)])
+#     pc.set_alpha(0.5)
+#     pc.set_edgecolor('black')
+# violins['cmedians'].set_edgecolor('black')
 
-axm.set_ylabel('Num transfers')
+# axm.set_ylabel('Num transfers')
+axm.set_ylabel("Recombined fraction \n @ $d_c=10^{-4}$")
 axm.grid(linestyle='--', axis='y')
-axm.set_ylim([-5, axm.get_ylim()[1]])
+# axm.set_ylim([-5, axm.get_ylim()[1]])
+axm.set_ylim([-0.05, 0.5])
 
 ymax = axm.get_ylim()[1]
 # adding connection lines
@@ -261,7 +299,7 @@ for i in range(3):
     axm.add_artist(cpr)
 
 # axd.set_ylabel('Num transfers\n per 4d clonal snp')
-axd.set_ylabel('Median transfer length')
+axd.set_ylabel('Transfer length')
 _ = axd.set_xticks([])
 _ = axd.set_xticklabels([])
 # axd.set_yticks([0, 0.25, 0.5, 0.75, 1])
@@ -274,4 +312,4 @@ _ = axd.set_xticks(xticks)
 _ = axd.set_xticklabels(xticklabels, rotation=90, ha='center', fontsize=5)
 
 fig.tight_layout()
-fig.savefig(os.path.join(config.analysis_directory, 'closely_related', 'summary_v6.pdf'), dpi=600)
+fig.savefig(os.path.join(config.analysis_directory, 'closely_related', 'summary_v7.pdf'), dpi=600)
