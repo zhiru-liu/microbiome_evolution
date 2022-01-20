@@ -49,6 +49,36 @@ def compute_pileup_for_clusters(cluster_dict, get_run_start_end, genome_len, thr
     return cumu_runs
 
 
+def compute_pileup_for_pairs(pairs, get_run_start_end, genome_len, thresholds):
+    """
+    Compute pileup for a given set of pairs
+    :param pairs:
+    :param get_run_start_end:
+    :param genome_len:
+    :param thresholds:
+    :return:
+    """
+    genome_len = int(genome_len)
+    cumu_runs = np.zeros([genome_len, len(thresholds)])
+    num_pairs = 0
+
+    for l, m in pairs:
+        # l, m are sample ids
+        all_start_end = get_run_start_end(l, m, thresholds, actual_index=True)
+        if all_start_end is None:
+            continue
+        num_pairs += 1
+        for start_end in all_start_end:
+            # iterating over contigs
+            for k, dat in enumerate(start_end):
+                # k represent which threshold
+                for start, end in dat:
+                    cumu_runs[start:end+1, k] += 1  # in new version (as of 08.18.21) end is inclusive
+    if num_pairs > 0:
+        # not couting the cluster pair if no typical pair between them
+        cumu_runs /= num_pairs
+    return cumu_runs
+
 def compute_pileup_for_cluster_between_clades(cluster1_dict, cluster2_dict, get_run_start_end, genome_len, thresholds):
     genome_len = int(genome_len)
     cumu_runs = np.zeros([genome_len, len(thresholds)])
@@ -266,22 +296,26 @@ class Pileup_Helper:
     def cluster_id_to_minor_sample_id(self, cluster_id):
         return self.minor_clade_samples[cluster_id]
 
-    def get_event_start_end(self, idx1, idx2, thresholds, cf_cutoff=None, minor_cluster=False):
+    def get_event_start_end(self, idx1, idx2, thresholds, cf_cutoff=None, minor_cluster=False, actual_index=False):
         """
         :param idx1: cluster index of the first sample
         :param idx2: cluster index of the second sample
         :param thresholds: list of run length thresholds
         :param cf_cutoff: if not supplied, will use default value supplied in config. use this cutoff to skip
         pairs with cf too high
+        :param actual_index: if True, then idx1,idx2 will be passed directly to dh.get_snp_vector
         :param minor_cluster: if true, idx2 will be interpreted as the index for the minor clade
         :return:
         """
-        i1 = self.cluster_id_to_sample_id(idx1)
-        if minor_cluster:
-            i2 = self.cluster_id_to_minor_sample_id(idx2)
+        if actual_index:
+            pair = (idx1, idx2)
         else:
-            i2 = self.cluster_id_to_sample_id(idx2)
-        pair = (i1, i2)
+            i1 = self.cluster_id_to_sample_id(idx1)
+            if minor_cluster:
+                i2 = self.cluster_id_to_minor_sample_id(idx2)
+            else:
+                i2 = self.cluster_id_to_sample_id(idx2)
+            pair = (i1, i2)
         # get the snp data
         snp_vec, coverage_arr = self.dh.get_snp_vector(pair)
         # check whether pair has lots of clonal regions

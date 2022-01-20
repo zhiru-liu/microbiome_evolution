@@ -2,7 +2,9 @@ import numpy as np
 import itertools
 import random
 import os
+import collections
 from utils import close_pair_utils, parallel_utils
+from parsers import parse_HMP_data
 import config
 
 
@@ -179,6 +181,47 @@ def generate_between_sample_idxs(dh, clonal_frac_cutoff=config.typical_clonal_fr
         return within_clade_pairs, between_clade_pairs
 
 
+def generate_between_sample_idxs_control_country(dh, country_counts_dict,
+                                                 cf_cutoff=config.typical_clonal_fraction_cutoff, num_pairs=100):
+    """
+    Takes in the distribution of country sample counts (from within host samples, for example), and generate
+    correct sampling of between host pairs after controlling this country structure
+    :param dh:
+    :param country_counts_dict: A dict of country: number of samples
+    :param cf_cutoff: clonal fraction cutoff to remove close pairs
+    :param num_pairs: suggested number of pairs to be sampled. The actual sample number is adjusted to match the
+    smallest country set (see code below for detailed handling)
+    :return: dict of country: pairs
+    """
+    sample_country_map = parse_HMP_data.parse_sample_country_map()
+    between_countries = [sample_country_map[x] for x in dh.good_samples[dh.single_subject_samples]]
+    between_countries = np.array(between_countries)
+    idxs_by_country = {}
+    for country in country_counts_dict:
+        mask = between_countries == country
+        idxs_by_country[country] = dh.single_subject_samples[mask]
+
+    # figure out the fraction of sample pairs for each country
+    total_counts = np.sum(country_counts_dict.values())
+    country_frac_dict = {x: country_counts_dict[x] / float(total_counts) for x in country_counts_dict}
+
+    cf_mat = load_clonal_frac_mat(dh.species_name)
+    passed_pairs_map = {}
+    for country in idxs_by_country:
+        country_idxs = idxs_by_country[country]
+        passed_pairs = [x for x in itertools.combinations(country_idxs, 2) if cf_mat[x] < cf_cutoff]
+        passed_pairs_map[country] = passed_pairs
+    # the max total sampling this dataset can support, according to the required sampling fraction
+    max_samples_list = [len(passed_pairs_map[country]) / country_frac_dict[country] for country in country_frac_dict]
+    # if num pairs is too large, reduce to match the smallest country
+    actual_samples = min(min(max_samples_list), num_pairs)
+
+    final_selected_pairs = {}
+    for country, pairs in passed_pairs_map.items():
+        final_selected_pairs[country] = random.sample(pairs, int(actual_samples * country_frac_dict[country]))
+    return final_selected_pairs
+
+
 def compute_max_runs(runs_data):
     return np.array(map(max, runs_data.values()))
 
@@ -236,8 +279,8 @@ def fit_quadratic_curve(x, y, min_x=0.1):
     params = np.polyfit(xfit, yfit, 2)
 
     def F(xs):
-        res = params[0]*x**2 + params[1]*xs + params[2]
-        res[xs < min_x] = np.mean(y[x < min_x]) # fit does not extend below min x
+        res = params[0]*xs**2 + params[1]*xs + params[2]
+        res[xs < min_x] = np.mean(y[x < min_x])  # fit does not extend below min x
         return res
     return F
 
@@ -254,4 +297,15 @@ def asexual_curve(x, block_size=config.first_pass_block_size, default=0):
     return y
 
 
-
+def get_E_rectale_within_host_countries(within_dh):
+    # generating within pairs country composition
+    sample_country_map = parse_HMP_data.parse_sample_country_map()
+    def if_pass_cf(snp_vec):
+        clonal_frac = close_pair_utils.compute_clonal_fraction(snp_vec, config.first_pass_block_size)
+        return clonal_frac <= config.typical_clonal_fraction_cutoff
+    good_sample_mask = np.array(within_dh.find_good_within_samples(if_pass_cf))
+    samples_for_pileup = within_dh.single_subject_samples[good_sample_mask[within_dh.single_subject_samples]]
+    samples_for_pileup = within_dh.good_samples[samples_for_pileup]
+    countries = [sample_country_map[x] for x in samples_for_pileup]
+    country_counts_dict = collections.Counter(countries)
+    return country_counts_dict

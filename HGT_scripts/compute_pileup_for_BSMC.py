@@ -33,7 +33,7 @@ def process_sim(filename, save_path, genome_len, close_pair_cutoff=0.95):
     return np.std(cumu_runs, axis=0) / np.mean(cumu_runs, axis=0)
 
 
-for i in range(1, 10):
+for i in range(1, 11):
     file_path = os.path.join(data_dir, 'rep%d.txt'%i)
     cv = process_sim(file_path, os.path.join(ckpt_dir, 'rep%d.txt'%i), genome_len)
     print(cv)

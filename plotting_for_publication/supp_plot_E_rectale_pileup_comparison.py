@@ -2,6 +2,7 @@ import pandas as pd
 import os
 import numpy as np
 import config
+from scipy.stats import fisher_exact
 from utils import parallel_utils, core_gene_utils
 import matplotlib.pyplot as plt
 from plotting_for_publication import plot_pileup_mirror
@@ -45,6 +46,29 @@ within_thresholds = np.loadtxt(os.path.join(base_path, 'within_host_thresholds.t
 between_cumu_runs, within_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
     between_host_path, within_host_path, ax, threshold_lens=[thresholds, within_thresholds], ind_to_plot=[1], ylim=0.5)
 
+
+# computing p value for within vs between differences using Fisher exact test
+between_comparisons = 2999  # recorded from pile up computation
+within_comparisons = 28
+between_counts = between_cumu_runs[:, 1] * between_comparisons
+within_counts = within_cumu_runs[:, 1] * within_comparisons
+
+fisher_table = np.ones((between_cumu_runs.shape[0], 2, 2))
+fisher_table[:, 0, 0] = within_counts
+fisher_table[:, 0, 1] = between_counts
+fisher_table[:, 1, 0] = within_comparisons - within_counts
+fisher_table[:, 1, 1] = between_comparisons - between_counts
+
+pgt = np.zeros(between_cumu_runs.shape[0])
+pls = np.zeros(between_cumu_runs.shape[0])
+# should take ~1min to compute all sites
+for site in xrange(between_cumu_runs.shape[0]):
+    _, p = fisher_exact(fisher_table[site, :, :], alternative='greater')
+    pgt[site] = p
+    _, p = fisher_exact(fisher_table[site, :, :], alternative='less')
+    pls[site] = p
+
+# TODO: plot the p values appropriately
 
 # plotting all the highlighted regions
 # ax.plot(transferase_locs, 'r', alpha=0.2)

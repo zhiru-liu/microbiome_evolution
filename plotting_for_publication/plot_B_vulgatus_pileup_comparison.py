@@ -43,7 +43,7 @@ within_clade_path = os.path.join(base_path, 'between_host.csv')
 within_thresholds = np.loadtxt(os.path.join(base_path, 'between_host_thresholds.txt'))
 
 between_cumu_runs, within_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
-    within_clade_path, between_clade_path, ax, threshold_lens=[within_thresholds, thresholds], ind_to_plot=[0, 1, 2], ylim=0.35)
+    within_clade_path, between_clade_path, ax, threshold_lens=[within_thresholds, thresholds], ind_to_plot=[0, 1, 2], ylim=10, normalized=True)
 
 
 # plotting all the highlighted regions
@@ -57,4 +57,4 @@ between_cumu_runs, within_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirr
 # ax.axvspan(-5, -1, alpha=0.1, color='b', label='PUL')
 # ax.legend(bbox_to_anchor=(1, 1))
 
-fig.savefig(os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_pileup_without_highlight.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_pileup_test.pdf'), bbox_inches='tight')

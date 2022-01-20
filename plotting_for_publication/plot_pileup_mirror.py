@@ -11,14 +11,14 @@ sys.path.append("..")
 import config
 
 
-def load_data_and_plot_mirror(between_host_path, within_host_path, ax, threshold_lens, ind_to_plot=None, ylim=0.35):
+def load_data_and_plot_mirror(between_host_path, within_host_path, ax, threshold_lens, ind_to_plot=None, ylim=0.35, normalized=False):
     between_cumu_runs = np.loadtxt(between_host_path)
     within_cumu_runs = np.loadtxt(within_host_path)
-    plot_mirror(between_cumu_runs, within_cumu_runs, ax, threshold_lens, ind_to_plot=ind_to_plot, ylim=ylim)
+    plot_mirror(between_cumu_runs, within_cumu_runs, ax, threshold_lens, ind_to_plot=ind_to_plot, ylim=ylim, normalized=normalized)
     return between_cumu_runs, within_cumu_runs
 
 
-def plot_mirror(between_cumu_runs, within_cumu_runs, ax, threshold_lens, ind_to_plot=None, ylim=0.35):
+def plot_mirror(between_cumu_runs, within_cumu_runs, ax, threshold_lens, ind_to_plot=None, ylim=0.35, normalized=False):
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     color_idx = 0
     # decide which of the cumu_runs to plot
@@ -28,9 +28,17 @@ def plot_mirror(between_cumu_runs, within_cumu_runs, ax, threshold_lens, ind_to_
         to_plot = ind_to_plot
 
     for i in to_plot:
-        ax.plot(between_cumu_runs[:, i], linewidth=1, color=colors[color_idx],
-                label="%d / %d" % (threshold_lens[0][i], threshold_lens[1][i]))
-        ax.plot(-within_cumu_runs[:, i], linewidth=1, color=colors[color_idx])
+        if normalized:
+            scale_between = between_cumu_runs[:, i].mean()
+            scale_within = within_cumu_runs[:, i].mean()
+            print("normalize by mean homozygosity (top&bottom) for threshold %d : %f & %f \n" % (threshold_lens[0][i], scale_between, scale_within))
+            ax.plot(between_cumu_runs[:, i] / scale_between, linewidth=1, color=colors[color_idx],
+                    label="%d / %d" % (threshold_lens[0][i], threshold_lens[1][i]))
+            ax.plot(-within_cumu_runs[:, i] / scale_within, linewidth=1, color=colors[color_idx])
+        else:
+            ax.plot(between_cumu_runs[:, i], linewidth=1, color=colors[color_idx],
+                    label="%d / %d" % (threshold_lens[0][i], threshold_lens[1][i]))
+            ax.plot(-within_cumu_runs[:, i], linewidth=1, color=colors[color_idx])
         color_idx += 1
     ax.hlines(0, 0, between_cumu_runs.shape[0], 'black', linewidth=1)
     ax.set_xlim([0, between_cumu_runs.shape[0]])

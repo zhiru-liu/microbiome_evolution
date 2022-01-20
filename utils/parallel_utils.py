@@ -409,6 +409,18 @@ class DataHoarder:
                 return None, None
         return self.snp_arr[mask, sample_id], mask
 
+    def find_good_within_samples(self, additional_filter=lambda x: True):
+        # return a boolean list that marks which within-samples are good for inferring SNPs reliably
+        # additional_filter takes in the snp_vector and determine whether it passes the condition
+        if self.mode == 'QP':
+            raise NotImplementedError("Only applicable for within-host data")
+        mask = []
+        for i in range(len(self.good_samples)):
+            snp_vec, covered = self.get_within_sample_snp_vector(i)
+            # if snp vec is none, then this sample does not pass
+            mask.append((not (snp_vec is None)) and additional_filter(snp_vec))
+        return mask
+
     def _get_median_coverage_df(self, depths):
         # only works for within host
         if len(depths) != np.sum(self.general_mask):
