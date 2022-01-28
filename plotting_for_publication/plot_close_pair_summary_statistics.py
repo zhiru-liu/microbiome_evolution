@@ -57,9 +57,12 @@ transfer_length_data = []
 plot_loc = []
 
 
-def interpolate_curve(xval, yval, sample_locations=[2.5e-5, 5e-5, 7.5e-5, 1e-4]):
+def interpolate_curve(xval, yval, sample_locations=[2.5e-5, 5e-5, 7.5e-5, 1e-4], scale=True):
     f = interpolate.interp1d(xval, yval, bounds_error=False)
-    return f(sample_locations)
+    res = f(sample_locations)
+    if scale:
+        res = res / (np.array([2.5e-5, 5e-5, 7.5e-5, 1e-4]))  # transfer per mutation
+    return res
 
 
 def plot_jitters(ax, X, ys, width, if_box=True, colorVal='tab:blue'):
@@ -122,43 +125,43 @@ for filename in files_to_plot:
         y2_ = y2[x > 0]
 
         # within first
-        # mid = interpolate_curve(fitted_data['within_x'], fitted_data['within_y'])
-        # w = interpolate_curve(fitted_data['within_x'], fitted_data['within_sigma'])
+        mid = interpolate_curve(fitted_data['within_x'], fitted_data['within_y'])
+        w = interpolate_curve(fitted_data['within_x'], fitted_data['within_sigma'])
         plot_loc.append(2 * idx)
         #
-        # xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
-        # axm.scatter(xloc, mid, s=5)
-        # axm.plot(xloc, mid, linestyle=':', linewidth=1)
-        # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
+        xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
+        axm.scatter(xloc, mid, s=5)
+        axm.plot(xloc, mid, linestyle=':', linewidth=1)
+        axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
         good_runs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=0)
         transfer_length_data.append(good_runs)
 
         # plot fraction recombined
-        rates = y1_ / x_
-        frac_recombined = rates * 1e-4
-        plot_jitters(axm, 2*idx, frac_recombined, width=0.4, colorVal=plot_colors[(idx-1) % len(plot_colors)])
+        # rates = y1_ / x_
+        # frac_recombined = rates * 1e-4
+        # plot_jitters(axm, 2*idx, frac_recombined, width=0.4, colorVal=plot_colors[(idx-1) % len(plot_colors)])
 
         xticks.append(idx * 2)
         xticklabels.append(species_name + '\n(within)')
         idx += 1
 
         # between next
-        # mid = interpolate_curve(fitted_data['between_x'], fitted_data['between_y'])
-        # w = interpolate_curve(fitted_data['between_x'], fitted_data['between_sigma'])
+        mid = interpolate_curve(fitted_data['between_x'], fitted_data['between_y'])
+        w = interpolate_curve(fitted_data['between_x'], fitted_data['between_sigma'])
         plot_loc.append(2 * idx)
-        #
-        # xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
-        # axm.scatter(xloc, mid, s=5)
-        # axm.plot(xloc, mid, linestyle=':', linewidth=1)
-        # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
+
+        xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
+        axm.scatter(xloc, mid, s=5)
+        axm.plot(xloc, mid, linestyle=':', linewidth=1)
+        axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
         good_runs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=1)
         transfer_length_data.append(good_runs)
 
-        rates = y2_ / x_
-        frac_recombined = rates * 1e-4
-        plot_jitters(axm, 2*idx, frac_recombined, width=0.4, colorVal=plot_colors[(idx-1) % len(plot_colors)])
+        # rates = y2_ / x_
+        # frac_recombined = rates * 1e-4
+        # plot_jitters(axm, 2*idx, frac_recombined, width=0.4, colorVal=plot_colors[(idx-1) % len(plot_colors)])
 
         xticks.append(idx * 2)
         xticklabels.append(species_name + '\n(between)')
@@ -167,36 +170,39 @@ for filename in files_to_plot:
 
 
     ######### Plotting the scatter summary #########
-    # x, y = close_pair_utils.prepare_x_y(raw_data)
-    #
-    # # using divergence as x values
-    # mid = interpolate_curve(fitted_data['x'], fitted_data['y'])
-    # w = interpolate_curve(fitted_data['x'], fitted_data['sigma'])
-    # if np.isnan(mid).sum() > 0:
-    #     # data does not cover the range 0 to 1e-4
-    #     continue
-    #
-    # # plotting species summary
-    # plot_loc.append(2 * idx)
-    # transfer_length_data.append(transfer_data['lengths'].to_numpy().astype(float) * config.second_pass_block_size)
-    #
-    # xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
-    # axm.scatter(xloc, mid, s=5)
-    # axm.plot(xloc, mid, linestyle=':', linewidth=1)
-    # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
+    x, y = close_pair_utils.prepare_x_y(raw_data)
+    try:
+        fitted_data = pd.read_csv(os.path.join(data_dir, 'fourth_pass', filename), index_col=0)
+    except IOError:
+        continue
+    # using divergence as x values
+    mid = interpolate_curve(fitted_data['x'], fitted_data['y'])
+    w = interpolate_curve(fitted_data['x'], fitted_data['sigma'])
+    if np.isnan(mid).sum() > 0:
+        # data does not cover the range 0 to 1e-4
+        continue
+
+    # plotting species summary
+    plot_loc.append(2 * idx)
+    transfer_length_data.append(transfer_data['lengths'].to_numpy().astype(float) * config.second_pass_block_size)
+
+    xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
+    axm.scatter(xloc, mid, s=5)
+    axm.plot(xloc, mid, linestyle=':', linewidth=1)
+    axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
 
     ######### Plotting the T_m estimation ##########
-    plot_loc.append(2 * idx)
-    good_runs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data)
-    transfer_length_data.append(good_runs)
-
-    x, y = close_pair_utils.prepare_x_y(raw_data, mode='fraction')
-    x_ = x[x > 0]
-    y_ = y[x > 0]
-    rates = y_ / x_
-    frac_recombined = rates * 1e-4
-    plot_jitters(axm, 2*idx, frac_recombined, width=0.4, colorVal=plot_colors[(idx-1) % len(plot_colors)])
+    # plot_loc.append(2 * idx)
+    # good_runs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data)
+    # transfer_length_data.append(good_runs)
+    #
+    # x, y = close_pair_utils.prepare_x_y(raw_data, mode='fraction')
+    # x_ = x[x > 0]
+    # y_ = y[x > 0]
+    # rates = y_ / x_
+    # frac_recombined = rates * 1e-4
+    # plot_jitters(axm, 2*idx, frac_recombined, width=0.4, colorVal=plot_colors[(idx-1) % len(plot_colors)])
 
     ########### Plot the count vs divergence highlights ########
     x, y = close_pair_utils.prepare_x_y(raw_data)
@@ -282,10 +288,11 @@ for i, loc in enumerate(plot_loc):
 # violins['cmedians'].set_edgecolor('black')
 
 # axm.set_ylabel('Num transfers')
-axm.set_ylabel("Recombined fraction \n @ $d_c=10^{-4}$")
+# axm.set_ylabel("Recombined fraction \n @ $d_c=10^{-4}$")
+axm.set_ylabel("Transfer / divergence")
 axm.grid(linestyle='--', axis='y')
-# axm.set_ylim([-5, axm.get_ylim()[1]])
-axm.set_ylim([-0.05, 0.5])
+# axm.set_ylim([-0.5, axm.get_ylim()[1]])
+# axm.set_ylim([-0.05, 0.5])
 
 ymax = axm.get_ylim()[1]
 # adding connection lines
@@ -312,4 +319,4 @@ _ = axd.set_xticks(xticks)
 _ = axd.set_xticklabels(xticklabels, rotation=90, ha='center', fontsize=5)
 
 fig.tight_layout()
-fig.savefig(os.path.join(config.analysis_directory, 'closely_related', 'summary_v7.pdf'), dpi=600)
+fig.savefig(os.path.join(config.analysis_directory, 'closely_related', 'summary_v8.pdf'), dpi=600)

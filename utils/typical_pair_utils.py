@@ -309,3 +309,38 @@ def get_E_rectale_within_host_countries(within_dh):
     countries = [sample_country_map[x] for x in samples_for_pileup]
     country_counts_dict = collections.Counter(countries)
     return country_counts_dict
+
+
+def get_sitewise_polymorphism(dh, clade_cutoff=None):
+    """
+    Compute the site wise polymorphism from a DataHoarder instance
+    polymorphism is defined as 2*f*(1-f) where f is the allele frequency in all samples
+    If clade cutoff is provided, will also compute the polymorphism for the largest clade only
+    :param dh:
+    :param clade_cutoff: divergence cutoff to separate the clades. For example B. vulgatus can have 0.03
+    :return:
+    """
+    snp_counts = np.sum(dh.snp_arr[:, dh.single_subject_samples] & dh.covered_arr[:, dh.single_subject_samples], axis=1)
+    covered_samples = np.sum(dh.covered_arr[:, dh.single_subject_samples], axis=1)
+    snp_frequency = snp_counts / covered_samples.astype(float)
+    snp_frequency[np.isnan(snp_frequency)] = 0
+    polymorphism = 2 * snp_frequency * (1 - snp_frequency)
+
+    if clade_cutoff is not None:
+        single_sub_idxs = dh.single_subject_samples
+        div_mat = load_pairwise_div_mat(dh.species_name)
+        div_mat = div_mat[single_sub_idxs, :][:, single_sub_idxs]
+
+        cluster_dict = close_pair_utils.get_clusters_from_pairwise_matrix(div_mat, threshold=0.03)
+        bigger_clade_id = np.argmax(map(len, cluster_dict.values()))
+        bigger_clade_idxs = cluster_dict.values()[bigger_clade_id]
+
+        clade_samples = dh.single_subject_samples[bigger_clade_idxs]
+        clade_snp_counts = np.sum(dh.snp_arr[:, clade_samples] & dh.covered_arr[:, clade_samples], axis=1)
+        clade_covered = np.sum(dh.covered_arr[:, clade_samples], axis=1)
+        clade_snp_frequency = clade_snp_counts / clade_covered.astype(float)
+        clade_snp_frequency[np.isnan(clade_snp_frequency)] = 0
+
+        clade_polymorphism = 2 * clade_snp_frequency * (1 - clade_snp_frequency)
+        return polymorphism, clade_polymorphism
+    return polymorphism

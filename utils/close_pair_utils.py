@@ -401,7 +401,7 @@ def sample_blocks(dh, num_samples=5000, block_size=1000):
 
 
 def prepare_x_y(df, mode='count', cf_cutoff=config.clonal_fraction_cutoff):
-    if mode not in ['count', 'length', 'fraction']:
+    if mode not in ['count', 'length', 'fraction', 'rate']:
         raise ValueError("Mode not implemented")
     # Multiple choice of x&y to plot
     # current version works for CPHMM pass 3 format
@@ -422,6 +422,11 @@ def prepare_x_y(df, mode='count', cf_cutoff=config.clonal_fraction_cutoff):
         cf = df['clonal fractions']
         x = df['clonal divs'].to_numpy()[cf >= cf_cutoff]
         y = 1 - cf[cf >= cf_cutoff]
+    elif mode == 'rate':
+        cf = df['clonal fractions']
+        x = df['clonal divs'].to_numpy()[cf >= cf_cutoff]
+        y = df['normalized transfer counts'].to_numpy()[cf >= cf_cutoff]
+        y /= x * 1e6  # num transfers per mutation
     return x, y
 
 

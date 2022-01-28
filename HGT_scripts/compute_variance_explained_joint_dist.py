@@ -115,6 +115,8 @@ if not plot_only:
 ###################################
 if plot_only:
     var_df = pd.read_csv(os.path.join(config.plotting_intermediate_directory, 'variance_explained.csv'))
+    var_df['Genus'] = var_df['Species'].apply(lambda x: x.split('_')[0])
+    var_df = var_df.sort_values(['Genus', 'Variance explained weighted control'], ascending=[True, False])
     var_df = var_df.set_index('Species')
 fig, axes = plt.subplots(1, 2, figsize=(2, 3),dpi=300)
 plt.subplots_adjust(wspace=0)
@@ -131,11 +133,11 @@ good_witin_color = '#ef8a62'
 num_species = var_df.shape[0]
 ys = 0-np.arange(0,num_species)
 
-axes[0].barh(ys+0.5, -var_df['Variance explained weighted control'],color=light_haploid_color,label='Largest clade',linewidth=0,zorder=1)
-axes[0].barh(ys+0.5, -var_df['Variance explained weighted'],color=haploid_color,linewidth=0,zorder=1)
+axes[1].barh(ys+0.5, var_df['Variance explained weighted control'],color=light_haploid_color,label='Largest clade',linewidth=0,zorder=1)
+axes[1].barh(ys+0.5, var_df['Variance explained weighted'],color=haploid_color,linewidth=0,zorder=1)
 
-axes[1].barh(ys+0.5, var_df['Variance explained control'],color=light_haploid_color,label='Largest clade',linewidth=0,zorder=1)
-axes[1].barh(ys+0.5, var_df['Variance explained'],color=haploid_color,linewidth=0,zorder=1)
+axes[0].barh(ys+0.5, -var_df['Variance explained control'],color=light_haploid_color,label='Largest clade',linewidth=0,zorder=1)
+axes[0].barh(ys+0.5, -var_df['Variance explained'],color=haploid_color,linewidth=0,zorder=1)
 
 # ax.barh(ys+0.5, num_samples,color=light_haploid_color,linewidth=0,label='hard non-QP',zorder=0)
 # ax.barh(ys+0.5, num_within_samples,left=num_qp_samples,color=good_witin_color,linewidth=0,label='simple non-QP')
@@ -159,7 +161,7 @@ axes[1].set_ylim([-1*num_species+0.5,1.5])
 axes[1].tick_params(axis='y', direction='out',length=3,pad=1)
 
 axes[1].legend(loc='lower right',frameon=False)
-axes[0].set_xlabel(r"$R^2_Y$")
-axes[1].set_xlabel(r"$R^2$")
+axes[1].set_xlabel(r"$R^2_Y$")
+axes[0].set_xlabel(r"$R^2$")
 
-fig.savefig(os.path.join(config.figure_directory, 'variance_explained.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'variance_explained_v2.pdf'), bbox_inches='tight')

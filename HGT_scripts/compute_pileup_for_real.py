@@ -58,12 +58,15 @@ def compute_E_rectale_between_host(thresholds):
                                                                                     num_pairs=3000)
     between_pairs = list(itertools.chain.from_iterable(country_pairs.values()))
 
-    within_cumu_runs = pileup_utils.compute_pileup_for_within_host(within_dh, thresholds)
+    cache_dir = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'E_rectale_within_json')
+    within_cumu_runs = pileup_utils.compute_pileup_for_within_host(within_dh, thresholds, cache_start_end=cache_dir)
     np.savetxt(os.path.join(ckpt_path, 'within_host.csv'), within_cumu_runs)
     np.savetxt(os.path.join(ckpt_path, 'within_host_thresholds.txt'), thresholds)
 
     genome_len = np.sum(ph.dh.general_mask)
-    between_cumu_runs = pileup_utils.compute_pileup_for_pairs(between_pairs, ph.get_event_start_end, genome_len, thresholds)
+    cache_dir = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'E_rectale_between_json')
+    between_cumu_runs = pileup_utils.compute_pileup_for_pairs(between_pairs, ph.get_event_start_end, genome_len, thresholds,
+                                                              cache_start_end=cache_dir)
     np.savetxt(os.path.join(ckpt_path, 'between_host.csv'), between_cumu_runs)
     np.savetxt(os.path.join(ckpt_path, 'between_host_thresholds.txt'), thresholds)
 

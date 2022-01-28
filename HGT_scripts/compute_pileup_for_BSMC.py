@@ -7,9 +7,9 @@ from utils import close_pair_utils, BSMC_utils, pileup_utils
 import config
 
 # data_dir = os.path.join(config.analysis_directory, 'fastsimbac_data', 'for_pileup', 'b_vulgatus')
-data_dir = os.path.join(config.analysis_directory, 'fastsimbac_data', 'hotspots')
+data_dir = os.path.join(config.analysis_directory, 'fastsimbac_data', 'hotspots_rbymu_2')
 # ckpt_dir = os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'b_vulgatus')
-ckpt_dir = os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'hotspots')
+ckpt_dir = os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'hotspots_rbymu2')
 DEBUG=False
 t = 0.00825
 genome_len = 280000

@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import pickle
+import json
 import itertools
 import os
 from collections import Counter
@@ -49,7 +51,7 @@ def compute_pileup_for_clusters(cluster_dict, get_run_start_end, genome_len, thr
     return cumu_runs
 
 
-def compute_pileup_for_pairs(pairs, get_run_start_end, genome_len, thresholds):
+def compute_pileup_for_pairs(pairs, get_run_start_end, genome_len, thresholds, cache_start_end=None):
     """
     Compute pileup for a given set of pairs
     :param pairs:
@@ -67,6 +69,9 @@ def compute_pileup_for_pairs(pairs, get_run_start_end, genome_len, thresholds):
         all_start_end = get_run_start_end(l, m, thresholds, actual_index=True)
         if all_start_end is None:
             continue
+        if cache_start_end is not None:
+            # pickle.dump(all_start_end, open(os.path.join(cache_start_end, '%s_%s.pkl' % (l, m)), 'wb'))
+            json.dump(all_start_end, open(os.path.join(cache_start_end, '%s_%s.json' % (l, m)), 'w'))
         num_pairs += 1
         for start_end in all_start_end:
             # iterating over contigs
@@ -78,6 +83,28 @@ def compute_pileup_for_pairs(pairs, get_run_start_end, genome_len, thresholds):
         # not couting the cluster pair if no typical pair between them
         cumu_runs /= num_pairs
     return cumu_runs
+
+
+def compute_pileup_from_cache(files, genome_len, allowed_threshold=1):
+    """
+    For performance consideration, only allow one threshold each time
+    :param files:
+    :param genome_len:
+    :param allowed_threshold:
+    :return:
+    """
+    cumu_runs = np.zeros(genome_len)
+    k = allowed_threshold
+    for f in files:
+        # all_start_end = pickle.load(open(f, 'rb'))
+        all_start_end = json.load(open(f, 'r'))
+        for start_end in all_start_end:
+            # iterating over contigs
+            # k represent which threshold
+            for start, end in start_end[k]:
+                cumu_runs[start:end+1] += 1  # in new version (as of 08.18.21) end is inclusive
+    return cumu_runs / float(len(files))
+
 
 def compute_pileup_for_cluster_between_clades(cluster1_dict, cluster2_dict, get_run_start_end, genome_len, thresholds):
     genome_len = int(genome_len)
@@ -111,7 +138,7 @@ def compute_pileup_for_cluster_between_clades(cluster1_dict, cluster2_dict, get_
     return cumu_runs
 
 
-def compute_pileup_for_within_host(dh, thresholds, clade_cutoff=None, within_clade=True):
+def compute_pileup_for_within_host(dh, thresholds, clade_cutoff=None, within_clade=True, cache_start_end=None):
     """
     Computing same pileup dist for within host data
     :param dh: DataHoarder instance that loads within host data for a given species
@@ -148,6 +175,9 @@ def compute_pileup_for_within_host(dh, thresholds, clade_cutoff=None, within_cla
         chromosomes = good_chromo[coverage_arr]
 
         all_start_end = compute_passed_starts_ends(snp_vec, chromosomes, snp_to_core, thresholds)
+        if cache_start_end is not None:
+            # pickle.dump(all_start_end, open(os.path.join(cache_start_end, '%s.pkl' % pair), 'wb'))
+            json.dump(all_start_end, open(os.path.join(cache_start_end, '%s.json' % pair), 'w'))
 
         for start_end in all_start_end:
             for k, dat in enumerate(start_end):

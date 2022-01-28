@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import numpy as np
 import config
-from utils import parallel_utils, core_gene_utils
+from utils import parallel_utils, core_gene_utils, typical_pair_utils
 import matplotlib.pyplot as plt
 from plotting_for_publication import plot_pileup_mirror
 
@@ -58,3 +58,23 @@ between_cumu_runs, within_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirr
 # ax.legend(bbox_to_anchor=(1, 1))
 
 fig.savefig(os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_pileup_test.pdf'), bbox_inches='tight')
+
+fig, ax = plt.subplots(figsize=(7, 2))
+polymorphism_dir = os.path.join(config.plotting_intermediate_directory, 'B_vulgatus_polymorphism.csv')
+if os.path.exists(polymorphism_dir):
+    pis = np.loadtxt(polymorphism_dir)
+    pi = pis[:, 0]
+    clade_pi = pis[:, 1]
+else:
+    dh = parallel_utils.DataHoarder(species_name, mode='QP', allowed_variants=['4D'])
+    pi, clade_pi = typical_pair_utils.get_sitewise_polymorphism(dh, clade_cutoff=0.03)
+    np.savetxt(os.path.join(config.plotting_intermediate_directory, 'B_vulgatus_polymorphism.csv'),
+               np.vstack([pi, clade_pi]).transpose())
+kernel = np.ones(3000) / 3000.
+ax.plot(np.convolve(pi, kernel, mode='same'))
+ax.plot(np.convolve(clade_pi, kernel, mode='same'), label='largest clade')
+ax.legend()
+ax.set_xlim([0, between_cumu_runs.shape[0]])
+ax.set_xlabel("Genome location")
+ax.set_ylabel('$\pi$')
+fig.savefig(os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_polymorphism.pdf'), bbox_inches='tight')
