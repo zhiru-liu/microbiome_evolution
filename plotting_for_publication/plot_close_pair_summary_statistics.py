@@ -23,12 +23,55 @@ from mpl_toolkits.axes_grid1.inset_locator import BboxPatch, BboxConnector, \
     BboxConnectorPatch
 
 species_priority = json.load(open(os.path.join(config.analysis_directory, 'species_plotting_priority.json'), 'r'))
+# sorted by Phylus and genus and fraction of QP pairs
+species_order = [
+    'Bacteroides_vulgatus_57955',
+    'Bacteroides_ovatus_58035',
+    'Bacteroides_uniformis_57318',
+    'Bacteroides_thetaiotaomicron_56941',
+    'Bacteroides_plebeius_61623',
+    'Bacteroides_stercoris_56735',
+    'Bacteroides_coprocola_61586',
+    'Bacteroides_eggerthii_54457',
+    'Bacteroides_finegoldii_57739',
+    'Bacteroides_caccae_53434',
+    'Bacteroides_cellulosilyticus_58046',
+    'Bacteroides_fragilis_54507',
+    'Bacteroides_massiliensis_44749',
+
+    'Barnesiella_intestinihominis_62208',
+    'Odoribacter_splanchnicus_62174',
+    'Parabacteroides_distasonis_56985',
+    'Parabacteroides_merdae_56972',
+
+    'Bacteroidales_bacterium_58650',
+
+    'Prevotella_copri_61740',
+
+    'Alistipes_shahii_62199',
+    'Alistipes_putredinis_61533',
+    'Alistipes_onderdonkii_55464',
+    'Alistipes_finegoldii_56071',
+
+    'Coprococcus_sp_62244',
+    'Roseburia_intestinalis_56239',
+
+    'Eubacterium_rectale_56927',
+    'Eubacterium_siraeum_57634',
+    'Faecalibacterium_cf_62236',
+    'Ruminococcus_bromii_62047',
+
+    'Oscillibacter_sp_60799',
+
+    'Dialister_invisus_61905',
+
+    'Akkermansia_muciniphila_55290']
+
+
 data_dir = os.path.join(config.analysis_directory, "closely_related")
 files_to_plot = sorted(filter(lambda x: (not x.startswith('.')) and ('all_transfers' not in x),
-                              os.listdir(os.path.join(data_dir, 'third_pass'))), key=lambda x: species_priority.get(x.split('.')[0]))
-# files_to_plot.insert(10, files_to_plot.pop(2))
-files_to_plot.insert(17, files_to_plot.pop(11))
-files_to_plot.insert(17, files_to_plot.pop(11))
+                              os.listdir(os.path.join(data_dir, 'third_pass'))),
+                       key=lambda x: (x.split('_')[0], species_priority.get(x.split('.')[0])))
 
 data_dir = os.path.join(config.analysis_directory, "closely_related")
 
@@ -65,7 +108,7 @@ def interpolate_curve(xval, yval, sample_locations=[2.5e-5, 5e-5, 7.5e-5, 1e-4],
     return res
 
 
-def plot_jitters(ax, X, ys, width, if_box=True, colorVal='tab:blue'):
+def plot_jitters(ax, X, ys, width, if_box=True, colorVal='tab:blue', alpha=0.1, marker='.'):
     kernel = gaussian_kde(ys)
 
     theory_ys = np.linspace(ys.min(),ys.max(),100)
@@ -89,20 +132,20 @@ def plot_jitters(ax, X, ys, width, if_box=True, colorVal='tab:blue'):
         ax.plot([X+other_width,X+other_width],[q25,q75],'-',color=colorVal,linewidth=1)
 
     if len(ys)<900:
-        ax.plot(X+xs,ys,'.',color=colorVal,alpha=0.1,markersize=5,markeredgewidth=0.0)
+        ax.scatter(X+xs,ys,marker=marker,color=colorVal,alpha=alpha,s=2)
     else:
-        ax.plot(X+xs,ys,'.',color=colorVal,alpha=0.1,markersize=5,markeredgewidth=0.0, rasterized=True)
+        ax.scatter(X+xs,ys,marker=marker,color=colorVal,alpha=alpha,s=2, rasterized=True)
 
-
-for filename in files_to_plot:
-    species_name = ' '.join(filename.split('.')[0].split('_')[:2])
-    raw_data = pd.read_pickle(os.path.join(data_dir, 'third_pass', filename.split('.')[0] + '.pickle'))
-    filename = filename.split('.')[0] + '.csv'
+other_species_to_plot = []
+for species_full_name in species_order:
+    species_name = ' '.join(species_full_name.split('_')[:2])
+    raw_data = pd.read_pickle(os.path.join(data_dir, 'third_pass', species_full_name + '.pickle'))
+    filename = species_full_name + '.csv'
 
     if 'vulgatus' in species_name:
-        data_path = os.path.join(data_dir, 'third_pass', filename.split('.')[0] + '_all_transfers_two_clades.pickle')
+        data_path = os.path.join(data_dir, 'third_pass', species_full_name + '_all_transfers_two_clades.pickle')
     else:
-        data_path = os.path.join(data_dir, 'third_pass', filename.split('.')[0] + '_all_transfers.pickle')
+        data_path = os.path.join(data_dir, 'third_pass', species_full_name + '_all_transfers.pickle')
 
     transfer_data = pd.read_pickle(data_path)
 
@@ -111,6 +154,7 @@ for filename in files_to_plot:
     if n_filtered < 3:
         continue
     print(filename, n, n_filtered, raw_data['clonal snps'].max(), raw_data['clonal divs'].max())
+    plot_jitter = False
 
     if 'vulgatus' in species_name:
         # for B vulgatus, everything needs to be done twice
@@ -132,7 +176,7 @@ for filename in files_to_plot:
         xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
         axm.scatter(xloc, mid, s=5)
         axm.plot(xloc, mid, linestyle=':', linewidth=1)
-        axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
+        # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
         good_runs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=0)
         transfer_length_data.append(good_runs)
@@ -143,7 +187,7 @@ for filename in files_to_plot:
         # plot_jitters(axm, 2*idx, frac_recombined, width=0.4, colorVal=plot_colors[(idx-1) % len(plot_colors)])
 
         xticks.append(idx * 2)
-        xticklabels.append(species_name + '\n(within)')
+        xticklabels.append(species_name + '\n(within clade)')
         idx += 1
 
         # between next
@@ -154,7 +198,7 @@ for filename in files_to_plot:
         xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
         axm.scatter(xloc, mid, s=5)
         axm.plot(xloc, mid, linestyle=':', linewidth=1)
-        axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
+        # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
         good_runs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=1)
         transfer_length_data.append(good_runs)
@@ -164,7 +208,7 @@ for filename in files_to_plot:
         # plot_jitters(axm, 2*idx, frac_recombined, width=0.4, colorVal=plot_colors[(idx-1) % len(plot_colors)])
 
         xticks.append(idx * 2)
-        xticklabels.append(species_name + '\n(between)')
+        xticklabels.append(species_name + '\n(between clade)')
         idx += 1
         continue
 
@@ -173,23 +217,35 @@ for filename in files_to_plot:
     x, y = close_pair_utils.prepare_x_y(raw_data)
     try:
         fitted_data = pd.read_csv(os.path.join(data_dir, 'fourth_pass', filename), index_col=0)
+        # using divergence as x values
+        mid = interpolate_curve(fitted_data['x'], fitted_data['y'], scale=True)
+        w = interpolate_curve(fitted_data['x'], fitted_data['sigma'], scale=True)
+        if np.isnan(mid).sum() > 0:
+            # data does not cover the range 0 to 1e-4
+            plot_jitter = True
+        if n_filtered < 100:
+            plot_jitter = True
     except IOError:
-        continue
-    # using divergence as x values
-    mid = interpolate_curve(fitted_data['x'], fitted_data['y'])
-    w = interpolate_curve(fitted_data['x'], fitted_data['sigma'])
-    if np.isnan(mid).sum() > 0:
-        # data does not cover the range 0 to 1e-4
-        continue
+        plot_jitter = True
 
     # plotting species summary
     plot_loc.append(2 * idx)
-    transfer_length_data.append(transfer_data['lengths'].to_numpy().astype(float) * config.second_pass_block_size)
-
+    good_runs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data)
+    transfer_length_data.append(good_runs)
     xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
-    axm.scatter(xloc, mid, s=5)
-    axm.plot(xloc, mid, linestyle=':', linewidth=1)
-    axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
+
+    color = plot_colors[(idx-1) % len(plot_colors)]
+    if plot_jitter:
+        x, y = close_pair_utils.prepare_x_y(raw_data, mode='count')
+        x_ = x[x > 0]
+        y_ = y[x > 0]
+        rates = y_ / x_
+        # frac_recombined = rates * 1e-4
+        plot_jitters(axm, 2*idx, rates, width=0.4, colorVal=color, alpha=0.5, marker='^')
+    else:
+        axm.scatter(xloc, mid, s=5, color=color)
+        axm.plot(xloc, mid, linestyle=':', linewidth=1, color=color)
+        # axm.vlines(xloc, mid - w, mid + w, alpha=0.2, color=color)
 
 
     ######### Plotting the T_m estimation ##########
@@ -208,10 +264,13 @@ for filename in files_to_plot:
     x, y = close_pair_utils.prepare_x_y(raw_data)
     kw = dict(linestyle=":", linewidth=1, color='grey')
     xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
+    x_highlight = np.array([2.5e-5, 5e-5, 7.5e-5, 1e-4])
+    y_highlight = x_highlight * mid
     if 'caccae' in species_name:
         fitted_data = pd.read_csv(os.path.join(data_dir, 'fourth_pass', filename), index_col=0)
         ax1.scatter(x, y, s=1)
-        ax1.plot(fitted_data['x'], fitted_data['y'])
+        ax1.plot(fitted_data['x'], fitted_data['y'], linestyle=':', color=color)
+        ax1.plot(x_highlight, y_highlight, '.', color=color, markersize=5)
         ax1.fill_between(fitted_data['x'], fitted_data['y'] - fitted_data['sigma'],
                          fitted_data['y'] + fitted_data['sigma'], alpha=0.25)
         ax1.set_title(species_name)
@@ -228,7 +287,8 @@ for filename in files_to_plot:
     if 'massiliensis' in species_name:
         fitted_data = pd.read_csv(os.path.join(data_dir, 'fourth_pass', filename), index_col=0)
         ax2.scatter(x, y, s=1)
-        ax2.plot(fitted_data['x'], fitted_data['y'])
+        ax2.plot(fitted_data['x'], fitted_data['y'], linestyle='--', color=color)
+        ax2.plot(x_highlight, y_highlight, '.', color=color, markersize=5)
         ax2.fill_between(fitted_data['x'], fitted_data['y'] - fitted_data['sigma'],
                          fitted_data['y'] + fitted_data['sigma'], alpha=0.25)
         ax2.set_title(species_name)
@@ -245,12 +305,13 @@ for filename in files_to_plot:
     if 'putredinis' in species_name:
         fitted_data = pd.read_csv(os.path.join(data_dir, 'fourth_pass', filename), index_col=0)
         ax3.scatter(x, y, s=1)
+        ax3.plot(x_highlight, y_highlight, '.', color=color, markersize=5)
 
         # select three examples pairs
         # example_mask = raw_data['pairs'].isin([(282, 387), (297, 331), (269, 313)])
         # ax3.scatter(x[example_mask], y[example_mask], s=1, color='r')
 
-        ax3.plot(fitted_data['x'], fitted_data['y'])
+        ax3.plot(fitted_data['x'], fitted_data['y'], linestyle='--', color=color)
         # ax3.set_xlim([0, 50])
         ax3.set_xlim([0, 2e-4])
         ax3.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
@@ -287,10 +348,25 @@ for i, loc in enumerate(plot_loc):
 #     pc.set_edgecolor('black')
 # violins['cmedians'].set_edgecolor('black')
 
+# plot the shaded background for genera
+genera = [x.split(' ')[0] for x in xticklabels]
+prev_genus = genera[0]
+plot_bkg = False
+for i, genus in enumerate(genera):
+    x_span = [2 * i + 1, 2 * i + 3]
+    if genus != prev_genus:
+        # alternate background color
+        plot_bkg = not plot_bkg
+    if plot_bkg:
+        axm.axvspan(x_span[0], x_span[1], color='grey', alpha=0.1, zorder=6, linewidth=0)
+        axd.axvspan(x_span[0], x_span[1], color='grey', alpha=0.1, zorder=6, linewidth=0)
+    prev_genus = genus
+
 # axm.set_ylabel('Num transfers')
 # axm.set_ylabel("Recombined fraction \n @ $d_c=10^{-4}$")
 axm.set_ylabel("Transfer / divergence")
 axm.grid(linestyle='--', axis='y')
+axm.set_yscale('log')
 # axm.set_ylim([-0.5, axm.get_ylim()[1]])
 # axm.set_ylim([-0.05, 0.5])
 
@@ -314,9 +390,12 @@ _ = axd.set_xticklabels([])
 axd.grid(linestyle='--', axis='y')
 axd.set_xlim(axm.get_xlim())
 axd.set_ylim([0, 5900])
+# axd.set_yscale('log')
+axm.set_xlim([1, 2 * len(xticklabels) + 1])
+axd.set_xlim([1, 2 * len(xticklabels) + 1])
 
 _ = axd.set_xticks(xticks)
 _ = axd.set_xticklabels(xticklabels, rotation=90, ha='center', fontsize=5)
 
 fig.tight_layout()
-fig.savefig(os.path.join(config.analysis_directory, 'closely_related', 'summary_v8.pdf'), dpi=600)
+fig.savefig(os.path.join(config.analysis_directory, 'closely_related', 'summary_v9_linear.pdf'), dpi=600)

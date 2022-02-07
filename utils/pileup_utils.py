@@ -9,15 +9,15 @@ from utils import close_pair_utils, parallel_utils, BSMC_utils, typical_pair_uti
 import config
 
 
-def compute_pileup_for_clusters(cluster_dict, get_run_start_end, genome_len, thresholds):
+def compute_pileup_for_clusters(cluster_dict, get_run_start_end, genome_len, thresholds, cache_start_end=None):
     """
     General function for computing pileup curves; close genomes will be clustered according to cluster_dict
     :param cluster_dict: precomputed clusters using pairwise divergence matrix (using function in close_pair_utils.py)
     :param get_run_start_end: function that compute the list of event starts and ends for each threshold.
     Use get_event_start_end_BSMC for BSMC simulated data. Use Pileup_Helper.get_event_start_end for real species data
     :param genome_len: rough length of the genome. Used in determining the threshold lengths
-    :param mean_div: mean pairwise divergence. Used in determining the threshold lengths
-    :param surprise_index: number of expected synonymous snps in the run. Used in determining the threshold lengths
+    :param thresholds: the threshold lengths for determining if accumulating a run
+    :param cache_start_end: directory; if provided, will cache all runs to this directory in json format
     :return: np array of shape (genome length, number of thresholds)
     """
     genome_len = int(genome_len)
@@ -34,6 +34,9 @@ def compute_pileup_for_clusters(cluster_dict, get_run_start_end, genome_len, thr
             all_start_end = get_run_start_end(l, m, thresholds)
             if all_start_end is None:
                 continue
+            if cache_start_end is not None:
+                # pickle.dump(all_start_end, open(os.path.join(cache_start_end, '%s_%s.pkl' % (l, m)), 'wb'))
+                json.dump(all_start_end, open(os.path.join(cache_start_end, '%s_%s.json' % (l, m)), 'w'))
             num_pairs += 1
             for start_end in all_start_end:
                 # iterating over contigs
@@ -106,7 +109,7 @@ def compute_pileup_from_cache(files, genome_len, allowed_threshold=1):
     return cumu_runs / float(len(files))
 
 
-def compute_pileup_for_cluster_between_clades(cluster1_dict, cluster2_dict, get_run_start_end, genome_len, thresholds):
+def compute_pileup_for_cluster_between_clades(cluster1_dict, cluster2_dict, get_run_start_end, genome_len, thresholds, cache_start_end=None):
     genome_len = int(genome_len)
     cumu_runs = np.zeros([genome_len, len(thresholds)])
 
@@ -121,6 +124,9 @@ def compute_pileup_for_cluster_between_clades(cluster1_dict, cluster2_dict, get_
             all_start_end = get_run_start_end(l, m, thresholds, minor_cluster=True)
             if all_start_end is None:
                 continue
+            if cache_start_end is not None:
+                # pickle.dump(all_start_end, open(os.path.join(cache_start_end, '%s_%s.pkl' % (l, m)), 'wb'))
+                json.dump(all_start_end, open(os.path.join(cache_start_end, '%s_%s.json' % (l, m)), 'w'))
             num_pairs += 1
             for start_end in all_start_end:
                 # iterating over contigs

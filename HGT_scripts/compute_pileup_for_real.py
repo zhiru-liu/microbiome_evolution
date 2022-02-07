@@ -8,7 +8,7 @@ from utils import pileup_utils, parallel_utils, typical_pair_utils
 import config
 
 
-def compute_between_host(species_name, thresholds, save_path=None):
+def compute_between_host(species_name, thresholds, save_path=None, cache_runs=None):
     print("Processing %s" % species_name)
     if 'vulgatus' in species_name:
         # only B vulgatus need to pick out the dominant clade
@@ -26,7 +26,7 @@ def compute_between_host(species_name, thresholds, save_path=None):
     ph = pileup_utils.Pileup_Helper(species_name, clade_cutoff=clade_cutoff)
     genome_len = np.sum(ph.dh.general_mask)
     cumu_runs = pileup_utils.compute_pileup_for_clusters(
-        ph.cluster_dict, ph.get_event_start_end, genome_len, thresholds=thresholds)
+        ph.cluster_dict, ph.get_event_start_end, genome_len, thresholds=thresholds, cache_start_end=cache_runs)
     if not os.path.exists(ckpt_path):
         os.makedirs(ckpt_path)
     np.savetxt(os.path.join(ckpt_path, 'between_host.csv'), cumu_runs)
@@ -36,10 +36,11 @@ def compute_between_host(species_name, thresholds, save_path=None):
 def compute_B_vulgatus_between_clade(thresholds):
     species_name = 'Bacteroides_vulgatus_57955'
     ckpt_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', '%s_between'%species_name)
+    cache_dir = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'B_vulgatus_between_host_between_clade')
     ph = pileup_utils.Pileup_Helper(species_name, clade_cutoff=0.03)
     genome_len = np.sum(ph.dh.general_mask)
     cumu_runs = pileup_utils.compute_pileup_for_cluster_between_clades(
-        ph.cluster_dict, ph.minor_cluster_dict, ph.get_event_start_end, genome_len, thresholds=thresholds)
+        ph.cluster_dict, ph.minor_cluster_dict, ph.get_event_start_end, genome_len, thresholds=thresholds, cache_start_end=cache_dir)
     if not os.path.exists(ckpt_path):
         os.makedirs(ckpt_path)
     np.savetxt(os.path.join(ckpt_path, 'between_host.csv'), cumu_runs)
@@ -76,10 +77,12 @@ def compute_within_host(species_name, thresholds, b_vulgatus_between_clade=False
     ckpt_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', species_name)
     if 'vulgatus' in species_name and b_vulgatus_between_clade:
         # ugly but whatever
-        cumu_runs = pileup_utils.compute_pileup_for_within_host(dh, thresholds, clade_cutoff=0.03, within_clade=False)
+        cache_dir = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'B_vulgatus_within_host_between_clade')
+        cumu_runs = pileup_utils.compute_pileup_for_within_host(dh, thresholds, clade_cutoff=0.03, within_clade=False, cache_start_end=cache_dir)
         ckpt_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', "%s_between" % species_name)
     elif 'vulgatus' in species_name:
-        cumu_runs = pileup_utils.compute_pileup_for_within_host(dh, thresholds, clade_cutoff=0.03)
+        cache_dir = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'B_vulgatus_within_host_within_clade')
+        cumu_runs = pileup_utils.compute_pileup_for_within_host(dh, thresholds, clade_cutoff=0.03, cache_start_end=cache_dir)
     else:
         cumu_runs = pileup_utils.compute_pileup_for_within_host(dh, thresholds)
     if cumu_runs is None:
@@ -107,7 +110,7 @@ if __name__ == '__main__':
             continue
         print("Processing %s" % species_name)
         # only processing one species
-        if 'rectale' not in species_name:
+        if 'vulgatus' not in species_name:
             continue
         if 'rectale' in species_name:
             theta = typical_pair_utils.compute_theta(species_name)
@@ -116,7 +119,9 @@ if __name__ == '__main__':
         if 'vulgatus' in species_name:
             within_theta, between_theta = typical_pair_utils.compute_theta(species_name, clade_cutoff=[None, 0.03], return_both=True)
             thresholds = np.array([15, 20, 25]) / within_theta
-            compute_between_host(species_name, thresholds)
+
+            cache_dir = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'B_vulgatus_between_host_within_clade')
+            compute_between_host(species_name, thresholds, cache_runs=cache_dir)
             compute_within_host(species_name, thresholds)
 
             thresholds = np.array([15, 20, 25]) / between_theta

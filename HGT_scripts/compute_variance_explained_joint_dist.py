@@ -116,8 +116,11 @@ if not plot_only:
 if plot_only:
     var_df = pd.read_csv(os.path.join(config.plotting_intermediate_directory, 'variance_explained.csv'))
     var_df['Genus'] = var_df['Species'].apply(lambda x: x.split('_')[0])
-    var_df = var_df.sort_values(['Genus', 'Variance explained weighted control'], ascending=[True, False])
     var_df = var_df.set_index('Species')
+    val_genus = var_df.groupby('Genus')['Variance explained weighted control'].mean()
+    val_dict = val_genus.to_dict()
+    var_df['Genus mean'] = var_df['Genus'].apply(val_dict.get)
+    var_df = var_df.sort_values(['Genus mean', 'Variance explained weighted control'], ascending=[False, False])
 fig, axes = plt.subplots(1, 2, figsize=(2, 3),dpi=300)
 plt.subplots_adjust(wspace=0)
 fontsize = 6
