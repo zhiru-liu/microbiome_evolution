@@ -44,7 +44,7 @@ within_host_path = os.path.join(base_path, 'within_host.csv')
 within_thresholds = np.loadtxt(os.path.join(base_path, 'within_host_thresholds.txt'))
 
 between_cumu_runs, within_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
-    between_host_path, within_host_path, ax, threshold_lens=[thresholds, within_thresholds], ind_to_plot=[1], ylim=0.5)
+    between_host_path, within_host_path, ax, ind_to_plot=0, ylim=0.5)
 
 
 # computing p value for within vs between differences using Fisher exact test

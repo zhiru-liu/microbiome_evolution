@@ -277,6 +277,31 @@ def enrichment_test(gene_vector, site_mask, pass_func, shuffle_size=1, shuffle_r
     return passed_counts
 
 
+def process_BSMC_sim(filename, save_path, genome_len, thresholds, close_pair_cutoff=0.95, return_res=False):
+    """
+    Process a single BSMC run data
+    :param filename: filename of the saved BSMC simulation
+    :param save_path: Path to save the pileup result (cumu_runs)
+    :param genome_len: Length of the simulated genome (in bps)
+    :param thresholds: A list of thresholds lengths for filtering runs/homozygous tracts
+    :param close_pair_cutoff: For clustering close pairs together, in order to avoid over counting genomes
+    :return: The CV of the pileup results
+    """
+    sim_data = BSMC_utils.load_data(filename)
+    cf_mat = BSMC_utils.get_pairwise_clonal_fraction_matrix(sim_data, genome_len)
+    cluster_dict = close_pair_utils.get_clusters_from_pairwise_matrix(1 - cf_mat, threshold=1 - close_pair_cutoff)
+    # pd_mat = BSMC_utils.get_pairwise_distance_matrix(sim_data, genome_len)
+    # cluster_dict = close_pair_utils.get_clusters_from_pairwise_matrix(pd_mat, threshold=0.001)
+    print("Sim has {} close clusters".format(len(cluster_dict)))
+    f = lambda x, y, z: get_event_start_end_BSMC(sim_data, genome_len, x, y, z)
+    cumu_runs = compute_pileup_for_clusters(cluster_dict, f, genome_len, thresholds)
+    if return_res:
+        return cumu_runs
+    else:
+        # save cumu_runs
+        np.savetxt(save_path, cumu_runs)
+        return np.std(cumu_runs, axis=0) / np.mean(cumu_runs, axis=0)
+
 class Pileup_Helper:
     def __init__(self, species_name, allowed_variants=["4D"], clade_cutoff=None, close_pair_cutoff=0.95):
         """

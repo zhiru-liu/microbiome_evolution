@@ -42,8 +42,10 @@ base_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical
 within_clade_path = os.path.join(base_path, 'between_host.csv')
 within_thresholds = np.loadtxt(os.path.join(base_path, 'between_host_thresholds.txt'))
 
-between_cumu_runs, within_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
-    within_clade_path, between_clade_path, ax, threshold_lens=[within_thresholds, thresholds], ind_to_plot=[0, 1, 2], ylim=10, normalized=True)
+within_cumu_runs, between_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
+    within_clade_path, between_clade_path, ax, ind_to_plot=0, ylim=0.3)
+print(between_cumu_runs[:, 0].mean(), within_cumu_runs[:, 0].mean())
+print(np.median(between_cumu_runs[:, 0]), np.median(within_cumu_runs[:, 0]))
 
 
 # plotting all the highlighted regions

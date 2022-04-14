@@ -11,10 +11,10 @@ sys.path.append("..")
 import config
 
 
-def load_data_and_plot_mirror(between_host_path, within_host_path, ax, threshold_lens, ind_to_plot=None, ylim=0.35, normalized=False):
+def load_data_and_plot_mirror(between_host_path, within_host_path, ax, ind_to_plot=0, ylim=0.35):
     between_cumu_runs = np.loadtxt(between_host_path)
     within_cumu_runs = np.loadtxt(within_host_path)
-    plot_mirror(between_cumu_runs, within_cumu_runs, ax, threshold_lens, ind_to_plot=ind_to_plot, ylim=ylim, normalized=normalized)
+    plot_mirror_single_threshold(between_cumu_runs, within_cumu_runs, ax, ind_to_plot=ind_to_plot, ylim=ylim)
     return between_cumu_runs, within_cumu_runs
 
 
@@ -46,6 +46,19 @@ def plot_mirror(between_cumu_runs, within_cumu_runs, ax, threshold_lens, ind_to_
     ax.set_xlabel("4D core genome location")
     ax.set_ylabel("sharing fraction")
     ax.legend(bbox_to_anchor=(1, 1))
+    ax.set_yticklabels(np.around(map(np.abs, ax.get_yticks()), decimals=1))
+
+
+def plot_mirror_single_threshold(between_cumu_runs, within_cumu_runs, ax, ind_to_plot, ylim=0.35, colors=['tab:blue', 'tab:orange']):
+    # decide which of the cumu_runs to plot
+    ax.plot(between_cumu_runs[:, ind_to_plot], linewidth=1, color=colors[0])
+    ax.plot(-within_cumu_runs[:, ind_to_plot], linewidth=1, color=colors[1])
+    ax.hlines(0, 0, between_cumu_runs.shape[0], 'black', linewidth=1)
+    ax.set_xlim([0, between_cumu_runs.shape[0]])
+    ax.set_ylim([-ylim, ylim])
+    ax.set_xlabel("4D core genome location")
+    ax.set_ylabel("sharing fraction")
+    # ax.legend(bbox_to_anchor=(1, 1))
     ax.set_yticklabels(np.around(map(np.abs, ax.get_yticks()), decimals=1))
 
 

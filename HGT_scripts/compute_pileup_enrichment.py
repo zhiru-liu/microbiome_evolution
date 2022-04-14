@@ -5,7 +5,7 @@ import config
 from utils import pileup_utils
 
 ############# setting up the parameters #############
-save_path = os.path.join(config.plotting_intermediate_directory, 'B_vulgatus_between_clade_pileup_shuffle.txt')
+save_path = os.path.join(config.plotting_intermediate_directory, 'B_vulgatus_within_clade_pileup_shuffle.txt')
 # E rectale
 # within_cached_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'E_rectale_within_json')
 # between_cached_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'E_rectale_between_json')
@@ -13,13 +13,13 @@ save_path = os.path.join(config.plotting_intermediate_directory, 'B_vulgatus_bet
 # genome_len = 230159
 
 # B vulgatus
-# within_cached_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'B_vulgatus_within_host_within_clade')
-# between_cached_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'B_vulgatus_between_host_within_clade')
-# base_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', 'Bacteroides_vulgatus_57955')
-
-within_cached_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'B_vulgatus_within_host_between_clade')
-between_cached_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'B_vulgatus_between_host_between_clade')
+within_cached_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'B_vulgatus_within_host_within_clade')
+between_cached_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'B_vulgatus_between_host_within_clade')
 base_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', 'Bacteroides_vulgatus_57955')
+
+# within_cached_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'B_vulgatus_within_host_between_clade')
+# between_cached_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'B_vulgatus_between_host_between_clade')
+# base_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', 'Bacteroides_vulgatus_57955')
 
 genome_len = 288079
 

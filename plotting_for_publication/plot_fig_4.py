@@ -99,6 +99,8 @@ def plot_allele_freq_zoomin(axes, histo_axes, sample_pair):
     histo_axes[0].set_xlim([0, 1000])
     histo_axes[1].set_xlim([0, 1000])
     histo_axes[0].set_xticklabels([])
+    histo_axes[0].set_yticklabels([])
+    histo_axes[1].set_yticklabels([])
     histo_axes[1].set_xlabel('Site Frequency Spectrum')
 
     # good_sites_before = good_sites_before[start:end]
@@ -157,12 +159,50 @@ def plot_allele_freq_zoomin(axes, histo_axes, sample_pair):
     axes[0].set_xticklabels([])
     axes[1].set_xlabel('Site index in covered coding region')
     axes[0].legend(loc='upper right')
+    axes[0].set_ylim([0, 1.5])
+    axes[1].set_ylim([0, 1.5])
 
     histo_axes[0].set_ylim([0, axes[0].get_ylim()[1]])
     histo_axes[0].set_yticks([0, 0.5, 1])
     histo_axes[1].set_ylim([0, axes[1].get_ylim()[1]])
     histo_axes[1].set_yticks([0, 0.5, 1])
     return minimal_genes, maximal_genes
+
+
+def plot_max_run_histo(ax, species_name):
+    max_run_dir = os.path.join(config.analysis_directory, 'typical_pairs', 'max_runs')
+    within_host_max_runs = np.loadtxt(os.path.join(max_run_dir, species_name + '_within.txt'), ndmin=1)
+    between_host_max_runs = np.loadtxt(os.path.join(max_run_dir, species_name + '_between.txt'))
+    ax.hist([between_host_max_runs, within_host_max_runs], bins=100, density=True,
+            cumulative=-1, histtype='step', label=['Between host', 'Within host'])
+    ax.set_xlabel('Max homozygous run length\n(4D syn sites)')
+    ax.set_ylabel('Fraction longer than')
+    ax.legend()
+
+
+def plot_example_snps(axes):
+    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_within_snp1.csv")
+    within_snp_vec1 = np.loadtxt(cache_file).astype(bool)
+    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_within_snp2.csv")
+    within_snp_vec2 = np.loadtxt(cache_file).astype(bool)
+    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_between_snp1.csv")
+    between_snp_vec1 = np.loadtxt(cache_file).astype(bool)
+    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_between_snp2.csv")
+    between_snp_vec2 = np.loadtxt(cache_file).astype(bool)
+
+    axes[0].plot(within_snp_vec1, linewidth=0.3)
+    axes[1].plot(within_snp_vec2, linewidth=0.3)
+    axes[2].plot(between_snp_vec1, linewidth=0.3)
+    axes[3].plot(between_snp_vec2, linewidth=0.3)
+    axes[0].set_xticklabels([])
+    axes[1].set_xticklabels([])
+    axes[2].set_xticklabels([])
+
+    xmax = min(len(within_snp_vec1), len(within_snp_vec2), len(between_snp_vec1), len(between_snp_vec2))
+    for ax in axes:
+        ax.set_xlim([0, xmax])
+        ax.set_yticklabels([])
+        ax.set_yticks([])
 
 
 def save_interesting_genes(genes, path):
@@ -176,34 +216,51 @@ mpl.rcParams['font.size'] = 7
 mpl.rcParams['lines.linewidth'] = 1
 mpl.rcParams['legend.fontsize'] = 'small'
 
-fig = plt.figure(figsize=(7, 5.5))
+fig = plt.figure(figsize=(7, 4.5))
 
-outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[2, 3.5], hspace=0.4, figure=fig)
+outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[2, 3.0], hspace=0.3, figure=fig)
 
 top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1.5,1],wspace=0,subplot_spec=outer_grid[0])
 
-local_div_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.2, subplot_spec=top_grid[1])
+local_div_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.5, subplot_spec=top_grid[1])
+snp_grid_1 = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=local_div_grid[0])
+snp_grid_2 = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=local_div_grid[1])
 
-bottom_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[4, 1], wspace=0.2, subplot_spec=outer_grid[1])
+bottom_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[3., 1], wspace=0.4, subplot_spec=outer_grid[1])
 
-zoomin_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.1, subplot_spec=bottom_grid[0])
+bottom_left_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[6, 1], wspace=0.05, subplot_spec=bottom_grid[0])
 
-histo_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.1, subplot_spec=bottom_grid[-1])
+bottom_right_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=bottom_grid[1])
+
+zoomin_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.1, subplot_spec=bottom_left_grid[0])
+
+histo_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.1, subplot_spec=bottom_left_grid[1])
 
 # adding axes
-local_ax1 = fig.add_subplot(local_div_grid[0])
-local_ax2 = fig.add_subplot(local_div_grid[1])
+snp_ax1 = fig.add_subplot(snp_grid_1[0])
+snp_ax2 = fig.add_subplot(snp_grid_1[1])
+snp_ax3 = fig.add_subplot(snp_grid_2[0])
+snp_ax4 = fig.add_subplot(snp_grid_2[1])
 
 zoomin_ax1 = fig.add_subplot(zoomin_grid[0])
 zoomin_ax2 = fig.add_subplot(zoomin_grid[1])
 histo_ax1 = fig.add_subplot(histo_grid[0])
 histo_ax2= fig.add_subplot(histo_grid[1])
 
+max_run_ax1 = fig.add_subplot(bottom_right_grid[0])
+max_run_ax2 = fig.add_subplot(bottom_right_grid[1])
+
 # plotting
 minimal_genes, maximal_genes = plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], [histo_ax1, histo_ax2], ['700114218', '700171115'])
-plot_local_polymorphism([local_ax1, local_ax2], ['700114218', '700171115'])
+# plot_local_polymorphism([local_ax1, local_ax2], ['700114218', '700171115'])
+
+plot_max_run_histo(max_run_ax1, 'Bacteroides_vulgatus_57955_same_clade')
+plot_max_run_histo(max_run_ax2, 'Eubacterium_rectale_56927')
+max_run_ax1.set_xlabel('')
+
+plot_example_snps([snp_ax1, snp_ax2, snp_ax3, snp_ax4])
 
 save_interesting_genes(minimal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "minimal.csv"))
 save_interesting_genes(maximal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "maximal.csv"))
 
-fig.savefig('test_denovo.pdf', bbox_inches="tight", dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig4.pdf'), bbox_inches="tight", dpi=600)

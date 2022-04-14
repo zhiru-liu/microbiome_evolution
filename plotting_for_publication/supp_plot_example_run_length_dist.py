@@ -12,7 +12,17 @@ from utils import parallel_utils
 
 def plot_example_run_length_dist(dist_ax, snp_vec_axes, within_dh, between_dh, within_idx, between_pair1, between_pair2):
     good_chromo = within_dh.chromosomes[within_dh.general_mask]
+
+    within_idx = np.where(within_dh.good_samples=='700114218')[0]
     within_snp_vec, snp_mask = within_dh.get_snp_vector(within_idx)
+    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_within_snp1.csv")
+    np.savetxt(cache_file, within_snp_vec)
+
+    within_idx = np.where(within_dh.good_samples=='700171115')[0]
+    within_snp_vec, snp_mask = within_dh.get_snp_vector(within_idx)
+    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_within_snp2.csv")
+    np.savetxt(cache_file, within_snp_vec)
+
     within_example_runs = parallel_utils.compute_runs_all_chromosomes(within_snp_vec, good_chromo[snp_mask])
     within_div = (np.sum(within_snp_vec) / float(len(within_snp_vec)))
 
@@ -27,6 +37,11 @@ def plot_example_run_length_dist(dist_ax, snp_vec_axes, within_dh, between_dh, w
 
     between_snp_vec2, snp_mask = between_dh.get_snp_vector(between_pair2)
     between_example_runs2 = parallel_utils.compute_runs_all_chromosomes(between_snp_vec2, good_chromo[snp_mask])
+
+    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_between_snp1.csv")
+    np.savetxt(cache_file, between_snp_vec1)
+    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_between_snp2.csv")
+    np.savetxt(cache_file, between_snp_vec2)
 
     between_div1 = (np.sum(between_snp_vec1) / float(len(between_snp_vec1)))
     between_div2 = (np.sum(between_snp_vec2) / float(len(between_snp_vec2)))

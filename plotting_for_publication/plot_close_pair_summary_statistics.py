@@ -398,4 +398,4 @@ _ = axd.set_xticks(xticks)
 _ = axd.set_xticklabels(xticklabels, rotation=90, ha='center', fontsize=5)
 
 fig.tight_layout()
-fig.savefig(os.path.join(config.analysis_directory, 'closely_related', 'summary_v9_linear.pdf'), dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig3.pdf'), dpi=600)

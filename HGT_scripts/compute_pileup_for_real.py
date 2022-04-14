@@ -20,9 +20,9 @@ def compute_between_host(species_name, thresholds, save_path=None, cache_runs=No
         ckpt_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', species_name)
     else:
         ckpt_path = save_path
-    if os.path.exists(ckpt_path):
-        print("%s already processed. Skipping" % species_name)
-        return
+    # if os.path.exists(ckpt_path):
+    #     print("%s already processed. Skipping" % species_name)
+    #     return
     ph = pileup_utils.Pileup_Helper(species_name, clade_cutoff=clade_cutoff)
     genome_len = np.sum(ph.dh.general_mask)
     cumu_runs = pileup_utils.compute_pileup_for_clusters(
@@ -110,8 +110,8 @@ if __name__ == '__main__':
             continue
         print("Processing %s" % species_name)
         # only processing one species
-        if 'vulgatus' not in species_name:
-            continue
+        # if 'rectale' not in species_name:
+        #     continue
         if 'rectale' in species_name:
             theta = typical_pair_utils.compute_theta(species_name)
             thresholds = np.array([15, 20, 25]) / theta

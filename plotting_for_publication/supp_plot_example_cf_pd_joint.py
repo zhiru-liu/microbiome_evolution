@@ -22,7 +22,8 @@ plt.subplots_adjust(wspace=0.25, hspace=0.6)
 ex1 = 'Prevotella_copri_61740'  # lack of close pairs
 ex2 = 'Roseburia_inulinivorans_61943'  # lack of close pairs
 ex3 = 'Barnesiella_intestinihominis_62208'  # minimal spread in joint plot
-ex4 = 'Dialister_invisus_61905'  # large spread in joint plot
+# ex4 = 'Dialister_invisus_61905'  # large spread in joint plot
+ex4 = 'Eubacterium_rectale_56927'  # population structure
 
 species = [ex1, ex2, ex3, ex4]
 
