@@ -14,7 +14,7 @@ from scipy.stats import gaussian_kde
 
 sys.path.append("..")
 import config
-from utils import close_pair_utils
+from utils import close_pair_utils, species_phylogeny_utils
 
 from matplotlib.transforms import Bbox, TransformedBbox, \
     blended_transform_factory
@@ -23,7 +23,7 @@ from mpl_toolkits.axes_grid1.inset_locator import BboxPatch, BboxConnector, \
     BboxConnectorPatch
 
 species_priority = json.load(open(os.path.join(config.analysis_directory, 'species_plotting_priority.json'), 'r'))
-# sorted by Phylus and genus and fraction of QP pairs
+# a heuristic order roughly by phylus and genus and fraction of QP pairs
 species_order = [
     'Bacteroides_vulgatus_57955',
     'Bacteroides_ovatus_58035',
@@ -52,7 +52,9 @@ species_order = [
     'Alistipes_putredinis_61533',
     'Alistipes_onderdonkii_55464',
     'Alistipes_finegoldii_56071',
+    'Alistipes_sp_60764',
 
+    'Lachnospiraceae_bacterium_51870',
     'Coprococcus_sp_62244',
     'Roseburia_intestinalis_56239',
 
@@ -60,18 +62,16 @@ species_order = [
     'Eubacterium_siraeum_57634',
     'Faecalibacterium_cf_62236',
     'Ruminococcus_bromii_62047',
+    'Ruminococcus_bicirculans_59300',
 
     'Oscillibacter_sp_60799',
 
     'Dialister_invisus_61905',
 
+    'Phascolarctobacterium_sp_59817',
+
     'Akkermansia_muciniphila_55290']
 
-
-data_dir = os.path.join(config.analysis_directory, "closely_related")
-files_to_plot = sorted(filter(lambda x: (not x.startswith('.')) and ('all_transfers' not in x),
-                              os.listdir(os.path.join(data_dir, 'third_pass'))),
-                       key=lambda x: (x.split('_')[0], species_priority.get(x.split('.')[0])))
 
 data_dir = os.path.join(config.analysis_directory, "closely_related")
 
@@ -361,7 +361,7 @@ for i, genus in enumerate(genera):
         axm.axvspan(x_span[0], x_span[1], color='grey', alpha=0.1, zorder=6, linewidth=0)
         axd.axvspan(x_span[0], x_span[1], color='grey', alpha=0.1, zorder=6, linewidth=0)
     prev_genus = genus
-
+print("In total {} species".format(len(genera)-1))
 # axm.set_ylabel('Num transfers')
 # axm.set_ylabel("Recombined fraction \n @ $d_c=10^{-4}$")
 axm.set_ylabel("Transfer / divergence")
@@ -398,4 +398,4 @@ _ = axd.set_xticks(xticks)
 _ = axd.set_xticklabels(xticklabels, rotation=90, ha='center', fontsize=5)
 
 fig.tight_layout()
-fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig3.pdf'), dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig3_.pdf'), dpi=600)

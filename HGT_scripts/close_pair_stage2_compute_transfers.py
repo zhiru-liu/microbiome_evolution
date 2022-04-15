@@ -8,7 +8,7 @@ import traceback
 sys.path.append("..")
 import config
 import cphmm.cphmm as hmm
-from utils import parallel_utils, close_pair_utils
+from utils import parallel_utils, close_pair_utils, typical_pair_utils
 
 
 def init_hmm(species_name, genome_len, block_size):
@@ -28,7 +28,7 @@ def init_hmm(species_name, genome_len, block_size):
     return cphmm
 
 
-def process_one_species(species_name, div_cutoff, block_size, debug=False):
+def process_one_species(species_name, block_size, debug=False):
     """
     :param species_name:
     :param div_cutoff: Hand annotated cutoff for first filtering of pairs
@@ -42,8 +42,9 @@ def process_one_species(species_name, div_cutoff, block_size, debug=False):
     div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
                            'between_hosts', '%s.csv' % species_name)
     div_mat = np.loadtxt(div_dir, delimiter=',')
-    pairs = close_pair_utils.find_close_pairs(div_cutoff, div_mat, dh.get_single_subject_idxs())
-    logging.info("After divergence cutoff, {} has {} pairs".format(species_name, len(pairs)))
+    cf_mat = typical_pair_utils.load_clonal_frac_mat(species_name)
+    pairs = close_pair_utils.find_close_pairs(CLONAL_FRAC_CUTOFF, cf_mat, dh.get_single_subject_idxs())
+    logging.info("After cf cutoff, {} has {} pairs".format(species_name, len(pairs)))
     if len(pairs) < 5:
         logging.info("Too few pairs, skipping")
         return None
@@ -55,6 +56,7 @@ def process_one_species(species_name, div_cutoff, block_size, debug=False):
 
     # use num of snp block as an estimate for clonal fraction
     # throw away pairs with too many blocks covered
+    # TODO: Zhiru: this is not needed anymore after using cf_mat above
     snp_block_cutoff = (1 - CLONAL_FRAC_CUTOFF) * mean_total_blocks
     second_pass_stats = first_pass_stats[
         first_pass_stats['snp_blocks'] < snp_block_cutoff].copy()
@@ -116,7 +118,7 @@ logging.basicConfig(
 
 CLONAL_FRAC_CUTOFF = 0.5  # config.clonal_fraction_cutoff
 BLOCK_SIZE = config.second_pass_block_size
-DEBUG = True
+DEBUG = False
 
 black_list = ['Bacteroides_xylanisolvens_57185', # for having extremely short contigs and short total core genome
               'Escherichia_coli_58110'] # for having extremely short contigs
@@ -143,7 +145,7 @@ for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
         continue
 
     logging.info("Starting %s" % species_name)
-    res = process_one_species(species_name, cutoff_dict[species_name][0], BLOCK_SIZE, debug=DEBUG)
+    res = process_one_species(species_name, BLOCK_SIZE, debug=DEBUG)
     logging.info("Finished %s" % species_name)
     if res is not None:
         df, data = res

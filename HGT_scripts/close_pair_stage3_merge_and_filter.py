@@ -20,6 +20,11 @@ for filename in os.listdir(ckpt_path):
                                         "closely_related", "first_pass", "{}.pickle".format(species_name))
     first_pass_df = pd.read_pickle(first_pass_save_path)
 
+    third_pass_path = os.path.join(config.analysis_directory, "closely_related", 'third_pass', species_name + '.pickle')
+    if os.path.exists(third_pass_path):
+        print("{} already processed, skipping".format(species_name))
+        continue
+
     data = pickle.load(open(os.path.join(ckpt_path, filename), 'rb'))
     transfer_counts, all_transfer_df = close_pair_utils.merge_and_filter_transfers(data, separate_clade=False)
     if transfer_counts is None:
@@ -49,6 +54,5 @@ for filename in os.listdir(ckpt_path):
     # third_pass_df = third_pass_df[third_pass_df['clonal fractions'] >= config.clonal_fraction_cutoff]
     # print("Before additional clonal fraction filter, {} pairs".format(len(data['pairs'])))
     # print("After filter, {} pairs".format(third_pass_df.shape[0]))
-
-    third_pass_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass', species_name + '.pickle'))
+    third_pass_df.to_pickle(third_pass_path)
     all_transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass', species_name + '_all_transfers.pickle'))

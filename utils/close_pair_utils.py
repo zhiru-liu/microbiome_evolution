@@ -8,18 +8,18 @@ import scipy.cluster.hierarchy as hierarchy
 import config
 
 
-def find_close_pairs(cutoff, div_mat, good_idxs):
+def find_close_pairs(cutoff, cf_mat, good_idxs):
     """
     helper function for picking out pairs to process
-    :param cutoff: cutoff divergence
-    :param div_mat: matrix of pairwise divergences. Must be sorted the
+    :param cutoff: cutoff clonal fraction
+    :param cf_mat: matrix of identical fraction. Must be sorted the
     same order as DataHoarder order
     :param good_idxs: list of indices corresponding to distinct subjects
     Can be computed with dh.get_single_subject_idxs
     :return:
     """
-    masked_div_mat = div_mat[good_idxs, :][:, good_idxs]
-    idxs = np.nonzero((masked_div_mat < cutoff) & (masked_div_mat != 0))
+    masked_cf_mat = cf_mat[good_idxs, :][:, good_idxs]
+    idxs = np.nonzero((masked_cf_mat > cutoff) & (masked_cf_mat != 1))
     pairs = zip(list(idxs[0]), list(idxs[1]))
     pairs = [(good_idxs[pair[0]], good_idxs[pair[1]])
              for pair in pairs if pair[0] < pair[1]]

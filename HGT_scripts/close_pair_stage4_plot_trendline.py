@@ -149,6 +149,6 @@ if __name__ == "__main__":
         ax.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
         fig.tight_layout()
         fig.savefig(os.path.join(config.analysis_directory,
-                                 "closely_related", "wall_clock_v4",
+                                 "closely_related", "wall_clock_v5",
                                  "{}.pdf".format(species_name)), dpi=300)
         plt.close()
