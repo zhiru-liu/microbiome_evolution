@@ -5,7 +5,7 @@ import numpy as np
 import pickle
 sys.path.append("..")
 import config
-from utils import parallel_utils, close_pair_utils
+from utils import parallel_utils, close_pair_utils, typical_pair_utils
 import cphmm.cphmm as hmm
 
 
@@ -30,6 +30,7 @@ def test_species(species_name, debug=False, clade_cutoff=None):
     dh = parallel_utils.DataHoarder(
         species_name, mode='QP', allowed_variants=['4D'])
     good_idxs = dh.get_single_subject_idxs()
+    pd_mat = typical_pair_utils.load_pairwise_div_mat(species_name)
 
     def sample_strain():
         return random.sample(good_idxs, 1)[0]
@@ -41,7 +42,7 @@ def test_species(species_name, debug=False, clade_cutoff=None):
         genome_len = len(snp_vec)
         l = int(np.random.exponential(lamb))
         start_idx = np.random.randint(0, genome_len - l + 1)
-        return start_idx, l, snp_vec[start_idx:start_idx + l]
+        return start_idx, l, snp_vec[start_idx:start_idx + l], donor_strain
 
     def generate_fake_genome(T, lamb, rbymu, L):
         genome = np.random.binomial(1, T, L)
@@ -49,9 +50,10 @@ def test_species(species_name, debug=False, clade_cutoff=None):
         num_transfers = np.random.binomial(L, T * rbymu)
         transfer_starts = []
         transfer_lens = []
+        transfer_origin = [] # true = between clade transfer
         for i in xrange(num_transfers):
             while True:
-                start, l, seq = get_random_transfer(focal_strain, lamb)
+                start, l, seq, donor = get_random_transfer(focal_strain, lamb)
                 if start > L:
                     continue
                 if np.sum(seq) <= 1:
@@ -61,8 +63,10 @@ def test_species(species_name, debug=False, clade_cutoff=None):
                 genome[start:start + l] = seq[:min(l, L - start)]
                 transfer_starts.append(start)
                 transfer_lens.append(min(l, L - start))
+                if clade_cutoff is not None:
+                    transfer_origin.append(pd_mat[donor, focal_strain] > clade_cutoff)
                 break
-        return genome, transfer_starts, transfer_lens
+        return genome, transfer_starts, transfer_lens, transfer_origin
 
     def sample_pair():
         return random.sample(good_idxs, 2)
@@ -92,6 +96,7 @@ def test_species(species_name, debug=False, clade_cutoff=None):
     dat['true counts'] = []
     dat['true T'] = []
     dat['true lengths'] = []
+    dat['true between clade counts'] = []
 
     BLOCK_SIZE = config.second_pass_block_size
     num_reps = 10 if debug else 100
@@ -106,7 +111,7 @@ def test_species(species_name, debug=False, clade_cutoff=None):
 
     for T in Ts:
         for i in range(num_reps):
-            g, sim_starts, sim_lens = generate_fake_genome(
+            g, sim_starts, sim_lens, sim_origins = generate_fake_genome(
                 T, mean_transfer_len, rbymu, int(L))
             blk_seq = close_pair_utils.to_block(g, BLOCK_SIZE).reshape((-1, 1))
             blk_seq_fit = (blk_seq > 0).astype(float)
@@ -119,6 +124,7 @@ def test_species(species_name, debug=False, clade_cutoff=None):
             dat['true counts'].append(len(sim_starts))
             dat['true lengths'].append(sim_lens)
             dat['true T'].append(T)
+            dat['true between clade counts'].append(np.sum(sim_origins))
 
             dat['starts'].append(starts)
             dat['ends'].append(ends)
@@ -141,4 +147,4 @@ def test_species(species_name, debug=False, clade_cutoff=None):
 all_species = ['Bacteroides_vulgatus_57955']
 
 for species in all_species:
-    test_species(species, debug=False, clade_cutoff=config.empirical_histogram_bins)
+    test_species(species, debug=True, clade_cutoff=config.empirical_histogram_bins)

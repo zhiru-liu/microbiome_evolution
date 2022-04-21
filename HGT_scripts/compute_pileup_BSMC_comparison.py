@@ -8,6 +8,8 @@ import config
 
 data_dir = os.path.join(config.analysis_directory, 'fastsimbac_data', 'r_scan')
 
+# for comparing with real data
+
 # parameters of BSMC sim
 t = 0.00825
 genome_len = 280000

@@ -119,6 +119,7 @@ total_counts, within_counts, between_counts, full_df = preprocess_data(data)
 plot_count_correlation(count_ax, true_counts, true_Ts, total_counts)
 plot_clonal_T_estimation(T_est_ax, true_Ts, est_Ts)
 plot_length_distributions(true_len_ax, true_lens, full_df['lengths'].astype(float))
+# plot_between_within_clade(between_within_count_ax, est_Ts, within_counts, between_counts)
 plot_between_within_clade(between_within_count_ax, est_Ts, within_counts, between_counts)
 plot_between_within_length_distributions(between_within_len_ax, full_df)
 

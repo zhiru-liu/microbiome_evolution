@@ -95,7 +95,7 @@ def plot_example_pair(ax, dh, pair, full_df, if_legend=True):
     ax.set_xlabel('Synonymous core genome location')
 
 
-def plot_scatter(ax, x, y1, y2, if_trend_line=True):
+def plot_scatter(ax, x, y1, y2, if_trend_line=True, sci_format=True):
     s1 = ax.scatter(x, y1, s=2, c=within_color, label='Within clade transfers')
     s2 = ax.scatter(x, -y2, s=2, c=between_color, label='Between clade transfers')
     trend_directory = os.path.join(config.plotting_intermediate_directory, "B_vulgatus_trend_line.csv")
@@ -113,7 +113,8 @@ def plot_scatter(ax, x, y1, y2, if_trend_line=True):
 
     ax.set_xlim([0, 2e-4])
     ax.set_ylim([-7.5, 17.5])
-    ax.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
+    if sci_format:
+        ax.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
 
     ax.set_yticks([-5, 0, 5, 10, 15])
     ax.set_yticklabels(['5', '0', '5', '10', '15'])
@@ -132,14 +133,15 @@ def plot_distributions(fig, ax, within_lens, between_lens, inset_location=[0.7, 
 
     ax.set_xlim([0, 20000])
 
-    left, bottom, width, height = inset_location
-    ax2 = fig.add_axes([left, bottom, width, height])
-    _ = ax2.hist(within_lens, density=True, bins=bins, cumulative=-1, histtype="step",
-                 label="within clade", color=within_color)
-    _ = ax2.hist(between_lens, density=True, bins=bins, cumulative=-1, histtype="step",
-                 label="between clade", color=between_color)
-    ax2.set_yscale('log')
-    ax2.set_xlim([0, 40000])
+    if inset_location is not None:
+        left, bottom, width, height = inset_location
+        ax2 = fig.add_axes([left, bottom, width, height])
+        _ = ax2.hist(within_lens, density=True, bins=bins, cumulative=-1, histtype="step",
+                     label="within clade", color=within_color)
+        _ = ax2.hist(between_lens, density=True, bins=bins, cumulative=-1, histtype="step",
+                     label="between clade", color=between_color)
+        ax2.set_yscale('log')
+        ax2.set_xlim([0, 40000])
 
     ax.legend()
     ax.set_xlabel('Transfer length / bps')

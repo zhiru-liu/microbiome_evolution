@@ -23,8 +23,8 @@ outlier_pair = (24, 75)
 typical_pair = (21, 34)
 
 axes[0].scatter(x, y, s=2, rasterized=True)
-axes[0].plot(outlier_xy[0], outlier_xy[1], 'x', color='tab:orange', markersize=3, label='outlier')
-axes[0].plot(typical_xy[0], typical_xy[1], '^', color='tab:green', markersize=3, label='typical')
+axes[0].plot(outlier_xy[0], outlier_xy[1], 'x', color='tab:orange', markersize=3, label='outlier pair')
+axes[0].plot(typical_xy[0], typical_xy[1], '^', color='tab:green', markersize=3, label='typical pair')
 axes[0].legend()
 axes[0].set_xlabel('identical fraction')
 axes[0].set_ylabel('pairwise divergence')
@@ -35,9 +35,9 @@ full_df = pd.read_pickle(os.path.join(config.analysis_directory, "closely_relate
 sub_df = full_df[full_df['pairs'] == outlier_pair]
 typical_sub_df = full_df[full_df['pairs'] == typical_pair]
 
-_ = axes[1].hist(full_df['divergences'].to_numpy(), bins=40)
-axes[1].plot(sub_df['divergences'], 8 + np.zeros(sub_df['divergences'].shape), 'x', markersize=3, label='outlier')
-axes[1].plot(typical_sub_df['divergences'], 2 + np.zeros(typical_sub_df['divergences'].shape), '^', markersize=3, label='regular')
+_ = axes[1].hist(full_df['divergences'].to_numpy(), bins=40, label='dist of detected transfers\nin all pairs')
+axes[1].plot(sub_df['divergences'], 100 + np.zeros(sub_df['divergences'].shape), 'x', markersize=3, label='transfers in outlier pair')
+axes[1].plot(typical_sub_df['divergences'], 50 + np.zeros(typical_sub_df['divergences'].shape), '^', markersize=3, label='transfers in typical pair')
 axes[1].legend()
 axes[1].set_xlabel('transfer divergence')
 axes[1].set_ylabel('histogram counts')
