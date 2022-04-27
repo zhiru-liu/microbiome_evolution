@@ -3,6 +3,7 @@ import json
 import sys
 import os
 import random
+import json
 import pandas as pd
 import seaborn as sns
 from scipy import interpolate
@@ -93,6 +94,7 @@ axd = fig.add_subplot(gs[8:, :])
 idx = 1
 xticks = []
 xticklabels = []
+plotted_species = []
 connection_l = []
 connection_r = []
 
@@ -209,6 +211,7 @@ for species_full_name in species_order:
 
         xticks.append(idx * 2)
         xticklabels.append(species_name + '\n(between clade)')
+        plotted_species.append(species_full_name)
         idx += 1
         continue
 
@@ -328,6 +331,7 @@ for species_full_name in species_order:
 
     xticks.append(idx * 2)
     xticklabels.append(species_name)
+    plotted_species.append(species_full_name)
     idx += 1
 
 # plotting all other violin plots
@@ -396,6 +400,7 @@ axd.set_xlim([1, 2 * len(xticklabels) + 1])
 
 _ = axd.set_xticks(xticks)
 _ = axd.set_xticklabels(xticklabels, rotation=90, ha='center', fontsize=5)
+json.dump(plotted_species, open(os.path.join(config.plotting_intermediate_directory, 'fig3_species.json'), 'w'))
 
 fig.tight_layout()
 fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig3_.pdf'), dpi=600)

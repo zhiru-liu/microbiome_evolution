@@ -85,6 +85,9 @@ def _compute_theta(species_name, single_sub_idxs, clade_cutoff=[None, None], cf_
 
     within_mask = (cfs < cf_cutoff) & (pds < clade_cutoff[1]) & (pds > clade_cutoff[0])
     between_mask = (cfs < cf_cutoff) & (pds > clade_cutoff[1])
+    if np.sum(within_mask) == 0:
+        # species has no typically diverged pair
+        return None
     within_theta = np.mean(pds[within_mask])
     if return_both:
         between_theta = np.mean(pds[between_mask])

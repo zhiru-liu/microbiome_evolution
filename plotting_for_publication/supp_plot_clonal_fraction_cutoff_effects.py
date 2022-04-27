@@ -26,6 +26,7 @@ median_between = []
 
 fig, axes = plt.subplots(3, 2, figsize=(4.2, 4.5))
 plt.subplots_adjust(wspace=0.4, hspace=0.5)
+idx = 0
 for i, cf_cutoff in enumerate(cutoffs):
     clonal_divs, within_counts, between_counts, full_df = close_pair_utils.prepare_HMM_results_for_B_vulgatus(
         save_path, cf_cutoff, cache_intermediate=False, filter_threshold=5)
@@ -37,15 +38,14 @@ for i, cf_cutoff in enumerate(cutoffs):
     median_within.append(np.median(within_lens))
     mean_between.append(between_lens.mean())
     median_between.append(np.median(between_lens))
-    j = 0
     if np.around(cf_cutoff, 2) in cutoffs_to_plot:
         # fig, axes = plt.subplots(1, 2, figsize=(6, 2.))
-        plot_B_vulgatus_close_pair.plot_scatter(axes[j, 0], clonal_divs, within_counts, between_counts, False, sci_format=False)
-        plot_B_vulgatus_close_pair.plot_distributions(fig, axes[j, 1], within_lens, between_lens,
+        plot_B_vulgatus_close_pair.plot_scatter(axes[idx, 0], clonal_divs, within_counts, between_counts, False, sci_format=False)
+        plot_B_vulgatus_close_pair.plot_distributions(fig, axes[idx, 1], within_lens, between_lens,
                                                       inset_location=None)
-        axes[j, 1].set_xticks([0, 5000, 10000, 15000, 20000])
-        axes[j, 0].set_xticklabels(['0.0', '0.5', '1.0', '1.5', '2.0'])
-        j += 1
+        axes[idx, 1].set_xticks([0, 5000, 10000, 15000, 20000])
+        axes[idx, 0].set_xticklabels(['0.0', '0.5', '1.0', '1.5', '2.0'])
+        idx += 1
 for i in range(2):
     axes[i, 0].set_xlabel('')
     axes[i, 1].set_xlabel('')

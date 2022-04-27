@@ -8,28 +8,31 @@ import config
 from scipy.stats import gaussian_kde
 from utils import close_pair_utils, typical_pair_utils, figure_utils
 
-species_to_plot = [
-    'Bacteroides_vulgatus_57955',
-    'Bacteroides_uniformis_57318',
-    'Bacteroides_stercoris_56735',
-    'Bacteroides_caccae_53434',
-    'Bacteroides_ovatus_58035',
-    'Bacteroides_thetaiotaomicron_56941',
-    'Bacteroides_massiliensis_44749',
-    'Bacteroides_cellulosilyticus_58046',
-    'Bacteroides_fragilis_54507',
-    'Parabacteroides_merdae_56972',
-    'Parabacteroides_distasonis_56985',
-    'Barnesiella_intestinihominis_62208',
-    'Alistipes_putredinis_61533',
-    'Alistipes_onderdonkii_55464',
-    'Alistipes_shahii_62199',
-    'Oscillibacter_sp_60799',
-    'Akkermansia_muciniphila_55290',
-    'Eubacterium_rectale_56927',
-    'Eubacterium_siraeum_57634',
-    'Ruminococcus_bromii_62047'
-]
+# species_to_plot = [
+#     'Bacteroides_vulgatus_57955',
+#     'Bacteroides_uniformis_57318',
+#     'Bacteroides_stercoris_56735',
+#     'Bacteroides_caccae_53434',
+#     'Bacteroides_ovatus_58035',
+#     'Bacteroides_thetaiotaomicron_56941',
+#     'Bacteroides_massiliensis_44749',
+#     'Bacteroides_cellulosilyticus_58046',
+#     'Bacteroides_fragilis_54507',
+#     'Parabacteroides_merdae_56972',
+#     'Parabacteroides_distasonis_56985',
+#     'Barnesiella_intestinihominis_62208',
+#     'Alistipes_putredinis_61533',
+#     'Alistipes_onderdonkii_55464',
+#     'Alistipes_shahii_62199',
+#     'Oscillibacter_sp_60799',
+#     'Akkermansia_muciniphila_55290',
+#     'Eubacterium_rectale_56927',
+#     'Eubacterium_siraeum_57634',
+#     'Ruminococcus_bromii_62047'
+# ]
+# process all species in figure 3
+species_to_plot = json.load(open(os.path.join(config.plotting_intermediate_directory, 'fig3_species.json'), 'r'))
+plotted_species = []
 
 mpl.rcParams['font.size'] = 5
 mpl.rcParams['axes.labelpad'] = 2
@@ -38,6 +41,7 @@ mpl.rcParams['legend.frameon'] = False
 mpl.rcParams['legend.fontsize'] = 'small'
 
 data_dir = os.path.join(config.analysis_directory, "closely_related")
+# hand annotated cutoffs to focus on the diversity within a single clade
 Tc_cutoffs = json.load(open(os.path.join(config.analysis_directory, 'misc', 'Tc_cutoffs.json'), 'r'))
 all_Tm = []
 all_Tc = []
@@ -46,7 +50,8 @@ all_close_frac = []
 # set up figure
 fig, ax = plt.subplots(figsize=(6, 4))
 ax2 = ax.twinx()
-locs = np.arange(len(species_to_plot))
+# locs = np.arange(len(species_to_plot))
+locs = []
 debug=False
 
 
@@ -77,7 +82,7 @@ def plot_jitters(ax, X, ys, width, colorVal='tab:blue'):
     else:
         ax.plot(X+xs,ys,'.',color=colorVal,alpha=0.5,markersize=5,markeredgewidth=0.0, rasterized=True)
 
-
+plot_idx = 0
 for i, species_name in enumerate(species_to_plot):
     data = pd.read_pickle(os.path.join(data_dir, 'third_pass', species_name + '.pickle'))
     x, y = close_pair_utils.prepare_x_y(data, mode='fraction')
@@ -88,7 +93,9 @@ for i, species_name in enumerate(species_to_plot):
     print("%s has Tm %f" % (species_name, Tm))  # Tm
 
     single_sub_idxs = typical_pair_utils.load_single_subject_sample_idxs(species_name)
-    Tc = typical_pair_utils._compute_theta(species_name, single_sub_idxs, clade_cutoff=Tc_cutoffs[species_name])
+    Tc = typical_pair_utils._compute_theta(species_name, single_sub_idxs, clade_cutoff=Tc_cutoffs.get(species_name, [None, None]))
+    if Tc is None:
+        continue
     print("%s has Tc %f" % (species_name, Tc))
     print("Tm/Tc is %f" %(Tm / Tc))
 
@@ -111,18 +118,26 @@ for i, species_name in enumerate(species_to_plot):
     all_close_frac.append(close_fraction)
 
     # now plot the distribution of rates
-    plot_jitters(ax, locs[i], rates, width=0.3)
+
+    plot_jitters(ax, plot_idx, rates * Tc, width=0.3)
+    locs.append(plot_idx)
+    plotted_species.append(species_name)
+    plot_idx += 1
 
     if debug:
         break
 
 _ = ax.set_xticks(locs)
-pretty_names = [figure_utils.get_pretty_species_name(name) for name in species_to_plot]
+pretty_names = [figure_utils.get_pretty_species_name(name) for name in plotted_species]
 _ = ax.set_xticklabels(pretty_names, rotation=90, ha='center', fontsize=5)
-ax.set_ylabel("recombined fraction / clonal divergence")
+ax.set_ylabel("Tc / Tm (pairwise est)")
 ax2.set_ylim(ax.get_ylim())
 ax2.set_yticks([])
 
-fig.savefig(os.path.join(config.figure_directory, 'Tm_dist.pdf'), bbox_inches='tight', dpi=600)
-df = pd.DataFrame({'Species':species_to_plot, 'Tm':all_Tm, 'Tc':all_Tc, 'Close pair fraction':all_close_frac})
+fig.savefig(os.path.join(config.figure_directory, 'TcTm_dist.pdf'), bbox_inches='tight', dpi=600)
+df = pd.DataFrame({'Species':plotted_species})
+df['d(Tc)'] = all_Tc
+df['d(Tm)'] = all_Tm
+df['Close pair fraction'] = all_close_frac
+df['Tc/Tm'] = df['d(Tc)'] / df['d(Tm)']
 df.to_csv(os.path.join(config.analysis_directory, 'misc', 'TmTc_estimation.csv'))
