@@ -337,6 +337,7 @@ for species_full_name in species_order:
 # plotting all other violin plots
 # violins = axd.violinplot(transfer_length_data[:], positions=plot_loc[:], vert=True, showmedians=True, showextrema=False,
 #                          widths=0.8)
+print("Species name, median transfer, mean transfer")
 for i, loc in enumerate(plot_loc):
     points_to_plot = 1000
     ys = transfer_length_data[i]
@@ -345,6 +346,7 @@ for i, loc in enumerate(plot_loc):
     # xs = np.ones(ys.shape) * loc + np.random.normal(scale=0.05, size=ys.shape)
     # axd.scatter(xs, ys, color=plot_colors[(i) % len(plot_colors)], s=0.2, rasterized=True, alpha=0.1)
     plot_jitters(axd, loc, ys, width=0.4, colorVal=plot_colors[i % len(plot_colors)])
+    print(xticklabels[i], np.median(ys), np.mean(ys))
 
 # for i, pc in enumerate(violins['bodies']):
 #     pc.set_facecolor(plot_colors[(i) % len(plot_colors)])

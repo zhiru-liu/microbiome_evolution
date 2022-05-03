@@ -391,6 +391,8 @@ class DataHoarder:
             return self.get_within_sample_snp_vector(idx)
 
     def get_two_QP_sample_snp_vector(self, sample_ids):
+        if len(sample_ids) != 2:
+            raise ValueError("Only accept a pair of sample indices")
         id1 = sample_ids[0]
         id2 = sample_ids[1]
         mask = self.covered_arr[:, id1] & self.covered_arr[:, id2]
