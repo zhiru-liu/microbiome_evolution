@@ -30,6 +30,7 @@ all_products = [gene_annotation_dict.get(x) for x in good_genes]
 PUL_locs = np.array(['PUL' in x for x in all_products]).astype(int)
 transferase_locs = np.array([('Glycosyltransferase' in x) or ('Glycosyl transferase' in x) or ('glycosyltransferase' in x) for x in all_products]).astype(int)
 
+""" Plot within clade between clade """
 # setting up figure
 fig, ax = plt.subplots(1, 1, figsize=(7, 3))
 
@@ -60,7 +61,37 @@ print(np.median(between_cumu_runs[:, 0]), np.median(within_cumu_runs[:, 0]))
 # ax.legend(bbox_to_anchor=(1, 1))
 
 fig.savefig(os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_pileup_test.pdf'), bbox_inches='tight')
+plt.close()
 
+""" Plot within host between host """
+# setting up figure
+fig, ax = plt.subplots(1, 1, figsize=(7, 3))
+# plot data
+base_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', 'Bacteroides_vulgatus_57955')
+within_host_path = os.path.join(base_path, 'within_host.csv')
+
+base_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', 'Bacteroides_vulgatus_57955')
+between_host_path = os.path.join(base_path, 'between_host.csv')
+
+within_cumu_runs, between_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
+    between_host_path, within_host_path, ax, ind_to_plot=0, ylim=0.3)
+fig.savefig(os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_pileup_same_clade.pdf'), bbox_inches='tight')
+plt.close()
+
+fig, ax = plt.subplots(1, 1, figsize=(7, 3))
+# plot data
+base_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', 'Bacteroides_vulgatus_57955_between')
+within_host_path = os.path.join(base_path, 'within_host.csv')
+
+base_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', 'Bacteroides_vulgatus_57955_between')
+between_host_path = os.path.join(base_path, 'between_host.csv')
+
+within_cumu_runs, between_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
+    between_host_path, within_host_path, ax, ind_to_plot=0, ylim=0.4)
+fig.savefig(os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_pileup_diff_clade.pdf'), bbox_inches='tight')
+plt.close()
+
+""" Plot polymorphism """
 fig, ax = plt.subplots(figsize=(7, 2))
 polymorphism_dir = os.path.join(config.plotting_intermediate_directory, 'B_vulgatus_polymorphism.csv')
 if os.path.exists(polymorphism_dir):

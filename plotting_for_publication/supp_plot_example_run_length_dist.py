@@ -45,6 +45,7 @@ def plot_example_run_length_dist(dist_ax, snp_vec_axes, between_pair1, between_p
         np.savetxt(cache_file_bt2, between_snp_vec2)
 
     within_example_runs = parallel_utils._compute_runs_single_chromosome(within_snp_vec2)
+    within_example_runs0 = parallel_utils._compute_runs_single_chromosome(within_snp_vec1)
     between_example_runs1 = parallel_utils._compute_runs_single_chromosome(between_snp_vec1)
     between_example_runs2 = parallel_utils._compute_runs_single_chromosome(between_snp_vec2)
 
@@ -65,8 +66,9 @@ def plot_example_run_length_dist(dist_ax, snp_vec_axes, between_pair1, between_p
                 histtype='step', label='between host 1')
     _ = dist_ax.hist(between_example_runs2 * between_div2, density=True, cumulative=-1, bins=1000,
                 histtype='step', label='between host 2')
+    dist_ax.axvline(within_example_runs[np.argsort(within_example_runs)[-3]] * within_div, label='temporal event', linestyle='--', color='k')
     xs = np.linspace(0, 10)
-    dist_ax.plot(xs, np.exp(-xs), label='Null')
+    dist_ax.plot(xs, np.exp(-xs), label='Random mutations')
     dist_ax.set_yscale('log')
     dist_ax.legend()
     dist_ax.set_xlim([0, dist_ax.get_xlim()[1]])

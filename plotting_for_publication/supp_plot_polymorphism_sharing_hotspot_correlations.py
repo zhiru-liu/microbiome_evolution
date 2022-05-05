@@ -28,7 +28,7 @@ smooth_clade_pi = np.convolve(clade_pi, kernel, mode='same')
 
 # mask to remove one of the top peak
 mask = np.ones(smooth_pi.shape)
-mask[60000:63500] = 0
+mask[59600:63400] = 0
 mask = mask.astype(bool)
 
 print("Correlation with within-clade pi")
@@ -50,7 +50,7 @@ fig, axes = plt.subplots(1, 1, figsize=(3, 2), dpi=600)
 # axes[0].set_ylabel('Sharing fraction')
 
 axes.plot(smooth_pi[mask], between_data[mask, 1], '.', markersize=1, rasterized=True)
-# axes.plot(smooth_pi[~mask], between_data[~mask, 1], '.', markersize=1, color='red', rasterized=True)
+axes.plot(smooth_pi[~mask], between_data[~mask, 1], '.', markersize=1, color='tab:orange', rasterized=True, label='ribosomal proteins')
 axes.set_xlabel('$\pi$')
 axes.set_ylabel('Sharing fraction')
 

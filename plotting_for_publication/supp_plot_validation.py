@@ -47,7 +47,7 @@ def plot_clonal_T_estimation(ax, true_Ts, est_Ts):
     ax.plot(xs, ys, '--', label='y=x')
     ax.plot([],'-', color='orange',label='median')
     ax.set_xlabel(r"True $2\mu T$ $(* 10^{-5})$")
-    ax.set_ylabel(r"$\pi$ in clonal region")
+    ax.set_ylabel("Clonal divergence")
     ax.legend()
     # ax.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
     return
@@ -76,17 +76,24 @@ def plot_between_within_length_distributions(ax, full_df):
 
 
 def plot_between_within_clade(ax, est_Ts, within_counts, between_counts):
+    core_genome_len = 2057681
+    within_counts = within_counts * 1e6 / core_genome_len
+    between_counts = between_counts * 1e6 / core_genome_len
+
     _ = ax.scatter(est_Ts, within_counts, s=1, label='Within-clade')
     _ = ax.scatter(est_Ts, -np.array(between_counts), s=1, label='Between-clade')
     ax.plot(est_Ts, np.zeros(est_Ts.shape), 'k-')
     ax.set_xlim([0, 2e-4])
-    ax.set_ylim([-40, 40])
-    ax.set_yticks([-40, -20, 0, 20, 40])
-    ax.set_yticklabels(['40', '20', '0', '20', '40'])
+    # ax.set_ylim([-40, 40])
+    ax.set_ylim([-7.5, 17.5])
+    ax.set_yticks([-5, 0, 5, 10, 15])
+    ax.set_yticklabels(['5', '0', '5', '10', '15'])
+    # ax.set_yticks([-40, -20, 0, 20, 40])
+    # ax.set_yticklabels(['40', '20', '0', '20', '40'])
     ax.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
     ax.set_ylabel("Detected transfers")
     ax.set_xlabel("Clonal divergence")
-    ax.legend(ncol=2)
+    ax.legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1))
     return
 
 # set up figure
@@ -111,7 +118,11 @@ between_within_count_ax = fig.add_subplot(lower_grid[0])
 path = os.path.join(config.analysis_directory, 'HMM_validation', 'Bacteroides_vulgatus_57955.pickle')
 data = pickle.load(open(path, 'rb'))
 true_counts = np.array(data['true counts'])
+true_between_counts = np.array(data['true between clade counts'])
+true_within_counts = true_counts - true_between_counts
 true_Ts = np.array(data['true T'])
+true_divs = np.array(data['true div'])
+print(true_divs)
 true_lens = np.concatenate(data['true lengths'])
 est_Ts = np.array(data['T est'])
 total_counts, within_counts, between_counts, full_df = preprocess_data(data)
@@ -119,8 +130,9 @@ total_counts, within_counts, between_counts, full_df = preprocess_data(data)
 plot_count_correlation(count_ax, true_counts, true_Ts, total_counts)
 plot_clonal_T_estimation(T_est_ax, true_Ts, est_Ts)
 plot_length_distributions(true_len_ax, true_lens, full_df['lengths'].astype(float))
-# plot_between_within_clade(between_within_count_ax, est_Ts, within_counts, between_counts)
 plot_between_within_clade(between_within_count_ax, est_Ts, within_counts, between_counts)
+# plot_between_within_clade(between_within_count_ax, est_Ts, true_within_counts, true_between_counts)
+# plot_between_within_clade(between_within_count_ax, true_divs, true_within_counts, true_between_counts)
 plot_between_within_length_distributions(between_within_len_ax, full_df)
 
-fig.savefig("test_validation.pdf", bbox_inches="tight")
+fig.savefig("test_validation_.pdf", bbox_inches="tight")

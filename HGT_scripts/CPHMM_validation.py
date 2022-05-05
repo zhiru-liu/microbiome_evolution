@@ -26,7 +26,7 @@ def init_hmm(species_name, genome_len, block_size):
     return cphmm
 
 
-def test_species(species_name, debug=False, clade_cutoff=None):
+def test_species(species_name, debug=False, clade_cutoff_bin=None, clade_cutoff_div=None):
     dh = parallel_utils.DataHoarder(
         species_name, mode='QP', allowed_variants=['4D'])
     good_idxs = dh.get_single_subject_idxs()
@@ -46,6 +46,7 @@ def test_species(species_name, debug=False, clade_cutoff=None):
 
     def generate_fake_genome(T, lamb, rbymu, L):
         genome = np.random.binomial(1, T, L)
+        mask = np.ones_like(genome)
         focal_strain = sample_strain()
         num_transfers = np.random.binomial(L, T * rbymu)
         transfer_starts = []
@@ -61,12 +62,15 @@ def test_species(species_name, debug=False, clade_cutoff=None):
                     continue
                 # ignore transfer seq beyond genome end
                 genome[start:start + l] = seq[:min(l, L - start)]
+                mask[start:start + l] = 0
                 transfer_starts.append(start)
                 transfer_lens.append(min(l, L - start))
-                if clade_cutoff is not None:
-                    transfer_origin.append(pd_mat[donor, focal_strain] > clade_cutoff)
+                if clade_cutoff_div is not None:
+                    transfer_origin.append(pd_mat[donor, focal_strain] > clade_cutoff_div)
                 break
-        return genome, transfer_starts, transfer_lens, transfer_origin
+        mask = mask.astype(bool)
+        true_div = np.sum(genome[mask]) / float(np.sum(mask))
+        return genome, true_div, transfer_starts, transfer_lens, transfer_origin
 
     def sample_pair():
         return random.sample(good_idxs, 2)
@@ -95,15 +99,16 @@ def test_species(species_name, debug=False, clade_cutoff=None):
     dat['T est'] = []
     dat['true counts'] = []
     dat['true T'] = []
+    dat['true div'] = []
     dat['true lengths'] = []
     dat['true between clade counts'] = []
 
     BLOCK_SIZE = config.second_pass_block_size
-    num_reps = 10 if debug else 100
+    num_reps = 16 if debug else 100
     L = 2.8e5
     mean_transfer_len = 2000
     rbymu = 1
-    Ts = [1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5, 1e-4]
+    Ts = [1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5, 1e-4, 11e-5, 12e-5, 13e-5, 14e-5, 15e-5]
     # Ts = [6e-5, 7e-5, 8e-5, 9e-5, 1e-4]
     # Ts = [1e-4+1e-5, 1e-4+2e-5, 1e-4+3e-5, 1e-4+4e-5, 1e-4+5e-5]
 
@@ -111,19 +116,21 @@ def test_species(species_name, debug=False, clade_cutoff=None):
 
     for T in Ts:
         for i in range(num_reps):
-            g, sim_starts, sim_lens, sim_origins = generate_fake_genome(
+            g, div, sim_starts, sim_lens, sim_origins = generate_fake_genome(
                 T, mean_transfer_len, rbymu, int(L))
             blk_seq = close_pair_utils.to_block(g, BLOCK_SIZE).reshape((-1, 1))
             blk_seq_fit = (blk_seq > 0).astype(float)
             if np.sum(blk_seq) == 0:
                 continue
             starts, ends, snp_count, clonal_len = close_pair_utils._decode_and_count_transfers(
-                blk_seq_fit, cphmm, sequence_with_snps=blk_seq, clade_cutoff_bin=clade_cutoff)
+                blk_seq_fit, cphmm, sequence_with_snps=blk_seq, clade_cutoff_bin=clade_cutoff_bin)
 
             # saving data
             dat['true counts'].append(len(sim_starts))
             dat['true lengths'].append(sim_lens)
             dat['true T'].append(T)
+            print(div)
+            dat['true div'].append(div)
             dat['true between clade counts'].append(np.sum(sim_origins))
 
             dat['starts'].append(starts)
@@ -147,4 +154,4 @@ def test_species(species_name, debug=False, clade_cutoff=None):
 all_species = ['Bacteroides_vulgatus_57955']
 
 for species in all_species:
-    test_species(species, debug=True, clade_cutoff=config.empirical_histogram_bins)
+    test_species(species, debug=True, clade_cutoff_bin=config.empirical_histogram_bins, clade_cutoff_div=0.03)
