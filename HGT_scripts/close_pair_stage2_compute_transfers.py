@@ -78,8 +78,9 @@ def process_one_species(species_name, block_size, debug=False):
     dat = dict()
     dat['starts'] = []
     dat['ends'] = []
-    dat['clonal snps'] = []
-    dat['transfer snps'] = []
+    # dat['clonal snps'] = []
+    # dat['transfer snps'] = []
+    dat['clonal divs'] = []
     dat['genome lengths'] = []
     dat['clonal lengths'] = []
     dat['pairs'] = list(good_pairs)
@@ -89,9 +90,12 @@ def process_one_species(species_name, block_size, debug=False):
         chromosomes = good_chromo[snp_mask]
         try:
             # starts, ends, T_approx = close_pair_utils.fit_and_count_transfers_all_chromosomes(
-            starts, ends, transfer_snp, clonal_snp, genome_len, clonal_len = \
+            # starts, ends, transfer_snp, clonal_snp, genome_len, clonal_len = \
+            #     close_pair_utils.fit_and_count_transfers_all_chromosomes(
+            #     snp_vec, chromosomes, cphmm, block_size, clade_cutoff_bin=clade_cutoff_bin)
+            starts, ends, clonal_div, genome_len, clonal_len = \
                 close_pair_utils.fit_and_count_transfers_all_chromosomes(
-                snp_vec, chromosomes, cphmm, block_size, clade_cutoff_bin=clade_cutoff_bin)
+                    snp_vec, chromosomes, cphmm, block_size, clade_cutoff_bin=clade_cutoff_bin)
         except:
             e = sys.exc_info()[0]
             tb = traceback.format_exc()
@@ -100,8 +104,9 @@ def process_one_species(species_name, block_size, debug=False):
             raise e
         dat['starts'].append(starts)
         dat['ends'].append(ends)
-        dat['transfer snps'].append(transfer_snp)
-        dat['clonal snps'].append(clonal_snp)
+        # dat['transfer snps'].append(transfer_snp)
+        # dat['clonal snps'].append(clonal_snp)
+        dat['clonal divs'].append(clonal_div)
         dat['genome lengths'].append(genome_len)
         dat['clonal lengths'].append(clonal_len)
 
@@ -118,7 +123,7 @@ logging.basicConfig(
 
 CLONAL_FRAC_CUTOFF = 0.5  # config.clonal_fraction_cutoff
 BLOCK_SIZE = config.second_pass_block_size
-DEBUG = False
+DEBUG = True
 
 black_list = ['Bacteroides_xylanisolvens_57185', # for having extremely short contigs and short total core genome
               'Escherichia_coli_58110'] # for having extremely short contigs

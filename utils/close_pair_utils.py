@@ -159,6 +159,23 @@ def find_segments(states, target_state=None, target_range=None):
     return ups, downs - 1
 
 
+def estimate_clonal_divergence(clonal_sequence, seq_blk_size=config.second_pass_block_size):
+    """
+    Correcting for missed recombination events by coarse-graining the clonal sequence into blocks
+    Then count the fraction of blocks with snps
+    Undetected recombination events will not inflate clonal divergence in this case
+    :param clonal_sequence: Sequence of the clonal region of a genome after HMM decoding
+    :param seq_blk_size: the size for each of the block in clonal_sequence, default the same as HMM
+    :return: estimated clonal divergence
+    """
+    naive_div = np.sum(clonal_sequence) / float(len(clonal_sequence) * seq_blk_size)
+
+    ideal_blk_size = 1000
+    new_blk_size = int(ideal_blk_size / seq_blk_size)
+    blk_seq = to_block(clonal_sequence, new_blk_size)
+    est_div = np.sum(blk_seq[blk_seq<=2]) / float(np.sum(blk_seq<=2) * new_blk_size * seq_blk_size)
+    return naive_div, est_div
+
 def _decode_and_count_transfers(sequence, model, sequence_with_snps=None, need_fit=True, clade_cutoff_bin=None,
                                 index_offset=0):
     """
@@ -171,16 +188,16 @@ def _decode_and_count_transfers(sequence, model, sequence_with_snps=None, need_f
     :param clade_cutoff_bin: For determining whether transfer is within clade or between clade
     based on the inferred bin in the empirical distribution. Within clade range from state 1 to
     state clade_cutoff_bin, inclusive.
-    :return: triplet of start and end indices (inclusive) as well as wall clock estimate
+    :return: triplet of start and end indices (inclusive) as well as the clonal sequence
     """
     if need_fit:
         model.fit(sequence)
     _, states = model.decode(sequence)
     if sequence_with_snps is not None:
-        snp_count = np.sum(sequence_with_snps[states == 0])
+        clonal_seq = sequence_with_snps[states == 0]
     else:
-        snp_count = np.sum(sequence[states == 0])
-    clonal_len = np.sum(states == 0)
+        clonal_seq = sequence[states == 0]
+    # clonal_len = len(clonal_seq)
 
     if clade_cutoff_bin is not None:
         # compute segments lengths for desire states
@@ -202,7 +219,7 @@ def _decode_and_count_transfers(sequence, model, sequence_with_snps=None, need_f
         # put in [] for compatibility with the above case
         starts = [tmp_starts]
         ends = [tmp_ends]
-    return starts, ends, snp_count, clonal_len
+    return starts, ends, clonal_seq
 
 
 def _fit_and_count_transfers_iterative(sequence, model, block_size, desired_states=[], iters=3):
@@ -256,6 +273,7 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
     all_ends = []
     snp_counts = []
     clonal_lens = []
+    clonal_seqs = []
     index_offset = 0
     for chromo in pd.unique(chromosomes):
         # iterate over contigs; similar to run length dist calculation
@@ -271,13 +289,14 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
             snp_count = 0
             clonal_len = len(blk_seq)
         else:
-            starts, ends, snp_count, clonal_len = _decode_and_count_transfers(
+            starts, ends, clonal_seq = _decode_and_count_transfers(
                 blk_seq_fit, model, sequence_with_snps=blk_seq, index_offset=index_offset,
                 clade_cutoff_bin=clade_cutoff_bin)
         all_starts.append(starts)
         all_ends.append(ends)
-        snp_counts.append(snp_count)
-        clonal_lens.append(clonal_len)
+        # snp_counts.append(snp_count)
+        # clonal_lens.append(clonal_len)
+        clonal_seqs.append(clonal_seq)
         # T_approxs.append(T_approx)
         model.reinit_emission_and_transfer_rates()
         index_offset += len(blk_seq)
@@ -290,10 +309,14 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
         starts.append(np.concatenate([s[i] for s in all_starts]))
         ends.append(np.concatenate([s[i] for s in all_ends]))
     # T_approx = float(np.sum(snp_counts)) / np.sum(clonal_lens)
-    clonal_snp = np.sum(snp_counts)
-    transfer_snp = np.sum(snp_vec) - clonal_snp
-    total_clonal_len = np.sum(clonal_lens) * block_size
-    return starts, ends, transfer_snp, clonal_snp, len(snp_vec), total_clonal_len
+    full_clonal_seq = np.concatenate(clonal_seqs)
+    clonal_div = estimate_clonal_divergence(clonal_seq, block_size)
+    # clonal_snp = np.sum(snp_counts)
+    # transfer_snp = np.sum(snp_vec) - clonal_snp
+    # total_clonal_len = np.sum(clonal_lens) * block_size
+    total_clonal_len = len(full_clonal_seq) * block_size
+    # return starts, ends, transfer_snp, clonal_snp, len(snp_vec), total_clonal_len
+    return starts, ends, clonal_div, len(snp_vec), total_clonal_len
 
 
 def merge_and_filter_transfers_one_pair(starts, ends, merge_threshold=100, filter_threshold=10):
@@ -528,9 +551,10 @@ def prepare_HMM_results_for_B_vulgatus(save_path, cf_cutoff, cache_intermediate=
     within_full_lengths = np.array([pair_to_total_length.get(x, 0) for x in dat['pairs']]) * config.second_pass_block_size
     within_fractions = within_full_lengths / np.array(dat['genome lengths']).astype(float)
 
-    clonal_snps = np.array(dat['clonal snps'])
+    # clonal_snps = np.array(dat['clonal snps'])
     clonal_lens = np.array(dat['clonal lengths'])
-    clonal_divs = clonal_snps / clonal_lens.astype(float)
+    # clonal_divs = clonal_snps / clonal_lens.astype(float)
+    clonal_divs = np.array(dat['clonal divs'])[:, 1]  # column 0: naive clonal divergence; col 1: estimated clonal div
     mask = clonal_fractions > cf_cutoff
 
     x = clonal_divs[mask]

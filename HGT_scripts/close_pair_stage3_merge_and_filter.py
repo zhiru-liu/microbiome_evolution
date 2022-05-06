@@ -35,11 +35,14 @@ for filename in os.listdir(ckpt_path):
 
     third_pass_df = pd.DataFrame()
     third_pass_df['pairs'] = data['pairs']
-    third_pass_df['clonal snps'] = data['clonal snps']
-    third_pass_df['transfer snps'] = data['transfer snps']
+    # third_pass_df['clonal snps'] = data['clonal snps']
+    # third_pass_df['transfer snps'] = data['transfer snps']
     third_pass_df['genome lengths'] = data['genome lengths'] # length of snp vector - taking missing data into account
     third_pass_df['clonal lengths'] = data['clonal lengths']
-    third_pass_df['clonal divs'] = third_pass_df['clonal snps'] / third_pass_df['clonal lengths'].astype(float)
+    # third_pass_df['clonal divs'] = third_pass_df['clonal snps'] / third_pass_df['clonal lengths'].astype(float)
+    clonal_divs = np.array(data['clonal divs'])
+    third_pass_df['clonal divs'] = clonal_divs[:, 1]
+    third_pass_df['naive clonal divs'] = clonal_divs[:, 0]
     third_pass_df['expected clonal snps'] = third_pass_df['clonal divs'] * third_pass_df['genome lengths']
     third_pass_df['transfer counts'] = transfer_counts
     core_genome_len = parallel_utils.get_genome_length(species_name)

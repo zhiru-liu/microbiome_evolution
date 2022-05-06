@@ -83,8 +83,8 @@ def plot_example_pair(ax, dh, pair, full_df, if_legend=True):
     ax.plot(shown_snp_locs, np.zeros(len(shown_snp_locs)), '|', color=snp_color, label='individual snps', markersize=2,
             markeredgewidth=0.5)
 
-    ax.set_yticks((-0.03, 0.0, 0.04, 0.08))
-    labels = ['transfer', '0.0', '0.04', '0.08']
+    ax.set_yticks((0.0, 0.04, 0.08))
+    labels = ['0', '4', '8']
     if if_legend:
         ax.legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1))
     ax.set_yticklabels(labels)
@@ -93,9 +93,12 @@ def plot_example_pair(ax, dh, pair, full_df, if_legend=True):
 
     ax.set_xlim([0, 264000])
     ax.set_xlabel('Synonymous core genome location')
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
 
 
 def plot_scatter(ax, x, y1, y2, if_trend_line=True):
+    print("Estimated within-clade transfer/divergence is {:e}".format(np.mean(y1[x>0]/x[x>0])))
     s1 = ax.scatter(x, y1, s=2, c=within_color, label='Within clade transfers')
     s2 = ax.scatter(x, -y2, s=2, c=between_color, label='Between clade transfers')
     trend_directory = os.path.join(config.plotting_intermediate_directory, "B_vulgatus_trend_line.csv")
@@ -119,8 +122,10 @@ def plot_scatter(ax, x, y1, y2, if_trend_line=True):
     ax.set_yticklabels(['5', '0', '5', '10', '15'])
     ax.xaxis.major.formatter._useMathText = True
 
-    ax.set_ylabel("Number of transfers per 1Mbps")
+    ax.set_ylabel("# transfers per 1Mbps")
     ax.set_xlabel("Clonal divergence")
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
 
 
 def plot_distributions(fig, ax, within_lens, between_lens, inset_location=[0.7, 0.18, 0.15, 0.15]):
@@ -141,9 +146,15 @@ def plot_distributions(fig, ax, within_lens, between_lens, inset_location=[0.7, 
     # ax2.set_yscale('log')
     # ax2.set_xlim([0, 40000])
 
-    ax.legend()
+    # ax.legend()
+    ax.set_ylim([0,1])
+    ax.set_yticks([0, 0.25, 0.5, 0.75, 1])
+    ax.set_yticklabels(['0','','','','1'])
     ax.set_xlabel('Transfer length / bps')
     ax.set_ylabel('Prob greater')
+    ax.yaxis.set_label_coords(-.1, .5)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
 
 
 
@@ -166,41 +177,35 @@ if __name__ == "__main__":
     within_lens = full_df[full_df['types']==0]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
     between_lens = full_df[full_df['types']==1]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
 
-    print("Mean within transfer length: {}".format(np.mean(within_lens)))
-    print("Mean between transfer length: {}".format(np.mean(between_lens)))
+    print("Median within transfer length: {}; mean within transfer length: {}".format(np.median(within_lens), np.mean(within_lens)))
+    print("Median between transfer length: {}; mean between transfer length: {}".format(np.median(between_lens), np.mean(between_lens)))
     print("Total number of close pairs: %d, detected transfers: %d, within transfers: %d, between transfers: %d" % (
         len(clonal_divs), full_df.shape[0], np.sum(full_df['types'] == 0), np.sum(full_df['types'] == 1)))
 
     # mapping out grid
-    fig = plt.figure(figsize=(7, 1.3))
-    outer_grid = gridspec.GridSpec(ncols=2, nrows=1, width_ratios=[2.5, 2], wspace=0.25, figure=fig)
+    fig = plt.figure(figsize=(7, 1.5))
+    gs_scatter = gridspec.GridSpec(1, 1)
+    gs_len = gridspec.GridSpec(1, 1)
+    gs_example = gridspec.GridSpec(2,1)
 
-    top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[0.5,2],wspace=0.5,subplot_spec=outer_grid[0])
-
-    # top_right_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.37, 2],hspace=0.4,subplot_spec=top_grid[1])
-    example_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1,1],hspace=0.2,subplot_spec=top_grid[1])
-
-    bottom_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1.5, 1], wspace=0.4, subplot_spec=outer_grid[1])
+    gs_example.update(left=0.2, right=0.48, top=0.95, bottom=0.22)
+    gs_scatter.update(left=0.56, right=0.78, top=0.95, bottom=0.22)
+    gs_len.update(left=0.83, right=0.98, top=0.95, bottom=0.22)
 
     # adding axes
-    _ = fig.add_subplot(top_grid[0])
-    ct_ax = fig.add_subplot(bottom_grid[0])
-
-    len_dist_ax = fig.add_subplot(bottom_grid[1])
-
-    # ex0_ax = fig.add_subplot(top_right_grid[0])
-
-    ex1_ax = fig.add_subplot(example_grid[0])
-
-    ex2_ax = fig.add_subplot(example_grid[1])
+    ct_ax = fig.add_subplot(gs_scatter[0,0])
+    len_dist_ax = fig.add_subplot(gs_len[0,0])
+    ex1_ax = fig.add_subplot(gs_example[0,0])
+    ex2_ax = fig.add_subplot(gs_example[1,0])
 
     ######################################################################
     # example species
     ######################################################################
-
+    fig.text(0.155, 0.55, "Divergence (%)", size=7, rotation=90.,verticalalignment ='center'
+             )
     # plot_typical_pair(ex0_ax, dh, (0, 128))
     # plot_example_pair(ex1_ax, dh, (128, 170), full_df, if_legend=False)
-    plot_example_pair(ex1_ax, dh, (54, 238), full_df, if_legend=True)
+    plot_example_pair(ex1_ax, dh, (54, 238), full_df, if_legend=False)
     plot_example_pair(ex2_ax, dh, (39, 74), full_df, if_legend=False)
     # ex0_ax.set_xticklabels([])
     ex1_ax.set_xticklabels([])
@@ -226,4 +231,4 @@ if __name__ == "__main__":
     ######################################################################
     plot_distributions(fig, len_dist_ax, within_lens, between_lens)
     fig.patch.set_alpha(0.0)
-    fig.savefig(os.path.join(config.figure_directory, 'fig2.pdf'), bbox_inches="tight")
+    fig.savefig(os.path.join(config.figure_directory, 'fig2.pdf'))

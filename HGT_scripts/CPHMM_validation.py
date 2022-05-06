@@ -70,6 +70,7 @@ def test_species(species_name, debug=False, clade_cutoff_bin=None, clade_cutoff_
                 break
         mask = mask.astype(bool)
         true_div = np.sum(genome[mask]) / float(np.sum(mask))
+        print(num_transfers, len(transfer_starts))
         return genome, true_div, transfer_starts, transfer_lens, transfer_origin
 
     def sample_pair():
@@ -97,18 +98,21 @@ def test_species(species_name, debug=False, clade_cutoff_bin=None, clade_cutoff_
     dat['starts'] = []
     dat['ends'] = []
     dat['T est'] = []
+    dat['naive T est'] = []
     dat['true counts'] = []
     dat['true T'] = []
     dat['true div'] = []
     dat['true lengths'] = []
     dat['true between clade counts'] = []
+    dat['clonal fraction'] = []
 
     BLOCK_SIZE = config.second_pass_block_size
     num_reps = 16 if debug else 100
     L = 2.8e5
     mean_transfer_len = 2000
     rbymu = 1
-    Ts = [1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5, 1e-4, 11e-5, 12e-5, 13e-5, 14e-5, 15e-5]
+    Ts = np.arange(1, 16)*1e-5
+    # [1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5, 10e-5, 11e-5, 12e-5, 13e-5, 14e-5, 15e-5]
     # Ts = [6e-5, 7e-5, 8e-5, 9e-5, 1e-4]
     # Ts = [1e-4+1e-5, 1e-4+2e-5, 1e-4+3e-5, 1e-4+4e-5, 1e-4+5e-5]
 
@@ -122,8 +126,9 @@ def test_species(species_name, debug=False, clade_cutoff_bin=None, clade_cutoff_
             blk_seq_fit = (blk_seq > 0).astype(float)
             if np.sum(blk_seq) == 0:
                 continue
-            starts, ends, snp_count, clonal_len = close_pair_utils._decode_and_count_transfers(
+            starts, ends, clonal_seq = close_pair_utils._decode_and_count_transfers(
                 blk_seq_fit, cphmm, sequence_with_snps=blk_seq, clade_cutoff_bin=clade_cutoff_bin)
+            naive_div, est_div = close_pair_utils.estimate_clonal_divergence(clonal_seq)
 
             # saving data
             dat['true counts'].append(len(sim_starts))
@@ -135,8 +140,9 @@ def test_species(species_name, debug=False, clade_cutoff_bin=None, clade_cutoff_
 
             dat['starts'].append(starts)
             dat['ends'].append(ends)
-            T_approx = float(snp_count) / (clonal_len * BLOCK_SIZE)
-            dat['T est'].append(T_approx)
+            dat['T est'].append(est_div)
+            dat['naive T est'].append(naive_div)
+            dat['clonal fraction'].append(len(clonal_seq)*BLOCK_SIZE / L)
 
             if i % 20 == 0:
                 print("Finished {} reps".format(i))
