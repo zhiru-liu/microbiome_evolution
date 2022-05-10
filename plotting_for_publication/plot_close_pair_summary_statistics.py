@@ -141,7 +141,11 @@ def plot_jitters(ax, X, ys, width, if_box=True, colorVal='tab:blue', alpha=0.1, 
 other_species_to_plot = []
 for species_full_name in species_order:
     species_name = ' '.join(species_full_name.split('_')[:2])
-    raw_data = pd.read_pickle(os.path.join(data_dir, 'third_pass', species_full_name + '.pickle'))
+    try:
+        raw_data = pd.read_pickle(os.path.join(data_dir, 'third_pass', species_full_name + '.pickle'))
+    except IOError:
+        print(species_name + " does not have data")
+        continue
     filename = species_full_name + '.csv'
 
     if 'vulgatus' in species_name:
@@ -155,7 +159,7 @@ for species_full_name in species_order:
     n_filtered = np.sum(raw_data['clonal fractions'] > config.clonal_fraction_cutoff)
     if n_filtered < 3:
         continue
-    print(filename, n, n_filtered, raw_data['clonal snps'].max(), raw_data['clonal divs'].max())
+    print(filename, n, n_filtered, raw_data['clonal divs'].max())
     plot_jitter = False
 
     if 'vulgatus' in species_name:
@@ -313,7 +317,7 @@ for species_full_name in species_order:
         # select three examples pairs
         # example_mask = raw_data['pairs'].isin([(282, 387), (297, 331), (269, 313)])
         # ax3.scatter(x[example_mask], y[example_mask], s=1, color='r')
-
+        print("A putredinis average rate:{:e}".format(np.mean(y[x>0]/x[x>0])))
         ax3.plot(fitted_data['x'], fitted_data['y'], linestyle='--', color=color)
         # ax3.set_xlim([0, 50])
         ax3.set_xlim([0, 2e-4])
@@ -405,4 +409,4 @@ _ = axd.set_xticklabels(xticklabels, rotation=90, ha='center', fontsize=5)
 json.dump(plotted_species, open(os.path.join(config.plotting_intermediate_directory, 'fig3_species.json'), 'w'))
 
 fig.tight_layout()
-fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig3_.pdf'), dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'fig3.pdf'), dpi=600)

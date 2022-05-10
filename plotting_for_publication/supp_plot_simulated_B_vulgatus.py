@@ -64,7 +64,7 @@ def plot_between_within_clade(ax, est_Ts, within_counts, between_counts):
 
     ax.set_xlim([0, 2e-4])
     # ax.set_ylim([-40, 40])
-    # ax.set_ylim([-7.5, 17.5])
+    ax.set_ylim([-17.5, 17.5])
     ax.set_yticks([-15, -10, -5, 0, 5, 10, 15])
     ax.set_yticklabels(['15', '10', '5', '0', '5', '10', '15'])
     ax.set_xticks([0, 1e-4, 2e-4])
@@ -98,10 +98,18 @@ gs_rt.update(left=0.63, top=0.76, bottom=0.24)
 path = os.path.join(config.analysis_directory, 'HMM_validation', 'Bacteroides_vulgatus_57955.pickle')
 genome_len = 2.8e5
 data = pickle.load(open(path, 'rb'), encoding='latin1')
-est_Ts = np.array(data['T est']) / config.second_pass_block_size
+
+true_counts = np.array(data['true counts'])
+true_between_counts = np.array(data['true between clade counts'])
+true_within_counts = true_counts - true_between_counts
+true_Ts = np.array(data['true T'])
+true_divs = np.array(data['true div'])
+true_lens = np.concatenate(data['true lengths'])
+true_total_lens = np.array([np.sum(x) for x in data['true lengths']])
+est_Ts = np.array(data['T est'])
 total_counts, within_counts, between_counts, full_df = preprocess_data(data)
-plot_between_within_clade(between_within_count_ax, est_Ts, within_counts, between_counts)
-# plot_between_within_clade(between_within_count_ax, true_divs, true_within_counts, true_between_counts)
+# plot_between_within_clade(between_within_count_ax, est_Ts, within_counts, between_counts)
+plot_between_within_clade(between_within_count_ax, true_divs, true_within_counts, true_between_counts)
 plot_between_within_length_distributions(between_within_len_ax, full_df)
 
-fig.savefig(os.path.join(config.figure_directory, "supp_simulated_Bv.pdf"), bbox_inches="tight")
+fig.savefig(os.path.join(config.figure_directory, "supp_simulated_Bv_ground_truth.pdf"), bbox_inches="tight")

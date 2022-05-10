@@ -142,7 +142,7 @@ true_Ts = np.array(data['true T'])
 true_divs = np.array(data['true div'])
 true_lens = np.concatenate(data['true lengths'])
 true_total_lens = np.array([np.sum(x) for x in data['true lengths']])
-est_Ts = np.array(data['T est']) / 10
+est_Ts = np.array(data['T est'])
 total_counts, within_counts, between_counts, full_df = preprocess_data(data)
 
 plot_count_correlation(fig, count_ax, true_counts, true_Ts, total_counts, true_total_lens / genome_len)

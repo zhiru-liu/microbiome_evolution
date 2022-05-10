@@ -26,11 +26,17 @@ def init_hmm(species_name, genome_len, block_size):
     return cphmm
 
 
-def test_species(species_name, debug=False, clade_cutoff_bin=None, clade_cutoff_div=None):
+def test_species(species_name, species_params={}):
     dh = parallel_utils.DataHoarder(
         species_name, mode='QP', allowed_variants=['4D'])
     good_idxs = dh.get_single_subject_idxs()
     pd_mat = typical_pair_utils.load_pairwise_div_mat(species_name)
+    if 'vulgatus' in species_name:
+        clade_cutoff_bin = config.empirical_histogram_bins
+        clade_cutoff_div = 0.03
+    else:
+        clade_cutoff_bin = None
+        clade_cutoff_div = None
 
     def sample_strain():
         return random.sample(good_idxs, 1)[0]
@@ -70,8 +76,8 @@ def test_species(species_name, debug=False, clade_cutoff_bin=None, clade_cutoff_
                 break
         mask = mask.astype(bool)
         true_div = np.sum(genome[mask]) / float(np.sum(mask))
-        print(num_transfers, len(transfer_starts))
-        return genome, true_div, transfer_starts, transfer_lens, transfer_origin
+        true_clonal_len = np.sum(mask)
+        return genome, true_div, true_clonal_len, transfer_starts, transfer_lens, transfer_origin
 
     def sample_pair():
         return random.sample(good_idxs, 2)
@@ -102,16 +108,17 @@ def test_species(species_name, debug=False, clade_cutoff_bin=None, clade_cutoff_
     dat['true counts'] = []
     dat['true T'] = []
     dat['true div'] = []
+    dat['true clonal fraction'] = []
     dat['true lengths'] = []
     dat['true between clade counts'] = []
     dat['clonal fraction'] = []
 
     BLOCK_SIZE = config.second_pass_block_size
-    num_reps = 16 if debug else 100
-    L = 2.8e5
-    mean_transfer_len = 2000
-    rbymu = 1
+    L = species_params['genome length']
+    mean_transfer_len = species_params['transfer len']
+    rbymu = species_params['rbymu']
     Ts = np.arange(1, 16)*1e-5
+    num_reps = species_params['reps']
     # [1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5, 10e-5, 11e-5, 12e-5, 13e-5, 14e-5, 15e-5]
     # Ts = [6e-5, 7e-5, 8e-5, 9e-5, 1e-4]
     # Ts = [1e-4+1e-5, 1e-4+2e-5, 1e-4+3e-5, 1e-4+4e-5, 1e-4+5e-5]
@@ -120,7 +127,7 @@ def test_species(species_name, debug=False, clade_cutoff_bin=None, clade_cutoff_
 
     for T in Ts:
         for i in range(num_reps):
-            g, div, sim_starts, sim_lens, sim_origins = generate_fake_genome(
+            g, div, clonal_len, sim_starts, sim_lens, sim_origins = generate_fake_genome(
                 T, mean_transfer_len, rbymu, int(L))
             blk_seq = close_pair_utils.to_block(g, BLOCK_SIZE).reshape((-1, 1))
             blk_seq_fit = (blk_seq > 0).astype(float)
@@ -134,8 +141,8 @@ def test_species(species_name, debug=False, clade_cutoff_bin=None, clade_cutoff_
             dat['true counts'].append(len(sim_starts))
             dat['true lengths'].append(sim_lens)
             dat['true T'].append(T)
-            print(div)
             dat['true div'].append(div)
+            dat['true clonal fraction'].append(clonal_len / float(L))
             dat['true between clade counts'].append(np.sum(sim_origins))
 
             dat['starts'].append(starts)
@@ -157,7 +164,11 @@ def test_species(species_name, debug=False, clade_cutoff_bin=None, clade_cutoff_
 #                'Bacteroides_vulgatus_57955',
 #                'Eubacterium_rectale_56927']
 
-all_species = ['Bacteroides_vulgatus_57955']
+all_species = ['Bacteroides_vulgatus_57955', 'Alistipes_putredinis_61533']
+all_species_params = [
+    {'species': 'Bacteroides_vulgatus_57955', 'genome length':2.8e5, 'transfer len': 2600, 'rbymu': 0.6, 'reps':16, 'clade cutoff': 0.03},  # matched post hoc
+    {'species': 'Alistipes_putredinis_61533', 'genome length':2.5e5, 'transfer len': 800, 'rbymu': 3, 'reps':100, 'clade cutoff': None}  # estimated using transfer/divergence
+]
 
-for species in all_species:
-    test_species(species, debug=True, clade_cutoff_bin=config.empirical_histogram_bins, clade_cutoff_div=0.03)
+for d in all_species_params:
+    test_species(d['species'], species_params=d)

@@ -286,8 +286,9 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
             # have to skip otherwise will mess up hmm
             starts = [np.array([])]
             ends = [np.array([])]
-            snp_count = 0
-            clonal_len = len(blk_seq)
+            # snp_count = 0
+            # clonal_len = len(blk_seq)
+            clonal_seq = blk_seq  # full sequence is clonal
         else:
             starts, ends, clonal_seq = _decode_and_count_transfers(
                 blk_seq_fit, model, sequence_with_snps=blk_seq, index_offset=index_offset,
@@ -310,7 +311,7 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
         ends.append(np.concatenate([s[i] for s in all_ends]))
     # T_approx = float(np.sum(snp_counts)) / np.sum(clonal_lens)
     full_clonal_seq = np.concatenate(clonal_seqs)
-    clonal_div = estimate_clonal_divergence(clonal_seq, block_size)
+    clonal_div = estimate_clonal_divergence(full_clonal_seq, block_size)
     # clonal_snp = np.sum(snp_counts)
     # transfer_snp = np.sum(snp_vec) - clonal_snp
     # total_clonal_len = np.sum(clonal_lens) * block_size
