@@ -26,7 +26,7 @@ for filename in os.listdir(ckpt_path):
         continue
 
     data = pickle.load(open(os.path.join(ckpt_path, filename), 'rb'))
-    transfer_counts, all_transfer_df = close_pair_utils.merge_and_filter_transfers(data, separate_clade=False)
+    transfer_counts, all_transfer_df = close_pair_utils.merge_and_filter_transfers(data, separate_clade=False, merge_threshold=0, filter_threshold=5)
     if transfer_counts is None:
         print("{} has no data".format(species_name))
         continue

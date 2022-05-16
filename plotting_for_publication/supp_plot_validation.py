@@ -35,16 +35,16 @@ def plot_count_correlation(fig, ax, true_counts, true_Ts, total_ct, true_recombi
     ax.legend(ncol=2, loc='upper left')
     ax.set_xlabel("True transfers")
     ax.set_ylabel("Detected transfers")
-    ax.set_ylim([0, 55])
-    ax.set_xlim([0, 55])
-    ax.set_xticks([0, 25, 50])
-    ax.set_yticks([0, 25, 50])
+    ax.set_ylim([0, 40])
+    ax.set_xlim([0, 40])
+    ax.set_xticks([0, 20, 40])
+    ax.set_yticks([0, 20, 40])
     # axins1 = inset_axes(ax, width='20%', height='5%', loc='lower right')
     # cmin, cmax = im.get_clim()
     # below = 0.25 * (cmax - cmin) + cmin
     # above = 0.75 * (cmax - cmin) + cmin
     # cb = fig.colorbar(im, cax=axins1, orientation='horizontal', ticks=[below, above])
-    cb = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    cb = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)  # magical parameter to make it similar size to ax
     cb.set_label(r"$f_r$")
     # axins1.xaxis.set_ticks_position('top')
     return
@@ -85,6 +85,25 @@ def plot_clonal_T_est_correlation(ax, true_Ts, est_Ts):
     ax.legend(loc='upper left')
     return
 
+
+def plot_clonal_frac_correlation(ax, true_cfs, est_cfs):
+    # markers = itertools.cycle(('+', '.', 'x', '^'))
+    ax.plot(true_cfs, est_cfs, '.', markersize=2)
+    xs = np.linspace(ax.get_xlim()[0], ax.get_xlim()[1])
+    ax.plot(xs, xs, '--', label='y=x')
+    # ax.legend(ncol=2, loc='center left', bbox_to_anchor=(1, 0.5))
+    ax.set_aspect('equal')
+    ax.set_xlabel("True clonal fraction")
+    ax.set_ylabel("Inferred clonal fraction")
+    # ax.set_ylim([0, 2.2e-4])
+    # ax.set_xlim([0, 2.2e-4])
+    # ax.set_xticks([0, 1e-4, 2e-4])
+    # ax.set_xticklabels([0, 1, 2])
+    # ax.set_yticks([0, 1e-4, 2e-4])
+    # ax.set_yticklabels([0, 1, 2])
+    ax.legend(loc='upper left')
+    return
+
 def plot_length_distributions(ax, true_lens, detected_lens):
     _ = ax.hist(detected_lens * config.second_pass_block_size, histtype='step', bins=100, density=True, label='Detected dist')
     _ = ax.hist(true_lens, histtype='step', bins=100, density=True, label='True dist')
@@ -113,21 +132,22 @@ mpl.rcParams['legend.fontsize']  = 'small'
 # between_within_len_ax = fig.add_subplot(lower_grid[1])
 # between_within_count_ax = fig.add_subplot(lower_grid[0])
 # fig, axes = plt.subplots(ncols=3, nrows=1, figsize=(6.5, 2.), gridspec_kw={'width_ratios': [1,1.1,0.7], 'wspace':0.6})
-fig = plt.figure(figsize=(6.5, 2))
+fig = plt.figure(figsize=(4.5, 3.5))
 # create a 1-row 3-column container as the left container
-gs_left = gridspec.GridSpec(1, 2, width_ratios=[1, 1.1])
+gs_top = gridspec.GridSpec(1, 2, width_ratios=[1, 1.1])
 # create a 1-row 1-column grid as the right container
-gs_right = gridspec.GridSpec(1, 1)
+gs_bottom = gridspec.GridSpec(1, 2)
 # add plots to the nested structure
-T_est_ax = fig.add_subplot(gs_left[0,0])
-count_ax = fig.add_subplot(gs_left[0,1])
-true_len_ax = fig.add_subplot(gs_right[0,0])
+T_est_ax = fig.add_subplot(gs_top[0,0])
+count_ax = fig.add_subplot(gs_top[0,1])
+true_len_ax = fig.add_subplot(gs_bottom[0,0])
+cf_ax = fig.add_subplot(gs_bottom[0,1])
 
-# now the plots are on top of each other, we'll have to adjust their edges so that they won't overlap
-gs_left.update(right=0.58)
-gs_right.update(left=0.72, top=0.75, bottom=0.25)
+gs_top.update(bottom=0.55)
+# gs_right.update(left=0.72, top=0.75, bottom=0.25)
 # also, we want to get rid of the horizontal spacing in the left gridspec
-gs_left.update(wspace=0.4)
+# gs_left.update(wspace=0.4)
+gs_bottom.update(top=0.45)
 
 # fig2, axes2 = plt.subplots(ncols=2, nrows=1, figsize=(3, 2.5), gridspec_kw={'width_ratios': [1,1]})
 # load up data
@@ -143,11 +163,14 @@ true_divs = np.array(data['true div'])
 true_lens = np.concatenate(data['true lengths'])
 true_total_lens = np.array([np.sum(x) for x in data['true lengths']])
 est_Ts = np.array(data['T est'])
+true_cf = np.array(data['true clonal fraction'])
+inferred_cf = np.array(data['clonal fraction'])
 total_counts, within_counts, between_counts, full_df = preprocess_data(data)
 
 plot_count_correlation(fig, count_ax, true_counts, true_Ts, total_counts, true_total_lens / genome_len)
 # plot_clonal_T_estimation(T_est_ax, true_Ts, est_Ts)
 plot_clonal_T_est_correlation(T_est_ax, true_divs, est_Ts)
 plot_length_distributions(true_len_ax, true_lens, full_df['lengths'].astype(float))
+plot_clonal_frac_correlation(cf_ax, true_cf, inferred_cf)
 
 fig.savefig(os.path.join(config.figure_directory, "supp_HMM_validation.pdf"), bbox_inches="tight")

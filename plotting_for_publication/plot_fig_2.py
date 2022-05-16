@@ -105,6 +105,8 @@ def plot_scatter(ax, x, y1, y2, if_trend_line=True):
     if os.path.exists(trend_directory) and if_trend_line:
         # add trend line
         trend_data = pd.read_csv(trend_directory)
+        mean_count = trend_data['within_y'][np.argmin(np.abs(trend_data['within_x'] - 1e-4))]
+        print("mean at 1e-4: {:.2f}".format(mean_count))
         ax.plot(trend_data['within_x'], trend_data['within_y'])
         ax.plot(trend_data['between_x'], -trend_data['between_y'])
         ax.fill_between(trend_data['within_x'], trend_data['within_y'] - trend_data['within_sigma'],

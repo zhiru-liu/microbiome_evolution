@@ -317,7 +317,10 @@ for species_full_name in species_order:
         # select three examples pairs
         # example_mask = raw_data['pairs'].isin([(282, 387), (297, 331), (269, 313)])
         # ax3.scatter(x[example_mask], y[example_mask], s=1, color='r')
+        print('\n')
         print("A putredinis average rate:{:e}".format(np.mean(y[x>0]/x[x>0])))
+        print("A putredinis intermediate count:{}".format(y_highlight))
+        print('\n')
         ax3.plot(fitted_data['x'], fitted_data['y'], linestyle='--', color=color)
         # ax3.set_xlim([0, 50])
         ax3.set_xlim([0, 2e-4])
@@ -341,7 +344,7 @@ for species_full_name in species_order:
 # plotting all other violin plots
 # violins = axd.violinplot(transfer_length_data[:], positions=plot_loc[:], vert=True, showmedians=True, showextrema=False,
 #                          widths=0.8)
-print("Species name, median transfer, mean transfer")
+print("\nSpecies name, median transfer, mean transfer")
 for i, loc in enumerate(plot_loc):
     points_to_plot = 1000
     ys = transfer_length_data[i]
@@ -409,4 +412,4 @@ _ = axd.set_xticklabels(xticklabels, rotation=90, ha='center', fontsize=5)
 json.dump(plotted_species, open(os.path.join(config.plotting_intermediate_directory, 'fig3_species.json'), 'w'))
 
 fig.tight_layout()
-fig.savefig(os.path.join(config.figure_directory, 'fig3.pdf'), dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'fig3_.pdf'), dpi=600)

@@ -45,7 +45,11 @@ def generate_fake_transfer_dist(species_name):
                 all_sim_divs.append(div)
     np.savetxt(os.path.join(config.analysis_directory, 'closely_related', 'simulated_transfers', '{}.csv'.format(species_name)), np.array(all_sim_divs))
 
-generate_fake_transfer_dist('Alistipes_shahii_62199')
-generate_fake_transfer_dist('Bacteroides_fragilis_54507')
-generate_fake_transfer_dist('Bacteroides_vulgatus_57955')
-generate_fake_transfer_dist('Eubacterium_rectale_56927')
+if __name__ == "__main__":
+    second_pass_dir = os.path.join(config.analysis_directory, "closely_related", "second_pass")
+    for filename in os.listdir(second_pass_dir):
+        if filename.startswith('.'):
+            continue
+        species_name = filename.split('.')[0]
+        print("Processing {}".format(species_name))
+        generate_fake_transfer_dist(species_name)

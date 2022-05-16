@@ -347,3 +347,18 @@ def get_sitewise_polymorphism(dh, clade_cutoff=None):
         clade_polymorphism = 2 * clade_snp_frequency * (1 - clade_snp_frequency)
         return polymorphism, clade_polymorphism
     return polymorphism
+
+
+def compute_B_vulgatus_clades():
+    species_name = 'Bacteroides_vulgatus_57955'
+    pd_mat = load_pairwise_div_mat(species_name)
+
+    clade_cutoff = 0.03
+    # form first order clusters using clade divergence cutoff
+    d = close_pair_utils.get_clusters_from_pairwise_matrix(pd_mat, threshold=clade_cutoff)
+    cluster_ids = np.argsort(map(len, d.values()))  # sort by sizes
+    major_clade = 1 + cluster_ids[-1]
+    major_clade_samples = d[major_clade]
+    minor_clade = 1 + cluster_ids[-2]
+    minor_clade_samples = d[minor_clade]
+    return major_clade_samples, minor_clade_samples

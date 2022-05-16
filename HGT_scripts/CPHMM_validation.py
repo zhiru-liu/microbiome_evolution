@@ -2,6 +2,7 @@ import sys
 import os
 import random
 import numpy as np
+import pandas as pd
 import pickle
 sys.path.append("..")
 import config
@@ -117,8 +118,16 @@ def test_species(species_name, species_params={}):
     L = species_params['genome length']
     mean_transfer_len = species_params['transfer len']
     rbymu = species_params['rbymu']
-    Ts = np.arange(1, 16)*1e-5
-    num_reps = species_params['reps']
+
+    if 'putredinis' in species_name:
+        # load T distribution inferred with EM
+        real_dist = pd.read_csv(os.path.join(config.analysis_directory, 'HMM_validation', 'Ap_rate_weights.csv'))
+        n = 1849  # number of pairs for A putredinis
+        Ts = np.random.choice(real_dist['Rates'], n, p=real_dist['Weights'])
+        num_reps = 1
+    else:
+        Ts = np.arange(1, 16)*1e-5
+        num_reps = species_params['reps']
     # [1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5, 10e-5, 11e-5, 12e-5, 13e-5, 14e-5, 15e-5]
     # Ts = [6e-5, 7e-5, 8e-5, 9e-5, 1e-4]
     # Ts = [1e-4+1e-5, 1e-4+2e-5, 1e-4+3e-5, 1e-4+4e-5, 1e-4+5e-5]
@@ -126,7 +135,7 @@ def test_species(species_name, species_params={}):
     cphmm = init_hmm(species_name, L, BLOCK_SIZE)
 
     for T in Ts:
-        for i in range(num_reps):
+        for i in xrange(num_reps):
             g, div, clonal_len, sim_starts, sim_lens, sim_origins = generate_fake_genome(
                 T, mean_transfer_len, rbymu, int(L))
             blk_seq = close_pair_utils.to_block(g, BLOCK_SIZE).reshape((-1, 1))
@@ -155,7 +164,7 @@ def test_species(species_name, species_params={}):
                 print("Finished {} reps".format(i))
 
     save_path = os.path.join(
-        config.analysis_directory, 'HMM_validation', '%s.pickle' % species_name)
+        config.analysis_directory, 'HMM_validation', '%s.pickle' % (species_name+species_params['suffix']))
 
     # data format will be almost identical to real pipeline, except also includes ground truth
     pickle.dump(dat, open(save_path, 'wb'))
@@ -166,8 +175,10 @@ def test_species(species_name, species_params={}):
 
 all_species = ['Bacteroides_vulgatus_57955', 'Alistipes_putredinis_61533']
 all_species_params = [
-    {'species': 'Bacteroides_vulgatus_57955', 'genome length':2.8e5, 'transfer len': 2600, 'rbymu': 0.6, 'reps':16, 'clade cutoff': 0.03},  # matched post hoc
-    {'species': 'Alistipes_putredinis_61533', 'genome length':2.5e5, 'transfer len': 800, 'rbymu': 3, 'reps':100, 'clade cutoff': None}  # estimated using transfer/divergence
+    # {'species': 'Bacteroides_vulgatus_57955', 'suffix': '', 'genome length':2.8e5, 'transfer len': 2600, 'rbymu': 0.65, 'reps':16, 'clade cutoff': 0.03},  # matched post hoc
+    {'species': 'Alistipes_putredinis_61533', 'suffix': '_EM_025', 'genome length':2.5e5, 'transfer len': 800, 'rbymu': 5.2, 'reps':100, 'clade cutoff': None},  # estimated using transfer/divergence
+    {'species': 'Alistipes_putredinis_61533', 'suffix': '_EM_050', 'genome length':2.5e5, 'transfer len': 800, 'rbymu': 3.4, 'reps':100, 'clade cutoff': None},  # estimated using transfer/divergence
+    {'species': 'Alistipes_putredinis_61533', 'suffix': '_EM_100', 'genome length':2.5e5, 'transfer len': 800, 'rbymu': 2.1, 'reps':100, 'clade cutoff': None},  # estimated using transfer/divergence
 ]
 
 for d in all_species_params:

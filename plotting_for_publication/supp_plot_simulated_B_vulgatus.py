@@ -55,6 +55,7 @@ def plot_between_within_clade(ax, est_Ts, within_counts, between_counts):
     s2 = ax.scatter(est_Ts, -np.array(between_counts), s=1, label='Between-clade')
     ax.plot(est_Ts, np.zeros(est_Ts.shape), 'k-')
 
+    print("Mean at 1e-4: {:.2f}".format(within_data[1][np.abs(within_data[0]-1e-4).argmin()]))
     ax.plot(within_data[0], within_data[1])
     ax.plot(between_data[0], -between_data[1])
     ax.fill_between(within_data[0], within_data[1] - within_data[2],

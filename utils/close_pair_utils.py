@@ -321,6 +321,7 @@ def fit_and_count_transfers_all_chromosomes(snp_vec, chromosomes, model, block_s
 
 
 def merge_and_filter_transfers_one_pair(starts, ends, merge_threshold=100, filter_threshold=10):
+    # TODO: bad! Will merge events on different contigs. Should not use merging functionality
     # clean up raw data
     df_transfers = pd.DataFrame()
     df_transfers['starts'] = np.concatenate(starts)
