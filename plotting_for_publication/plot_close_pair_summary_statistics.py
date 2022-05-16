@@ -149,7 +149,7 @@ for species_full_name in species_order:
     filename = species_full_name + '.csv'
 
     if 'vulgatus' in species_name:
-        data_path = os.path.join(data_dir, 'third_pass', species_full_name + '_all_transfers_two_clades.pickle')
+        data_path = os.path.join(data_dir, 'third_pass', species_full_name + '_all_transfers_processed.pickle')
     else:
         data_path = os.path.join(data_dir, 'third_pass', species_full_name + '_all_transfers.pickle')
 
@@ -402,7 +402,9 @@ _ = axd.set_xticklabels([])
 # axd.set_yscale('log')
 axd.grid(linestyle='--', axis='y')
 axd.set_xlim(axm.get_xlim())
-axd.set_ylim([0, 5900])
+axd.set_ylim([0, 50e3])
+axd.set_yticks([0, 20e3, 40e3])
+axd.set_yticklabels([0, '20kb', '40kb'])
 # axd.set_yscale('log')
 axm.set_xlim([1, 2 * len(xticklabels) + 1])
 axd.set_xlim([1, 2 * len(xticklabels) + 1])

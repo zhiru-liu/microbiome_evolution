@@ -9,7 +9,7 @@ import pickle
 import dask.array as da
 sys.path.append("..")
 import config
-from utils import parallel_utils, core_gene_utils
+from utils import parallel_utils, core_gene_utils, close_pair_utils
 
 
 mpl_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
@@ -190,17 +190,37 @@ def plot_example_snps(axes):
     cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_between_snp2.csv")
     between_snp_vec2 = np.loadtxt(cache_file).astype(bool)
 
-    axes[0].plot(within_snp_vec1, linewidth=0.3)
-    axes[1].plot(within_snp_vec2, linewidth=0.3)
-    axes[2].plot(between_snp_vec1, linewidth=0.3)
-    axes[3].plot(between_snp_vec2, linewidth=0.3)
+    blk_size = 1000
+    snp_blk = close_pair_utils.to_block(within_snp_vec1, blk_size)
+    barcode1 = np.concatenate([snp_blk > 0, [0]])
+    snp_blk = close_pair_utils.to_block(within_snp_vec2, blk_size)
+    barcode2 = np.concatenate([snp_blk > 0, [0]])
+    snp_blk = close_pair_utils.to_block(between_snp_vec1, blk_size)
+    barcode3 = np.concatenate([snp_blk > 0, [0]])
+    snp_blk = close_pair_utils.to_block(between_snp_vec2, blk_size)
+    barcode4 = np.concatenate([snp_blk > 0, [0]])
+
+    # xlim = min(xlim, len(snp_blk) - 1)
+    axes[0].imshow(np.expand_dims(barcode1, axis=0), aspect='auto',
+                   cmap=mpl.colors.ListedColormap(['white', 'tab:blue']), interpolation='nearest')
+    axes[1].imshow(np.expand_dims(barcode2, axis=0), aspect='auto',
+                   cmap=mpl.colors.ListedColormap(['white', 'tab:blue']), interpolation='nearest')
+    axes[2].imshow(np.expand_dims(barcode3, axis=0), aspect='auto',
+                   cmap=mpl.colors.ListedColormap(['white', 'tab:blue']), interpolation='nearest')
+    axes[3].imshow(np.expand_dims(barcode4, axis=0), aspect='auto',
+                   cmap=mpl.colors.ListedColormap(['white', 'tab:blue']), interpolation='nearest')
+
+    # axes[0].plot(within_snp_vec1, linewidth=0.3)
+    # axes[1].plot(within_snp_vec2, linewidth=0.3)
+    # axes[2].plot(between_snp_vec1, linewidth=0.3)
+    # axes[3].plot(between_snp_vec2, linewidth=0.3)
     axes[0].set_xticklabels([])
     axes[1].set_xticklabels([])
     axes[2].set_xticklabels([])
 
     xmax = min(len(within_snp_vec1), len(within_snp_vec2), len(between_snp_vec1), len(between_snp_vec2))
     for ax in axes:
-        ax.set_xlim([0, xmax])
+        ax.set_xlim([0, xmax / blk_size])
         ax.set_yticklabels([])
         ax.set_yticks([])
 
@@ -210,6 +230,7 @@ def save_interesting_genes(genes, path):
     all_genes = pd.read_csv(os.path.join(config.data_directory, 'genome_features', '%s.csv' % species_name))
     gene_data = all_genes[all_genes['PATRIC ID'].isin(gene_ids)]
     gene_data.to_csv(path)
+
 
 # setting up figures
 mpl.rcParams['font.size'] = 7

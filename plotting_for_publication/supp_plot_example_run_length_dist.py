@@ -34,13 +34,17 @@ def plot_example_run_length_dist(dist_ax, snp_vec_axes, between_pair1, between_p
 
         within_idx1 = np.where(within_dh.good_samples=='700114218')[0]
         within_idx2 = np.where(within_dh.good_samples=='700171115')[0]
-        within_snp_vec1, snp_mask = within_dh.get_snp_vector(within_idx1)
-        within_snp_vec2, snp_mask = within_dh.get_snp_vector(within_idx2)
+        within_snp_vec1, snp_mask1 = within_dh.get_snp_vector(within_idx1)
+        within_snp_vec2, snp_mask2 = within_dh.get_snp_vector(within_idx2)
+        both_true = snp_mask1 & snp_mask2
+        new_within_vec1 = within_snp_vec1[both_true[snp_mask1]]
+        new_within_vec2 = within_snp_vec2[both_true[snp_mask2]]
+
         between_snp_vec2, snp_mask = between_dh.get_snp_vector(between_pair2)
         between_snp_vec1, snp_mask = between_dh.get_snp_vector(between_pair1)
 
-        np.savetxt(cache_file_wt1, within_snp_vec1)
-        np.savetxt(cache_file_wt2, within_snp_vec2)
+        np.savetxt(cache_file_wt1, new_within_vec1)
+        np.savetxt(cache_file_wt2, new_within_vec2)
         np.savetxt(cache_file_bt1, between_snp_vec1)
         np.savetxt(cache_file_bt2, between_snp_vec2)
 

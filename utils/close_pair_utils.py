@@ -460,7 +460,7 @@ def prepare_run_lengths(raw_df, run_df, desired_type=0, cf_cutoff=config.clonal_
     good_pairs = raw_df[raw_df['clonal fractions'] > cf_cutoff]['pairs']
     mask = run_df['pairs'].isin(good_pairs)
     sub_df = run_df[mask]
-    runs = sub_df[sub_df['types'] == desired_type]['lengths'].to_numpy().astype(float) * config.second_pass_block_size
+    runs = sub_df[sub_df['types'] == desired_type]['transfer lengths (core genome)'].to_numpy().astype(float)
     return runs
 
 

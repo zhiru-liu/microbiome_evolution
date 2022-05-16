@@ -137,7 +137,7 @@ def plot_distributions(fig, ax, within_lens, between_lens, inset_location=[0.7, 
     _ = ax.hist(between_lens, density=True, bins=bins, cumulative=-1, histtype="step",
                 label="between clade", color=between_color)
 
-    ax.set_xlim([0, 20000])
+    ax.set_xlim([0, 150e3])
 
     # left, bottom, width, height = inset_location
     # ax2 = fig.add_axes([left, bottom, width, height])
@@ -152,7 +152,9 @@ def plot_distributions(fig, ax, within_lens, between_lens, inset_location=[0.7, 
     ax.set_ylim([0,1])
     ax.set_yticks([0, 0.25, 0.5, 0.75, 1])
     ax.set_yticklabels(['0','','','','1'])
-    ax.set_xlabel('Transfer length / bps')
+    ax.set_xticks([0, 50e3, 100e3, 150e3])
+    ax.set_xticklabels([0, 50, 100, 150])
+    ax.set_xlabel('Transfer length / kbps')
     ax.set_ylabel('Prob greater')
     ax.yaxis.set_label_coords(-.1, .5)
     ax.spines['right'].set_visible(False)
@@ -174,15 +176,23 @@ if __name__ == "__main__":
     save_path = config.B_vulgatus_data_path
     BLOCK_SIZE = config.second_pass_block_size
     clonal_divs, within_counts, between_counts, full_df = close_pair_utils.prepare_HMM_results_for_B_vulgatus(
-        save_path, 0.8, cache_intermediate=True, merge_threshold=100)
+        save_path, 0.8, cache_intermediate=True, merge_threshold=0)
 
-    within_lens = full_df[full_df['types']==0]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
-    between_lens = full_df[full_df['types']==1]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
+    transfer_df_path = os.path.join(config.analysis_directory, "closely_related", 'third_pass',
+                 'Bacteroides_vulgatus_57955' + '_all_transfers_processed.pickle')
+    if not os.path.exists(transfer_df_path):
+        raise RuntimeError("Please run stage 3a scripts to obtain full genome length and divergences")
+    transfer_df = pd.read_pickle(transfer_df_path)
+
+    # within_lens = full_df[full_df['types']==0]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
+    within_lens = transfer_df[transfer_df['types']==0]['transfer lengths (core genome)'].to_numpy()
+    # between_lens = full_df[full_df['types']==1]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
+    between_lens = transfer_df[transfer_df['types']==1]['transfer lengths (core genome)'].to_numpy()
 
     print("Median within transfer length: {}; mean within transfer length: {}".format(np.median(within_lens), np.mean(within_lens)))
     print("Median between transfer length: {}; mean between transfer length: {}".format(np.median(between_lens), np.mean(between_lens)))
-    print("Total number of close pairs: %d, detected transfers: %d, within transfers: %d, between transfers: %d" % (
-        len(clonal_divs), full_df.shape[0], np.sum(full_df['types'] == 0), np.sum(full_df['types'] == 1)))
+    print("Total number of close pairs: %d, detected transfers: %d, within transfers: %d, between transfers: %d, mean length: %f" % (
+        len(clonal_divs), full_df.shape[0], np.sum(full_df['types'] == 0), np.sum(full_df['types'] == 1), np.mean(np.concatenate([within_lens, between_lens]))))
 
     # mapping out grid
     fig = plt.figure(figsize=(7, 1.5))
@@ -207,8 +217,8 @@ if __name__ == "__main__":
              )
     # plot_typical_pair(ex0_ax, dh, (0, 128))
     # plot_example_pair(ex1_ax, dh, (128, 170), full_df, if_legend=False)
-    plot_example_pair(ex1_ax, dh, (54, 238), full_df, if_legend=False)
-    plot_example_pair(ex2_ax, dh, (39, 74), full_df, if_legend=False)
+    plot_example_pair(ex1_ax, dh, (54, 238), transfer_df, if_legend=False)
+    plot_example_pair(ex2_ax, dh, (39, 74), transfer_df, if_legend=False)
     # ex0_ax.set_xticklabels([])
     ex1_ax.set_xticklabels([])
     # ex0_ax.set_xlabel('')

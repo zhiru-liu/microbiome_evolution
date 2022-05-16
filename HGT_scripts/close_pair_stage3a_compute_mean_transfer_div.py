@@ -79,16 +79,25 @@ if __name__ == "__main__":
     second_pass_dir = os.path.join(config.analysis_directory, "closely_related", "second_pass")
     data_dir = os.path.join(config.analysis_directory, "closely_related", "third_pass")
 
-    for filename in os.listdir(second_pass_dir):
-        if filename.startswith('.'):
-            continue
-        species_name = filename.split('.')[0]
-        print("Processing {}".format(species_name))
-        filepath = os.path.join(data_dir, "%s_all_transfers.pickle" % species_name)
-        if not os.path.exists(filepath):
-            print("Intermediate file not found for {}, skipping".format(species_name))
-            continue
-        transfer_df = pd.read_pickle(filepath)
-        dh = parallel_utils.DataHoarder(species_name=species_name, mode='QP', allowed_variants=['1D', '2D', '3D','4D'])
-        transfer_df = compute_div_in_transfers(dh, transfer_df)
-        transfer_df.to_pickle(filepath)
+    species_name = 'Bacteroides_vulgatus_57955'
+    filepath = os.path.join(config.analysis_directory, "closely_related", 'third_pass',
+                 'Bacteroides_vulgatus_57955' + '_all_transfers_two_clades.pickle')
+    dh = parallel_utils.DataHoarder(species_name=species_name, mode='QP', allowed_variants=['1D', '2D', '3D', '4D'])
+    transfer_df = pd.read_pickle(filepath)
+    transfer_df = compute_div_in_transfers(dh, transfer_df)
+    transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass',
+                 'Bacteroides_vulgatus_57955' + '_all_transfers_processed.pickle'))
+
+    # for filename in os.listdir(second_pass_dir):
+    #     if filename.startswith('.'):
+    #         continue
+    #     species_name = filename.split('.')[0]
+    #     print("Processing {}".format(species_name))
+    #     filepath = os.path.join(data_dir, "%s_all_transfers.pickle" % species_name)
+    #     if not os.path.exists(filepath):
+    #         print("Intermediate file not found for {}, skipping".format(species_name))
+    #         continue
+    #     transfer_df = pd.read_pickle(filepath)
+    #     dh = parallel_utils.DataHoarder(species_name=species_name, mode='QP', allowed_variants=['1D', '2D', '3D','4D'])
+    #     transfer_df = compute_div_in_transfers(dh, transfer_df)
+    #     transfer_df.to_pickle(filepath)
