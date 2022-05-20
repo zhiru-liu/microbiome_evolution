@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import numpy as np
 import config
-from utils import parallel_utils, core_gene_utils, typical_pair_utils
+from utils import parallel_utils, core_gene_utils, typical_pair_utils, pileup_utils
 import matplotlib.pyplot as plt
 from plotting_for_publication import plot_pileup_mirror
 
@@ -62,6 +62,24 @@ print(np.median(between_cumu_runs[:, 0]), np.median(within_cumu_runs[:, 0]))
 
 fig.savefig(os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_pileup_test.pdf'), bbox_inches='tight')
 plt.close()
+
+
+""" Compute enrichment at glycosyltransferases and ribosomal proteins """
+reps = 1e5
+def if_gt(gene):
+    x = gene_annotation_dict[gene]
+    return ('Glycosyltransferase' in x) or ('Glycosyl transferase' in x) or ('glycosyltransferase' in x)
+site_mask = between_cumu_runs[:, 0] > 0.1
+true_res, perm_res = pileup_utils.enrichment_test(good_genes, site_mask, if_gt, shuffle_size=10, shuffle_reps=int(reps))
+print("p-val for glycosyltransferases is {:e}".format(np.sum(np.array(perm_res) >= true_res) / reps))
+# np.savetxt("gt_perm_counts.txt", perm_res)
+
+def if_rp(gene):
+    x = gene_annotation_dict[gene]
+    return 'ribosomal protein' in x
+site_mask = within_cumu_runs[:, 0] > 0.1
+true_res, perm_res = pileup_utils.enrichment_test(good_genes, site_mask, if_rp, shuffle_size=10, shuffle_reps=int(reps))
+print("p-val for glycosyltransferases is {:e}".format(np.sum(np.array(perm_res) >= true_res) / reps))
 
 """ Plot within host between host """
 # setting up figure

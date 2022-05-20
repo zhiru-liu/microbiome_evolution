@@ -25,6 +25,7 @@ for filename in os.listdir(os.path.join(max_run_dir)):
     if len(within_host_max_runs) == 0:
         print("Skipping {}: no within host data".format(species_name))
         continue
+    print("Species: {}; Samples: {}".format(species_name, len(within_host_max_runs)))
     ks_dist, p_val = ks_2samp(within_host_max_runs, between_host_max_runs, alternative='less')
 
     fig, ax = plt.subplots(figsize=(3, 2))
@@ -33,7 +34,7 @@ for filename in os.listdir(os.path.join(max_run_dir)):
     ax.set_xlabel('Max homozygous run length (4D syn sites)')
     ax.set_ylabel('Fraction longer than')
     ax.legend()
-    ax.set_title("p={:.1e}".format(p_val))
+    ax.set_title("$n_w={}, p={:.1e}$".format(len(within_host_max_runs), p_val))
 
     fig.savefig(os.path.join(plot_dir, '{}.pdf'.format(species_name)), bbox_inches='tight')
     plt.close()

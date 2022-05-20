@@ -274,7 +274,8 @@ def enrichment_test(gene_vector, site_mask, pass_func, shuffle_size=1, shuffle_r
         passed_genes = pd.unique(new_gene_vector[site_mask])
         passed_count = np.sum([pass_func(x) for x in passed_genes])
         passed_counts.append(passed_count)
-    return passed_counts
+    true_counts = np.sum([pass_func(x) for x in pd.unique(gene_vector[site_mask])])
+    return true_counts, passed_counts
 
 
 def process_BSMC_sim(filename, save_path, genome_len, thresholds, close_pair_cutoff=0.95, return_res=False):

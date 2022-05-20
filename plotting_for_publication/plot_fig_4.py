@@ -66,7 +66,7 @@ def plot_local_polymorphism(axes, sample_pair):
     axes[1].set_ylabel("Intermediate frequency \nSNV density")
 
 
-def plot_allele_freq_zoomin(axes, histo_axes, sample_pair):
+def plot_allele_freq_zoomin(axes, histo_axes, sample_pair, plot_locations=True):
     idx1 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
     idx2 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[1])
 
@@ -127,7 +127,11 @@ def plot_allele_freq_zoomin(axes, histo_axes, sample_pair):
 
     # xs_before = snp_info[1][start:end][good_sites_before]  # locations
     # xs_after = snp_info[1][start:end][good_sites_after]  # locations
-    xs = np.arange(len(freq_before))
+    if plot_locations:
+        xs = snp_info[1][start:end][good_sites]
+        print("ref genome region: {} - {}".format(xs[0], xs[-1]))
+    else:
+        xs = np.arange(len(freq_before))
     axes[0].plot(xs[freq_before < 0.1], freq_before[freq_before < 0.1], '.', markersize=2,
                  label='Alt allele frequency', rasterized=True, color=mpl_colors[0])
     axes[0].plot(xs[freq_before > 0.1], freq_before[freq_before > 0.1], '.', markersize=2, color=mpl_colors[0])
@@ -138,7 +142,9 @@ def plot_allele_freq_zoomin(axes, histo_axes, sample_pair):
 
     non_core = np.invert(np.isin(snp_info[2][start:end][good_sites], core_genes)).astype(int)
     non_core_starts = np.nonzero((non_core[1:] - non_core[:-1]) > 0)[0]
+    non_core_starts = xs[non_core_starts]
     non_core_ends = np.nonzero((non_core[1:] - non_core[:-1]) < 0)[0]
+    non_core_ends = xs[non_core_ends]
     for i in range(len(non_core_starts)):
         # start_idx = snp_info[1][start:end][non_core_starts[i]]
         # end_idx = snp_info[1][start:end][non_core_ends[i]]
@@ -153,8 +159,8 @@ def plot_allele_freq_zoomin(axes, histo_axes, sample_pair):
     copy_num = d_after[start:end][good_sites] / mean_depth_after
     local_copy_after = np.convolve(copy_num, np.ones((N,)) / N, mode='same')
 
-    axes[0].plot(local_copy_before, 'grey', label='Local rel copynumber')
-    axes[1].plot(local_copy_after, 'grey')
+    axes[0].plot(xs, local_copy_before, 'grey', label='Local rel copynumber')
+    axes[1].plot(xs, local_copy_after, 'grey')
 
     axes[0].set_xticklabels([])
     axes[1].set_xlabel('Site index in covered coding region')
@@ -166,6 +172,7 @@ def plot_allele_freq_zoomin(axes, histo_axes, sample_pair):
     histo_axes[0].set_yticks([0, 0.5, 1])
     histo_axes[1].set_ylim([0, axes[1].get_ylim()[1]])
     histo_axes[1].set_yticks([0, 0.5, 1])
+    print(minimal_genes[np.isin(minimal_genes, core_genes)])
     return minimal_genes, maximal_genes
 
 

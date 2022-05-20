@@ -329,7 +329,7 @@ def pipe_snps(species_name, min_nonzero_median_coverage=config.pipe_snps_min_non
 #     If there are 4 samples, then they must be spread across at least 2 people. 
     
     # Load genomic coverage distributions
-    sample_coverage_histograms, sample_list = parse_coverage_distribution(species_name, remove_c=False)
+    sample_coverage_histograms, sample_lise = parse_coverage_distribution(species_name, remove_c=False)
     # depth threshold map returns the lower and upper depth values that are 0.3*median and 3*median depth in the data. 
     depth_threshold_map = calculate_relative_depth_threshold_map(sample_coverage_histograms, sample_list, min_nonzero_median_coverage, lower_factor, upper_factor)
     
