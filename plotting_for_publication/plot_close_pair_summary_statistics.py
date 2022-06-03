@@ -99,6 +99,7 @@ connection_l = []
 connection_r = []
 
 transfer_length_data = []
+all_num_pairs = []
 plot_loc = []
 
 
@@ -184,8 +185,9 @@ for species_full_name in species_order:
         axm.plot(xloc, mid, linestyle=':', linewidth=1)
         # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
-        good_runs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=0)
+        good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=0)
         transfer_length_data.append(good_runs)
+        all_num_pairs.append(num_pairs)
 
         # plot fraction recombined
         # rates = y1_ / x_
@@ -206,8 +208,9 @@ for species_full_name in species_order:
         axm.plot(xloc, mid, linestyle=':', linewidth=1)
         # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
-        good_runs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=1)
+        good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=1)
         transfer_length_data.append(good_runs)
+        all_num_pairs.append(num_pairs)
 
         # rates = y2_ / x_
         # frac_recombined = rates * 1e-4
@@ -237,8 +240,9 @@ for species_full_name in species_order:
 
     # plotting species summary
     plot_loc.append(2 * idx)
-    good_runs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data)
+    good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data)
     transfer_length_data.append(good_runs)
+    all_num_pairs.append(num_pairs)
     xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
 
     color = plot_colors[(idx-1) % len(plot_colors)]
@@ -415,3 +419,9 @@ json.dump(plotted_species, open(os.path.join(config.plotting_intermediate_direct
 
 fig.tight_layout()
 fig.savefig(os.path.join(config.figure_directory, 'fig3_.pdf'), dpi=600)
+
+
+total_events = 0
+for lengths in transfer_length_data:
+    total_events += len(lengths)
+print("Total {} species; total {} pairs;  total {} detected events".format(len(transfer_length_data)-1, np.sum(all_num_pairs), total_events))

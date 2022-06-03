@@ -29,11 +29,14 @@ def plot_between_within_length_distributions(ax, full_df):
     between_lens = full_df.loc[full_df['types']==1, 'lengths'].astype(float)
     print("Median within transfer length: {}; mean within transfer length: {}".format(np.median(within_lens), np.mean(within_lens)))
     print("Median between transfer length: {}; mean between transfer length: {}".format(np.median(between_lens), np.mean(between_lens)))
-    _ = ax.hist(within_lens * config.second_pass_block_size, cumulative=-1,
+    conversion_factor = 7.14  # 4D to full genome length conversion
+    _ = ax.hist(within_lens * config.second_pass_block_size * conversion_factor, cumulative=-1,
                 histtype='step', bins=100, density=True, label='Within-clade')
-    _ = ax.hist(between_lens * config.second_pass_block_size, cumulative=-1,
+    _ = ax.hist(between_lens * config.second_pass_block_size * conversion_factor, cumulative=-1,
                 histtype='step', bins=100, density=True, label='Between-clade')
-    ax.set_xlabel('Transfer length / bps')
+    ax.set_xticks([0, 50e3, 100e3, 150e3])
+    ax.set_xticklabels([0, 50, 100, 150])
+    ax.set_xlabel('Transfer length / kbps')
     ax.set_ylabel('Prob greater')
     ax.legend()
     return
@@ -109,8 +112,8 @@ true_lens = np.concatenate(data['true lengths'])
 true_total_lens = np.array([np.sum(x) for x in data['true lengths']])
 est_Ts = np.array(data['T est'])
 total_counts, within_counts, between_counts, full_df = preprocess_data(data)
-# plot_between_within_clade(between_within_count_ax, est_Ts, within_counts, between_counts)
-plot_between_within_clade(between_within_count_ax, true_divs, true_within_counts, true_between_counts)
+plot_between_within_clade(between_within_count_ax, est_Ts, within_counts, between_counts)
+# plot_between_within_clade(between_within_count_ax, true_divs, true_within_counts, true_between_counts)
 plot_between_within_length_distributions(between_within_len_ax, full_df)
 
-fig.savefig(os.path.join(config.figure_directory, "supp_simulated_Bv_ground_truth.pdf"), bbox_inches="tight")
+fig.savefig(os.path.join(config.figure_directory, "supp_simulated_Bv.pdf"), bbox_inches="tight")

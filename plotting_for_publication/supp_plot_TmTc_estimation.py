@@ -69,18 +69,18 @@ def plot_jitters(ax, X, ys, width, colorVal='tab:blue'):
     q50 = np.quantile(ys,0.5)
     q75 = np.quantile(ys,0.75)
 
-    # ax.fill_betweenx(theory_ys, X-theory_pdf*scale,X+theory_pdf*scale,linewidth=0.25,facecolor=light_colorVal,edgecolor=colorVal)
-    other_width = width+0.1
-    ax.plot([X-other_width,X+other_width],[q25,q25],'-',color=colorVal,linewidth=1)
-    ax.plot([X-other_width,X+other_width],[q50,q50],'-',color=colorVal,linewidth=1)
-    ax.plot([X-other_width,X+other_width],[q75,q75],'-',color=colorVal,linewidth=1)
-    ax.plot([X-other_width,X-other_width],[q25,q75],'-',color=colorVal,linewidth=1)
-    ax.plot([X+other_width,X+other_width],[q25,q75],'-',color=colorVal,linewidth=1)
-
     if len(ys)<900:
         ax.plot(X+xs,ys,'.',color=colorVal,alpha=0.5,markersize=5,markeredgewidth=0.0)
     else:
         ax.plot(X+xs,ys,'.',color=colorVal,alpha=0.5,markersize=5,markeredgewidth=0.0, rasterized=True)
+
+    # ax.fill_betweenx(theory_ys, X-theory_pdf*scale,X+theory_pdf*scale,linewidth=0.25,facecolor=light_colorVal,edgecolor=colorVal)
+    other_width = width+0.1
+    ax.plot([X-other_width,X+other_width],[q25,q25],'-',color=colorVal,linewidth=1)
+    ax.plot([X-other_width,X+other_width],[q50,q50],'-',color='tab:orange',linewidth=1)
+    ax.plot([X-other_width,X+other_width],[q75,q75],'-',color=colorVal,linewidth=1)
+    ax.plot([X-other_width,X-other_width],[q25,q75],'-',color=colorVal,linewidth=1)
+    ax.plot([X+other_width,X+other_width],[q25,q75],'-',color=colorVal,linewidth=1)
 
 plot_idx = 0
 for i, species_name in enumerate(species_to_plot):
@@ -134,10 +134,10 @@ ax.set_ylabel("Tc / Tm (pairwise est)")
 ax2.set_ylim(ax.get_ylim())
 ax2.set_yticks([])
 
-fig.savefig(os.path.join(config.figure_directory, 'TcTm_dist.pdf'), bbox_inches='tight', dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_TcTm_dist.pdf'), bbox_inches='tight', dpi=600)
 df = pd.DataFrame({'Species':plotted_species})
 df['d(Tc)'] = all_Tc
 df['d(Tm)'] = all_Tm
 df['Close pair fraction'] = all_close_frac
 df['Tc/Tm'] = df['d(Tc)'] / df['d(Tm)']
-df.to_csv(os.path.join(config.analysis_directory, 'misc', 'TmTc_estimation.csv'))
+df.to_csv(os.path.join(config.figure_directory, 'supp_table', 'TcTm_estimation.csv'))

@@ -460,8 +460,9 @@ def prepare_run_lengths(raw_df, run_df, desired_type=0, cf_cutoff=config.clonal_
     good_pairs = raw_df[raw_df['clonal fractions'] > cf_cutoff]['pairs']
     mask = run_df['pairs'].isin(good_pairs)
     sub_df = run_df[mask]
+    num_pairs = len(sub_df['pairs'].unique())
     runs = sub_df[sub_df['types'] == desired_type]['transfer lengths (core genome)'].to_numpy().astype(float)
-    return runs
+    return runs, num_pairs
 
 
 def _fclusters_to_dict(clusters):
@@ -512,7 +513,7 @@ def get_empirical_div_dist(local_divs, genome_divs, num_bins, separate_clades, c
 
 
 def prepare_HMM_results_for_B_vulgatus(save_path, cf_cutoff, cache_intermediate=True,
-                                       merge_threshold=0, mode='count', filter_threshold=5):
+                                       merge_threshold=0, mode='count', filter_threshold=2):
     """
     Handy function to extract useful data from HMM raw results
     Filtering genome pairs according to the clonal fraction, such that can control the degree of
@@ -532,11 +533,6 @@ def prepare_HMM_results_for_B_vulgatus(save_path, cf_cutoff, cache_intermediate=
 
     within_counts, between_counts, full_df = merge_and_filter_transfers(dat, separate_clade=True,
                                             merge_threshold=merge_threshold, filter_threshold=filter_threshold)
-    if cache_intermediate:
-        full_df.to_pickle(
-            os.path.join(config.analysis_directory, "closely_related", 'third_pass',
-                         'Bacteroides_vulgatus_57955' + '_all_transfers_two_clades.pickle'))
-
     # compute the total length of transferred regions
     pair_to_total_length = full_df.groupby('pairs')['lengths'].sum().to_dict()
     full_lengths = np.array([pair_to_total_length.get(x, 0) for x in dat['pairs']]) * config.second_pass_block_size
@@ -580,4 +576,11 @@ def prepare_HMM_results_for_B_vulgatus(save_path, cf_cutoff, cache_intermediate=
     # only keeping transfer events from pairs passing the clonal fraction threshold
     passed_pairs = list(compress(dat['pairs'], mask))  # compress is concatenating lists
     passed_full_df = full_df[full_df['pairs'].isin(passed_pairs)]
+
+    if cache_intermediate:
+        full_df['clonal fraction >80%'] = full_df['pairs'].isin(passed_pairs)
+        full_df.to_pickle(
+            os.path.join(config.analysis_directory, "closely_related", 'third_pass',
+                         'Bacteroides_vulgatus_57955' + '_all_transfers_two_clades.pickle'))
+
     return x, y1, y2, passed_full_df

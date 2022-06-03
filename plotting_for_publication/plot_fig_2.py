@@ -175,14 +175,17 @@ if __name__ == "__main__":
 
     save_path = config.B_vulgatus_data_path
     BLOCK_SIZE = config.second_pass_block_size
-    clonal_divs, within_counts, between_counts, full_df = close_pair_utils.prepare_HMM_results_for_B_vulgatus(
+    clonal_divs, within_counts, between_counts, filtered_full_df = close_pair_utils.prepare_HMM_results_for_B_vulgatus(
         save_path, 0.8, cache_intermediate=True, merge_threshold=0)
+
+    print(np.sum((within_counts>0) | (between_counts>0)))
 
     transfer_df_path = os.path.join(config.analysis_directory, "closely_related", 'third_pass',
                  'Bacteroides_vulgatus_57955' + '_all_transfers_processed.pickle')
     if not os.path.exists(transfer_df_path):
         raise RuntimeError("Please run stage 3a scripts to obtain full genome length and divergences")
     transfer_df = pd.read_pickle(transfer_df_path)
+    transfer_df = transfer_df[transfer_df['clonal fraction >80%']]
 
     # within_lens = full_df[full_df['types']==0]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
     within_lens = transfer_df[transfer_df['types']==0]['transfer lengths (core genome)'].to_numpy()
@@ -192,7 +195,7 @@ if __name__ == "__main__":
     print("Median within transfer length: {}; mean within transfer length: {}".format(np.median(within_lens), np.mean(within_lens)))
     print("Median between transfer length: {}; mean between transfer length: {}".format(np.median(between_lens), np.mean(between_lens)))
     print("Total number of close pairs: %d, detected transfers: %d, within transfers: %d, between transfers: %d, mean length: %f" % (
-        len(clonal_divs), full_df.shape[0], np.sum(full_df['types'] == 0), np.sum(full_df['types'] == 1), np.mean(np.concatenate([within_lens, between_lens]))))
+        len(clonal_divs), filtered_full_df.shape[0], np.sum(filtered_full_df['types'] == 0), np.sum(filtered_full_df['types'] == 1), np.mean(np.concatenate([within_lens, between_lens]))))
 
     # mapping out grid
     fig = plt.figure(figsize=(7, 1.5))
@@ -244,3 +247,21 @@ if __name__ == "__main__":
     plot_distributions(fig, len_dist_ax, within_lens, between_lens)
     fig.patch.set_alpha(0.0)
     fig.savefig(os.path.join(config.figure_directory, 'fig2.pdf'))
+
+    # preparing the supp table of all transfer events
+    good_df = transfer_df
+    sample_mask, sample_names = parallel_utils.get_QP_sample_mask(species_name)
+    good_samples = sample_names[sample_mask]
+    good_df['Sample 1'] = [good_samples[pair[0]] for pair in good_df['pairs']]
+    good_df['Sample 2'] = [good_samples[pair[1]] for pair in good_df['pairs']]
+    good_df['between clade?'] = [['F', 'T'][i] for i in good_df['types']]
+    good_df.drop(columns=['starts', 'ends', 'types', 'lengths', 'pairs', 'clonal fraction >80%'], inplace=True)
+    df_to_save = good_df[
+        ['Sample 1', 'Sample 2', 'between clade?', 'synonymous divergences', 'divergences', 'core genome starts',
+         'core genome ends', 'transfer lengths (core genome)', 'contigs',
+         'reference genome starts', 'reference genome ends']]
+    df_to_save.columns = ['Sample 1', 'Sample 2', 'between clade?', 'synonymous divergences', 'divergences',
+                          'core genome starts',
+                          'core genome ends', 'transfer lengths (covered sites on core genome)', 'contigs',
+                          'reference genome starts', 'reference genome ends', ]
+    df_to_save.to_csv(os.path.join(config.figure_directory, 'supp_table', 'Bv_all_detected_transfers.csv'))

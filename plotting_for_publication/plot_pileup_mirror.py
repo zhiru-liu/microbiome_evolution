@@ -11,10 +11,10 @@ sys.path.append("..")
 import config
 
 
-def load_data_and_plot_mirror(between_host_path, within_host_path, ax, ind_to_plot=0, ylim=0.35):
+def load_data_and_plot_mirror(between_host_path, within_host_path, ax, ind_to_plot=0, ylim=0.35, colors=['tab:blue', 'tab:orange']):
     between_cumu_runs = np.loadtxt(between_host_path)
     within_cumu_runs = np.loadtxt(within_host_path)
-    plot_mirror_single_threshold(between_cumu_runs, within_cumu_runs, ax, ind_to_plot=ind_to_plot, ylim=ylim)
+    plot_mirror_single_threshold(between_cumu_runs, within_cumu_runs, ax, ind_to_plot=ind_to_plot, ylim=ylim, colors=colors)
     return between_cumu_runs, within_cumu_runs
 
 
@@ -53,6 +53,12 @@ def plot_mirror_single_threshold(between_cumu_runs, within_cumu_runs, ax, ind_to
     # decide which of the cumu_runs to plot
     ax.plot(between_cumu_runs[:, ind_to_plot], linewidth=1, color=colors[0])
     ax.plot(-within_cumu_runs[:, ind_to_plot], linewidth=1, color=colors[1])
+
+    xs = np.arange(between_cumu_runs.shape[0])
+    zeros = np.zeros(between_cumu_runs.shape[0])
+    ax.fill_between(xs, zeros, between_cumu_runs[:, ind_to_plot], color=colors[0], alpha=0.5, rasterized=True)
+    ax.fill_between(xs, -within_cumu_runs[:, ind_to_plot], zeros, color=colors[1], alpha=0.5, rasterized=True)
+
     ax.hlines(0, 0, between_cumu_runs.shape[0], 'black', linewidth=1)
     ax.set_xlim([0, between_cumu_runs.shape[0]])
     ax.set_ylim([-ylim, ylim])

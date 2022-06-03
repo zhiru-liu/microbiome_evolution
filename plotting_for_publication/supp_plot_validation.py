@@ -132,22 +132,23 @@ mpl.rcParams['legend.fontsize']  = 'small'
 # between_within_len_ax = fig.add_subplot(lower_grid[1])
 # between_within_count_ax = fig.add_subplot(lower_grid[0])
 # fig, axes = plt.subplots(ncols=3, nrows=1, figsize=(6.5, 2.), gridspec_kw={'width_ratios': [1,1.1,0.7], 'wspace':0.6})
-fig = plt.figure(figsize=(4.5, 3.5))
+fig = plt.figure(figsize=(5, 3.7))
 # create a 1-row 3-column container as the left container
-gs_top = gridspec.GridSpec(1, 2, width_ratios=[1, 1.1])
-# create a 1-row 1-column grid as the right container
-gs_bottom = gridspec.GridSpec(1, 2)
-# add plots to the nested structure
-T_est_ax = fig.add_subplot(gs_top[0,0])
-count_ax = fig.add_subplot(gs_top[0,1])
-true_len_ax = fig.add_subplot(gs_bottom[0,0])
-cf_ax = fig.add_subplot(gs_bottom[0,1])
+gs_tl = gridspec.GridSpec(1, 1)
+gs_tr = gridspec.GridSpec(1, 1)
+gs_bl = gridspec.GridSpec(1, 1)
+gs_br = gridspec.GridSpec(1, 1)
 
-gs_top.update(bottom=0.55)
-# gs_right.update(left=0.72, top=0.75, bottom=0.25)
-# also, we want to get rid of the horizontal spacing in the left gridspec
-# gs_left.update(wspace=0.4)
-gs_bottom.update(top=0.45)
+# add plots to the nested structure
+T_est_ax = fig.add_subplot(gs_tl[0,0])
+count_ax = fig.add_subplot(gs_tr[0,0])
+true_len_ax = fig.add_subplot(gs_br[0,0])
+cf_ax = fig.add_subplot(gs_bl[0,0])
+
+gs_tl.update(left=0.1, right=0.4, top=0.95, bottom=0.60)
+gs_tr.update(left=0.4, right=0.85, top=0.95, bottom=0.60)
+gs_bl.update(left=0.1, right=0.4, top=0.48, bottom=0.13)
+gs_br.update(left=0.55, right=0.9, top=0.48, bottom=0.13)
 
 # fig2, axes2 = plt.subplots(ncols=2, nrows=1, figsize=(3, 2.5), gridspec_kw={'width_ratios': [1,1]})
 # load up data
@@ -173,4 +174,4 @@ plot_clonal_T_est_correlation(T_est_ax, true_divs, est_Ts)
 plot_length_distributions(true_len_ax, true_lens, full_df['lengths'].astype(float))
 plot_clonal_frac_correlation(cf_ax, true_cf, inferred_cf)
 
-fig.savefig(os.path.join(config.figure_directory, "supp_HMM_validation.pdf"), bbox_inches="tight")
+fig.savefig(os.path.join(config.figure_directory, "supp_HMM_validation.pdf"))

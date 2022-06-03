@@ -8,7 +8,7 @@ sys.path.append("..")
 import config
 from utils import typical_pair_utils
 
-def process_species(species_name, len_threshold=None):
+def process_species(ax, species_name, len_threshold=None):
     save_path = os.path.join(run_data_dir, 'within_hosts', '{}.pickle'.format(species_name))
     try:
         within_runs_data = pickle.load(open(save_path, 'rb'))
@@ -46,12 +46,13 @@ def process_species(species_name, len_threshold=None):
     ks_dist, p_val = ks_2samp(within_long_runs, between_long_runs)
 
     bins = np.arange(max(max(between_long_runs), max(within_long_runs)))
-    fig, ax = plt.subplots()
+    # fig, ax = plt.subplots()
     _ = ax.hist(within_long_runs, cumulative=-1, density=True, bins=bins, histtype='step')
     _ = ax.hist(between_long_runs, cumulative=-1, density=True, bins=bins, histtype='step')
-    ax.set_title("length threshold: {0}, p={1:.2e}".format(int(len_threshold), p_val))
-    fig.savefig(os.path.join(config.analysis_directory, 'typical_pairs', 'long_run_sums', '{}.pdf'.format(species_name)))
-    plt.close()
+    # ax.set_title("length threshold: {0}, p={1:.2e}".format(int(len_threshold), p_val))
+    ax.set_title("$p={0:.2e}$".format(int(len_threshold), p_val))
+    # fig.savefig(os.path.join(config.analysis_directory, 'typical_pairs', 'long_run_sums', '{}.pdf'.format(species_name)))
+    # plt.close()
 
 
 run_data_dir = os.path.join(config.analysis_directory, 'typical_pairs', 'runs_data')

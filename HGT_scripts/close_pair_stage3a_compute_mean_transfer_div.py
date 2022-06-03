@@ -20,6 +20,7 @@ def compute_div_in_transfers(dh, transfer_df):
     contig_cum_lens = np.insert(np.cumsum(core_contig_lengths), 0, 0)
 
     divs = []
+    full_divs = []
     full_starts = []
     full_ends = []
     run_lengths = []
@@ -34,6 +35,7 @@ def compute_div_in_transfers(dh, transfer_df):
 
         full_to_snp_vec = full_to_syn_mask & full_coverage_vec
         full_coords = np.where(full_to_snp_vec)[0]
+        full_coord_to_snp_loc = {y: x for x, y in enumerate(np.where(full_coverage_vec)[0])}
 
         good_chromo = dh.chromosomes[syn_core_mask][coverage_vec]
         contig_lengths = parallel_utils.get_contig_lengths(good_chromo)
@@ -50,6 +52,10 @@ def compute_div_in_transfers(dh, transfer_df):
             full_start, full_end = full_coords[int(start)], full_coords[int(end)-1]  # right end is now inclusive
             full_starts.append(full_start)
             full_ends.append(full_end)
+            full_snp_start = full_coord_to_snp_loc[int(full_start)]  # for indexing the full snp vec
+            full_snp_end = full_coord_to_snp_loc[int(full_end)]
+            full_div = np.sum(full_snp_vec[full_snp_start:full_snp_end]) / float(full_snp_end - full_snp_start)
+            full_divs.append(full_div)
 
             # calculating the total number of sites in transfer (ignoring non-core genes)
             dist_between = np.sum(full_coverage_vec[full_start:full_end])
@@ -60,12 +66,13 @@ def compute_div_in_transfers(dh, transfer_df):
             contig = dh.chromosomes[ref_start]
             if contig != dh.chromosomes[ref_end]:
                 raise RuntimeWarning("Potential bug: Run event spanning two contigs! Species: {}; Pair: {}".format(species_name, pair))
-            contig_start = ref_location_to_contig_location(ref_start, contig, contig_list, contig_cum_lens)
-            contig_end = ref_location_to_contig_location(ref_end, contig, contig_list, contig_cum_lens)
+            contig_start = dh.locations[ref_location_to_contig_location(ref_start, contig, contig_list, contig_cum_lens)]
+            contig_end = dh.locations[ref_location_to_contig_location(ref_end, contig, contig_list, contig_cum_lens)]
             ref_contigs.append(contig)
             ref_starts.append(contig_start)
             ref_ends.append(contig_end)
-    transfer_df['divergences'] = divs
+    transfer_df['synonymous divergences'] = divs
+    transfer_df['divergences'] = full_divs
     transfer_df['core genome starts'] = full_starts
     transfer_df['core genome ends'] = full_ends
     transfer_df['transfer lengths (core genome)'] = run_lengths

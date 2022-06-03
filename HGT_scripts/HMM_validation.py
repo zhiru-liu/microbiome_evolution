@@ -7,6 +7,8 @@ sys.path.append("..")
 import config
 from utils import parallel_utils, close_pair_utils, hmm
 
+""" Old code for naive HMM validation. Updated code in CPHMM_validation.py """
+
 
 def test_species(species_name, transfer_div=None, debug=False):
     dh = parallel_utils.DataHoarder(

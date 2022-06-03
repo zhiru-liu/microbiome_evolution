@@ -70,7 +70,7 @@ def plot_example_run_length_dist(dist_ax, snp_vec_axes, between_pair1, between_p
                 histtype='step', label='between host 1')
     _ = dist_ax.hist(between_example_runs2 * between_div2, density=True, cumulative=-1, bins=1000,
                 histtype='step', label='between host 2')
-    dist_ax.axvline(within_example_runs[np.argsort(within_example_runs)[-3]] * within_div, label='temporal event', linestyle='--', color='k')
+    dist_ax.axvline(within_example_runs[np.argsort(within_example_runs)[-3]] * within_div, label='within-host sweep event', linestyle='--', color='k')
     xs = np.linspace(0, 10)
     dist_ax.plot(xs, np.exp(-xs), label='Random mutations')
     dist_ax.set_yscale('log')
@@ -97,12 +97,12 @@ def plot_example_run_length_dist(dist_ax, snp_vec_axes, between_pair1, between_p
 
 
 # setting up axes
-fig1, ax = plt.subplots(figsize=(3, 2))
+fig1, ax = plt.subplots(figsize=(4, 3))
 fig2, axes = plt.subplots(3, 1, figsize=(4, 2))
 
 # plot
 plot_example_run_length_dist(ax, axes,
                              between_pair1=(152, 224), between_pair2=(42, 69))
 
-fig1.savefig(os.path.join(config.figure_directory, "supp_example_run_length_distributions.pdf"), bbox_inches='tight')
+fig1.savefig(os.path.join(config.figure_directory, 'supp', "supp_example_run_length_distributions.pdf"), bbox_inches='tight')
 # fig2.savefig("example_genomes.pdf", bbox_inches='tight')
