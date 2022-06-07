@@ -133,6 +133,6 @@ if __name__=='__main__':
 
     good_species_list = parse_midas_data.parse_good_species_list()
     for species_name in good_species_list:
-        print species_name
-        print get_number_of_genomes(species_name)
+        print(species_name)
+        print(get_number_of_genomes(species_name))
     

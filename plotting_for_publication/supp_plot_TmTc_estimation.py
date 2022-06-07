@@ -48,7 +48,7 @@ all_Tc = []
 all_close_frac = []
 
 # set up figure
-fig, ax = plt.subplots(figsize=(6, 4))
+fig, ax = plt.subplots(figsize=(6, 2.5))
 ax2 = ax.twinx()
 # locs = np.arange(len(species_to_plot))
 locs = []

@@ -65,21 +65,21 @@ def plot_example_run_length_dist(dist_ax, snp_vec_axes, between_pair1, between_p
 
     # plot the histograms
     _ = dist_ax.hist(within_example_runs * within_div, density=True, cumulative=-1, bins=1000,
-                histtype='step', label='within host')
+                histtype='step', label='within host', color=config.within_host_color)
     _ = dist_ax.hist(between_example_runs1 * between_div1, density=True, cumulative=-1, bins=1000,
-                histtype='step', label='between host 1')
+                histtype='step', label='between host 1', linestyle='dotted', color=config.between_host_color)
     _ = dist_ax.hist(between_example_runs2 * between_div2, density=True, cumulative=-1, bins=1000,
-                histtype='step', label='between host 2')
+                histtype='step', label='between host 2', color=config.between_host_color)
     dist_ax.axvline(within_example_runs[np.argsort(within_example_runs)[-3]] * within_div, label='within-host sweep event', linestyle='--', color='k')
     xs = np.linspace(0, 10)
-    dist_ax.plot(xs, np.exp(-xs), label='Random mutations')
+    dist_ax.plot(xs, np.exp(-xs), label='Random mutations', color='tab:red')
     dist_ax.set_yscale('log')
     dist_ax.legend()
     dist_ax.set_xlim([0, dist_ax.get_xlim()[1]])
     ymin = 0.8 / max(len(within_example_runs),
                      len(between_example_runs1), len(between_example_runs2))
     dist_ax.set_ylim([ymin, dist_ax.get_ylim()[1]])
-    dist_ax.set_xlabel("Normalized tract length ($l\cdot d$)")
+    dist_ax.set_xlabel("Normalized run length ($l\cdot d$)")
     dist_ax.set_ylabel("Prob longer than $l$")
 
     # plot the snp_vectors

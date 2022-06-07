@@ -36,7 +36,7 @@ within_host_path = os.path.join(base_path, 'within_host.csv')
 within_thresholds = np.loadtxt(os.path.join(base_path, 'within_host_thresholds.txt'))
 
 between_cumu_runs, within_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
-    between_host_path, within_host_path, mirror_ax, ind_to_plot=0, ylim=0.5, colors=['tab:blue', 'tab:green'])
+    between_host_path, within_host_path, mirror_ax, ind_to_plot=0, ylim=0.5, colors=[config.between_host_color, config.within_host_color])
 
 pval_ax = axes[1]
 n_reps = 2000.

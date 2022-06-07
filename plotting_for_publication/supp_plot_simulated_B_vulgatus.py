@@ -90,13 +90,14 @@ mpl.rcParams['lines.linewidth'] = 1
 mpl.rcParams['legend.fontsize']  = 'small'
 
 fig = plt.figure(figsize=(4.5, 2.))
+# fig = plt.figure(figsize=(6, 2.8))
 gs_lf = gridspec.GridSpec(1, 1)
 gs_rt = gridspec.GridSpec(1, 1)
 between_within_count_ax = fig.add_subplot(gs_lf[0,0])
 between_within_len_ax = fig.add_subplot(gs_rt[0,0])
 
 # now the plots are on top of each other, we'll have to adjust their edges so that they won't overlap
-gs_lf.update(right=0.48, top=0.8, bottom=0.2)
+gs_lf.update(right=0.48, top=0.76, bottom=0.24)
 gs_rt.update(left=0.63, top=0.76, bottom=0.24)
 
 path = os.path.join(config.analysis_directory, 'HMM_validation', 'Bacteroides_vulgatus_57955.pickle')
@@ -116,4 +117,4 @@ plot_between_within_clade(between_within_count_ax, est_Ts, within_counts, betwee
 # plot_between_within_clade(between_within_count_ax, true_divs, true_within_counts, true_between_counts)
 plot_between_within_length_distributions(between_within_len_ax, full_df)
 
-fig.savefig(os.path.join(config.figure_directory, "supp_simulated_Bv.pdf"), bbox_inches="tight")
+fig.savefig(os.path.join(config.figure_directory, 'supp', "supp_simulated_Bv.pdf"), bbox_inches="tight")

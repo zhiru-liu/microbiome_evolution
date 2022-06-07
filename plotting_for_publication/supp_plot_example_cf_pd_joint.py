@@ -58,4 +58,4 @@ for i in range(3):
         scatter_ax.legend()
         scatter_ax.set_title(figure_utils.get_pretty_species_name(species_name))
 
-fig.savefig(os.path.join(config.figure_directory, 'supp_joint_examples.pdf'), bbox_inches='tight', dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_joint_examples.pdf'), bbox_inches='tight', dpi=600)

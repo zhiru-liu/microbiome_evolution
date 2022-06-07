@@ -101,6 +101,10 @@ def plot_allele_freq_zoomin(axes, histo_axes, sample_pair, plot_locations=True):
     histo_axes[0].set_xticklabels([])
     histo_axes[0].set_yticklabels([])
     histo_axes[1].set_yticklabels([])
+    histo_axes[0].spines['top'].set_visible(False)
+    histo_axes[0].spines['right'].set_visible(False)
+    histo_axes[1].spines['top'].set_visible(False)
+    histo_axes[1].spines['right'].set_visible(False)
     histo_axes[1].set_xlabel('Site Frequency Spectrum')
 
     # good_sites_before = good_sites_before[start:end]
@@ -181,9 +185,9 @@ def plot_max_run_histo(ax, species_name):
     within_host_max_runs = np.loadtxt(os.path.join(max_run_dir, species_name + '_within.txt'), ndmin=1)
     between_host_max_runs = np.loadtxt(os.path.join(max_run_dir, species_name + '_between.txt'))
     ax.hist([between_host_max_runs, within_host_max_runs], bins=100, density=True,
-            cumulative=-1, histtype='step', label=['Between host', 'Within host'])
-    ax.set_xlabel('Max homozygous run length\n(4D syn sites)')
-    ax.set_ylabel('Fraction longer than')
+            cumulative=-1, histtype='step', label=['Between host', 'Within host'], color=[config.between_host_color, config.within_host_color])
+    ax.set_xlabel('Max homozygous run length\n(4D syn sites), $x$')
+    ax.set_ylabel('Fraction longer than $x$')
     ax.legend()
 
 
@@ -209,13 +213,13 @@ def plot_example_snps(axes):
 
     # xlim = min(xlim, len(snp_blk) - 1)
     axes[0].imshow(np.expand_dims(barcode1, axis=0), aspect='auto',
-                   cmap=mpl.colors.ListedColormap(['white', 'tab:blue']), interpolation='nearest')
+                   cmap=mpl.colors.ListedColormap(['white', config.within_host_color]), interpolation='nearest')
     axes[1].imshow(np.expand_dims(barcode2, axis=0), aspect='auto',
-                   cmap=mpl.colors.ListedColormap(['white', 'tab:blue']), interpolation='nearest')
+                   cmap=mpl.colors.ListedColormap(['white', config.within_host_color]), interpolation='nearest')
     axes[2].imshow(np.expand_dims(barcode3, axis=0), aspect='auto',
-                   cmap=mpl.colors.ListedColormap(['white', 'tab:blue']), interpolation='nearest')
+                   cmap=mpl.colors.ListedColormap(['white', config.between_host_color]), interpolation='nearest')
     axes[3].imshow(np.expand_dims(barcode4, axis=0), aspect='auto',
-                   cmap=mpl.colors.ListedColormap(['white', 'tab:blue']), interpolation='nearest')
+                   cmap=mpl.colors.ListedColormap(['white', config.between_host_color]), interpolation='nearest')
 
     # axes[0].plot(within_snp_vec1, linewidth=0.3)
     # axes[1].plot(within_snp_vec2, linewidth=0.3)
@@ -279,7 +283,7 @@ max_run_ax1 = fig.add_subplot(bottom_right_grid[0])
 max_run_ax2 = fig.add_subplot(bottom_right_grid[1])
 
 # plotting
-minimal_genes, maximal_genes = plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], [histo_ax1, histo_ax2], ['700114218', '700171115'])
+minimal_genes, maximal_genes = plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], [histo_ax1, histo_ax2], ['700114218', '700171115'], plot_locations=False)
 # plot_local_polymorphism([local_ax1, local_ax2], ['700114218', '700171115'])
 
 plot_max_run_histo(max_run_ax1, 'Bacteroides_vulgatus_57955_same_clade')

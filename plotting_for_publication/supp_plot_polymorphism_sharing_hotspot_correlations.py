@@ -2,6 +2,7 @@
 from scipy.stats import spearmanr, pearsonr
 import numpy as np
 import os
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import config
 from plotting_for_publication import default_fig_styles
@@ -50,8 +51,10 @@ fig, axes = plt.subplots(1, 1, figsize=(3, 2), dpi=600)
 # axes[0].set_ylabel('Sharing fraction')
 
 axes.plot(smooth_pi[mask], between_data[mask, 1], '.', markersize=1, rasterized=True)
-axes.plot(smooth_pi[~mask], between_data[~mask, 1], '.', markersize=1, color='tab:orange', rasterized=True, label='ribosomal proteins')
+axes.plot(smooth_pi[~mask], between_data[~mask, 1], '.', markersize=1, color='tab:orange', rasterized=True, label='enriched for\nribosomal proteins')
+mpl.rcParams['legend.frameon']  = True
+axes.legend()
 axes.set_xlabel('$\pi$')
 axes.set_ylabel('Sharing fraction')
 
-plt.savefig(os.path.join(config.figure_directory, 'supp', 'pi_pileup_correlation.pdf'), bbox_inches='tight')
+plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_pi_pileup_correlation.pdf'), bbox_inches='tight')

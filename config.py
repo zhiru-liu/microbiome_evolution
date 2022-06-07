@@ -81,6 +81,10 @@ typical_clonal_fraction_cutoff = 0.1
 coverage_zscore_cutoff = 2
 sample_zscore_cutoff = 2
 
+# color convention
+within_host_color = '#57C398'
+between_host_color = '#2c7fb8'
+
 # Comment this out
 #from parsers.parse_HMP_data import *
 # and uncomment this

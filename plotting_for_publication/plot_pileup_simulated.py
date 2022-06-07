@@ -70,28 +70,41 @@ length_scan_median = np.loadtxt(os.path.join(config.analysis_directory, 'sharing
 length_scan_cvs = np.loadtxt(os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'length_scan_cvs.csv'))
 thresholds = np.arange(10, 35, 2) / 0.00825
 
-fig, ax = plt.subplots(2, 2, figsize=(4, 3))
+fig, axes = plt.subplots(2, 2, figsize=(4, 3))
 plt.subplots_adjust(wspace=0.5, hspace=0.5)
 # plot rbymu scan
-ax[1, 0].errorbar(rbymu, mean_sim_medians, yerr=sigma_sim_medians, fmt='o', markersize=3)
-ax[1, 1].errorbar(rbymu, mean_sim_cvs, yerr=sigma_sim_csv, fmt='o', markersize=3)
-ax[1, 1].set_ylim([0, 1])
-ax[1, 0].set_xlabel(r'$r/\mu$')
-ax[1, 1].set_xlabel(r'$r/\mu$')
-ax[1, 0].set_ylabel('Median sharing fraction')
-ax[1, 1].set_ylabel('CV')
+axes[0, 1].errorbar(rbymu, mean_sim_medians, yerr=sigma_sim_medians, fmt='o', markersize=3)
+axes[1, 1].errorbar(rbymu, mean_sim_cvs, yerr=sigma_sim_csv, fmt='o', markersize=3)
+axes[1, 1].set_ylim([0, 1])
+axes[0, 1].set_xlabel(r'$r/\mu$')
+axes[1, 1].set_xlabel(r'$r/\mu$')
+axes[0, 1].set_ylabel('Median sharing fraction')
+axes[1, 1].set_ylabel('CV')
 
 # plot threshold length scan
-ax[0, 0].errorbar(thresholds, np.mean(length_scan_median, axis=0), yerr=np.std(length_scan_median, axis=0), fmt='o', markersize=3)
-ax[0, 1].errorbar(thresholds, np.mean(length_scan_cvs, axis=0), yerr=np.std(length_scan_cvs, axis=0), fmt='o', markersize=3)
-ax[0, 1].set_ylim([0, 1])
-ax[0, 0].set_xlabel('threshold / bps')
-ax[0, 1].set_xlabel('threshold / bps')
-ax[0, 0].set_ylabel('Median sharing fraction')
-ax[0, 1].set_ylabel('CV')
+axes[0, 0].errorbar(thresholds, np.mean(length_scan_median, axis=0), yerr=np.std(length_scan_median, axis=0), fmt='o', markersize=3)
+axes[1, 0].errorbar(thresholds, np.mean(length_scan_cvs, axis=0), yerr=np.std(length_scan_cvs, axis=0), fmt='o', markersize=3)
+axes[1, 0].set_ylim([0, 1])
+axes[0, 0].set_xlabel('threshold / bps')
+axes[1, 0].set_xlabel('threshold / bps')
+axes[0, 0].set_ylabel('Median sharing fraction')
+axes[1, 0].set_ylabel('CV')
 
 # Hard coded B. vulgatus median sharing fraction...
-ax[0, 0].axhline(0.02797646, linestyle='--', color='grey')
-ax[0, 0].axvline(3400, linestyle='--', color='grey')
+axes[0, 0].axhline(0.02797646, linestyle='--', color='grey')
+axes[0, 0].axvline(3400, linestyle='--', color='grey')
 
-fig.savefig(os.path.join(config.figure_directory, 'pileup_fig', 'varying_rho.pdf'), bbox_inches='tight')
+ax = axes[0, 0]
+ax.text(-0.00, 1.12, "A", transform=ax.transAxes,
+      fontsize=7, fontweight='bold', va='top', ha='left')
+ax = axes[0, 1]
+ax.text(-0.00, 1.12, "B", transform=ax.transAxes,
+              fontsize=7, fontweight='bold', va='top', ha='left')
+ax = axes[1, 0]
+ax.text(-0.00, 1.12, "C", transform=ax.transAxes,
+              fontsize=7, fontweight='bold', va='top', ha='left')
+ax = axes[1, 1]
+ax.text(-0.00, 1.12, "D", transform=ax.transAxes,
+              fontsize=7, fontweight='bold', va='top', ha='left')
+
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_BSMC_pileup_CV_varying_rho.pdf'), bbox_inches='tight')

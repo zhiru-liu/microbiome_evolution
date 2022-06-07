@@ -4,7 +4,7 @@ import config
 import gzip
 import os.path
 import os
-import midas_db_utils
+from utils import midas_db_utils
 
 core_genes_directory = ("%score_genes/" % config.data_directory)
 external_core_genes_directory = ("%score_genes/external/" % config.data_directory)

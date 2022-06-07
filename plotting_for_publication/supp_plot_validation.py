@@ -147,8 +147,8 @@ cf_ax = fig.add_subplot(gs_bl[0,0])
 
 gs_tl.update(left=0.1, right=0.4, top=0.95, bottom=0.60)
 gs_tr.update(left=0.4, right=0.85, top=0.95, bottom=0.60)
-gs_bl.update(left=0.1, right=0.4, top=0.48, bottom=0.13)
-gs_br.update(left=0.55, right=0.9, top=0.48, bottom=0.13)
+gs_bl.update(left=0.1, right=0.4, top=0.45, bottom=0.10)
+gs_br.update(left=0.55, right=0.9, top=0.45, bottom=0.10)
 
 # fig2, axes2 = plt.subplots(ncols=2, nrows=1, figsize=(3, 2.5), gridspec_kw={'width_ratios': [1,1]})
 # load up data
@@ -174,4 +174,14 @@ plot_clonal_T_est_correlation(T_est_ax, true_divs, est_Ts)
 plot_length_distributions(true_len_ax, true_lens, full_df['lengths'].astype(float))
 plot_clonal_frac_correlation(cf_ax, true_cf, inferred_cf)
 
-fig.savefig(os.path.join(config.figure_directory, "supp_HMM_validation.pdf"))
+
+T_est_ax.text(-0.08, 1.12, "A", transform=T_est_ax.transAxes,
+        fontsize=7, fontweight='bold', va='top', ha='left')
+count_ax.text(-0.08, 1.12, "B", transform=count_ax.transAxes,
+        fontsize=7, fontweight='bold', va='top', ha='left')
+cf_ax.text(-0.08, 1.12, "C", transform=cf_ax.transAxes,
+        fontsize=7, fontweight='bold', va='top', ha='left')
+true_len_ax.text(-0.08, 1.12, "D", transform=true_len_ax.transAxes,
+        fontsize=7, fontweight='bold', va='top', ha='left')
+
+fig.savefig(os.path.join(config.figure_directory, 'supp', "supp_HMM_validation.pdf"), bbox_inches='tight')

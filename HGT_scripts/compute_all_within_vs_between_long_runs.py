@@ -32,7 +32,7 @@ def process_species(ax, species_name, len_threshold=None):
                 theta = same_clade
         else:
             theta = typical_pair_utils.compute_theta(species_name)
-        len_threshold = 50 / theta
+        len_threshold = 30 / theta
         print(species_name, len_threshold)
 
     # within_long_runs_dict = {k:np.sum(within_runs_data[k]>len_threshold) for k in within_runs_data}
@@ -40,26 +40,38 @@ def process_species(ax, species_name, len_threshold=None):
     within_long_runs_dict = {k:np.sum(within_runs_data[k][within_runs_data[k]>len_threshold]) for k in within_runs_data}
     between_long_runs_dict = {k:np.sum(between_runs_data[k][between_runs_data[k]>len_threshold]) for k in between_runs_data}
 
+
     between_long_runs = between_long_runs_dict.values()
     within_long_runs = within_long_runs_dict.values()
+    filepath = os.path.join(config.analysis_directory, 'typical_pairs', 'long_run_sums', species_name+'between.csv')
+    np.savetxt(filepath, between_long_runs)
+    filepath = os.path.join(config.analysis_directory, 'typical_pairs', 'long_run_sums', species_name+'within.csv')
+    np.savetxt(filepath, within_long_runs)
 
     ks_dist, p_val = ks_2samp(within_long_runs, between_long_runs)
 
     bins = np.arange(max(max(between_long_runs), max(within_long_runs)))
-    # fig, ax = plt.subplots()
-    _ = ax.hist(within_long_runs, cumulative=-1, density=True, bins=bins, histtype='step')
-    _ = ax.hist(between_long_runs, cumulative=-1, density=True, bins=bins, histtype='step')
-    # ax.set_title("length threshold: {0}, p={1:.2e}".format(int(len_threshold), p_val))
-    ax.set_title("$p={0:.2e}$".format(int(len_threshold), p_val))
-    # fig.savefig(os.path.join(config.analysis_directory, 'typical_pairs', 'long_run_sums', '{}.pdf'.format(species_name)))
-    # plt.close()
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(3,2))
+        _ = ax.hist(within_long_runs, cumulative=-1, density=True, bins=bins, histtype='step')
+        _ = ax.hist(between_long_runs, cumulative=-1, density=True, bins=bins, histtype='step')
+        # ax.set_title("length threshold: {0}, p={1:.2e}".format(int(len_threshold), p_val))
+        ax.set_title("$p={0:.2e}$".format(p_val))
+        fig.savefig(os.path.join(config.analysis_directory, 'typical_pairs', 'long_run_sums_plots', '{}.pdf'.format(species_name)), bbox_inches='tight')
+        plt.close()
+    else:
+        _ = ax.hist(within_long_runs, cumulative=-1, density=True, bins=bins, histtype='step')
+        _ = ax.hist(between_long_runs, cumulative=-1, density=True, bins=bins, histtype='step')
+        # ax.set_title("length threshold: {0}, p={1:.2e}".format(int(len_threshold), p_val))
+        ax.set_title("$p={0:.2e}$".format(p_val))
 
 
-run_data_dir = os.path.join(config.analysis_directory, 'typical_pairs', 'runs_data')
-for filename in os.listdir(os.path.join(run_data_dir, 'between_hosts')):
-    if filename.startswith('.'):
-        continue
-    species_name = filename.split('.')[0]
-    process_species(species_name)
+if __name__ == '__main__':
+    run_data_dir = os.path.join(config.analysis_directory, 'typical_pairs', 'runs_data')
+    for filename in os.listdir(os.path.join(run_data_dir, 'between_hosts')):
+        if filename.startswith('.'):
+            continue
+        species_name = filename.split('.')[0]
+        process_species(None, species_name)
 
 # process_species('Eubacterium_rectale_56927', len_threshold=1160)
