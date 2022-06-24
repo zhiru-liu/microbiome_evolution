@@ -90,6 +90,7 @@ def prepare_trend_line(x, y):
 if __name__ == "__main__":
     trend_line = True
     colored = True  # whether to use clonal fraction for color code
+    if_counts = False
     second_pass_dir = os.path.join(config.analysis_directory, "closely_related", "second_pass")
     data_dir = os.path.join(config.analysis_directory, "closely_related", "third_pass")
 
@@ -113,10 +114,13 @@ if __name__ == "__main__":
         # x: number of clonal snps; or the expected number of total snps; or the clonal divergence
         # y: number of detected transfers; or the total length of transfer regions
         x = df['clonal divs'].to_numpy()
-        y = df['normalized transfer counts'].to_numpy()
         div_cutoff = 3.e-4
         cf = df['clonal fractions'][x < div_cutoff]
-        y = y[x < div_cutoff]
+        if if_counts:
+            y = df['normalized transfer counts'].to_numpy()
+            y = y[x < div_cutoff]
+        else:
+            y = 1 - cf
         x = x[x < div_cutoff]
 
         if colored:
@@ -128,14 +132,22 @@ if __name__ == "__main__":
 
         ax.set_title(species_name)
         ax.set_xlabel("Expected clonal snps")
-        ax.set_ylabel("Num detected transfers per 1Mbps")
+        if if_counts:
+            ax.set_ylabel("Num detected transfers per 1Mbps")
+        else:
+            ax.set_ylabel("Recombined fraction")
         if trend_line:
             cf = df['clonal fractions']
             # only using the sufficiently close pairs to fit trend line
             x_fit = df['clonal divs'].to_numpy()
-            y_fit = df['normalized transfer counts'].to_numpy()
-            x_fit = x_fit[cf >= config.clonal_fraction_cutoff]
-            y_fit = y_fit[cf >= config.clonal_fraction_cutoff]
+            if if_counts:
+                y_fit = df['normalized transfer counts'].to_numpy()
+            else:
+                y_fit = 1 - df['clonal fractions'].to_numpy()
+
+            cf_cutoff = config.clonal_fraction_cutoff
+            x_fit = x_fit[cf >= cf_cutoff]
+            y_fit = y_fit[cf >= cf_cutoff]
             x_plot, y_plot, sigmas = prepare_trend_line(x_fit, y_fit)
 
             ax.plot(x_plot, y_plot)
@@ -143,12 +155,21 @@ if __name__ == "__main__":
                 ax.fill_between(x_plot, y_plot - sigmas,
                                 y_plot + sigmas, alpha=0.25)
                 df_save = pd.DataFrame(data={'x':x_plot, 'y':y_plot, 'sigma':sigmas})
-                df_save.to_csv(os.path.join(config.analysis_directory,
-                    "closely_related", "fourth_pass", "{}.csv".format(species_name)))
+                if if_counts:
+                    df_save.to_csv(os.path.join(config.analysis_directory,
+                        "closely_related", "fourth_pass", "{}.csv".format(species_name)))
+                else:
+                    df_save.to_csv(os.path.join(config.analysis_directory,
+                        "closely_related", "fourth_pass", "{}_length.csv".format(species_name)))
         ax.set_xlim([0, div_cutoff])
         ax.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
         fig.tight_layout()
-        fig.savefig(os.path.join(config.analysis_directory,
-                                 "closely_related", "wall_clock_v6",
-                                 "{}.pdf".format(species_name)), dpi=300)
+        if if_counts:
+            fig.savefig(os.path.join(config.analysis_directory,
+                                     "closely_related", "wall_clock_v6",
+                                     "{}.pdf".format(species_name)), dpi=300)
+        else:
+            fig.savefig(os.path.join(config.analysis_directory,
+                                     "closely_related", "wall_clock_v6_length",
+                                     "{}.pdf".format(species_name)), dpi=300)
         plt.close()

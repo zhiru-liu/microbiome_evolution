@@ -46,6 +46,7 @@ Tc_cutoffs = json.load(open(os.path.join(config.analysis_directory, 'misc', 'Tc_
 all_Tm = []
 all_Tc = []
 all_close_frac = []
+all_total_pairs = []
 
 # set up figure
 fig, ax = plt.subplots(figsize=(6, 2.5))
@@ -116,6 +117,7 @@ for i, species_name in enumerate(species_to_plot):
     all_Tm.append(Tm)
     all_Tc.append(Tc)
     all_close_frac.append(close_fraction)
+    all_total_pairs.append(total_pairs)
 
     # now plot the distribution of rates
 
@@ -140,4 +142,5 @@ df['d(Tc)'] = all_Tc
 df['d(Tm)'] = all_Tm
 df['Close pair fraction'] = all_close_frac
 df['Tc/Tm'] = df['d(Tc)'] / df['d(Tm)']
+df['Total pairs'] = all_total_pairs
 df.to_csv(os.path.join(config.figure_directory, 'supp_table', 'TcTm_estimation.csv'))

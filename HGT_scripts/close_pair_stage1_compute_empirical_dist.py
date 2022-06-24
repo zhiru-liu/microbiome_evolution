@@ -38,6 +38,9 @@ for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
     if species_name == 'Bacteroides_vulgatus_57955':
         separate_clades = True
         clade_cutoff = 0.03
+    elif species_name == 'Alistipes_shahii_62199':
+        separate_clades = True
+        clade_cutoff = 0.04
     else:
         separate_clades = False
         clade_cutoff = None

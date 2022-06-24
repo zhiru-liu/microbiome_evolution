@@ -187,7 +187,7 @@ def plot_max_run_histo(ax, species_name):
     ax.hist([between_host_max_runs, within_host_max_runs], bins=100, density=True,
             cumulative=-1, histtype='step', label=['Between host', 'Within host'], color=[config.between_host_color, config.within_host_color])
     ax.set_xlabel('Max homozygous run length\n(4D syn sites), $x$')
-    ax.set_ylabel('Fraction longer than $x$')
+    ax.set_ylabel('Fraction $>x$')
     ax.legend()
 
 

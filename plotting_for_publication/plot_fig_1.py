@@ -60,6 +60,7 @@ def plot_cf_pd_joint(axes):
 
     # marg_ax.set_xscale('log')
     marg_ax.set_xticks([1, 500, 1000])
+    marg_ax.set_xticklabels(['1', '500', '1k'])
 
     scatter_ax.set_xlabel('Identical fraction')
     scatter_ax.set_ylabel('Pairwise syn divergence')

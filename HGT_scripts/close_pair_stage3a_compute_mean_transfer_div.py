@@ -86,14 +86,23 @@ if __name__ == "__main__":
     second_pass_dir = os.path.join(config.analysis_directory, "closely_related", "second_pass")
     data_dir = os.path.join(config.analysis_directory, "closely_related", "third_pass")
 
-    species_name = 'Bacteroides_vulgatus_57955'
+    species_name = 'Alistipes_shahii_62199'
     filepath = os.path.join(config.analysis_directory, "closely_related", 'third_pass',
-                 'Bacteroides_vulgatus_57955' + '_all_transfers_two_clades.pickle')
+                            'Alistipes_shahii_62199' + '_all_transfers_two_clades.pickle')
     dh = parallel_utils.DataHoarder(species_name=species_name, mode='QP', allowed_variants=['1D', '2D', '3D', '4D'])
     transfer_df = pd.read_pickle(filepath)
     transfer_df = compute_div_in_transfers(dh, transfer_df)
     transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass',
-                 'Bacteroides_vulgatus_57955' + '_all_transfers_processed.pickle'))
+                                       'Alistipes_shahii_62199' + '_all_transfers_processed.pickle'))
+
+    # species_name = 'Bacteroides_vulgatus_57955'
+    # filepath = os.path.join(config.analysis_directory, "closely_related", 'third_pass',
+    #              'Bacteroides_vulgatus_57955' + '_all_transfers_two_clades.pickle')
+    # dh = parallel_utils.DataHoarder(species_name=species_name, mode='QP', allowed_variants=['1D', '2D', '3D', '4D'])
+    # transfer_df = pd.read_pickle(filepath)
+    # transfer_df = compute_div_in_transfers(dh, transfer_df)
+    # transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass',
+    #              'Bacteroides_vulgatus_57955' + '_all_transfers_processed.pickle'))
 
     # for filename in os.listdir(second_pass_dir):
     #     if filename.startswith('.'):

@@ -8,7 +8,7 @@ from plotting_for_publication import plot_pileup_mirror
 
 species_name = 'Bacteroides_vulgatus_57955'
 compute_function_enrichment = False
-plot_polymorphism = False
+plot_polymorphism = True
 plot_within_host = False
 
 # loading the gene name array
@@ -164,8 +164,8 @@ if plot_polymorphism:
         np.savetxt(os.path.join(config.plotting_intermediate_directory, 'B_vulgatus_polymorphism.csv'),
                    np.vstack([pi, clade_pi]).transpose())
     kernel = np.ones(3000) / 3000.
-    ax.plot(np.convolve(pi, kernel, mode='same'))
-    ax.plot(np.convolve(clade_pi, kernel, mode='same'), label='largest clade')
+    ax.plot(np.convolve(pi, kernel, mode='same'), color='tab:grey', label='within species')
+    ax.plot(np.convolve(clade_pi, kernel, mode='same'), color='tab:blue', label='within largest clade')
     ax.legend()
     ax.set_xlim([0, between_cumu_runs.shape[0]])
     ax.set_xlabel("Genome location")

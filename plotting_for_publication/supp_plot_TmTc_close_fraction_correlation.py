@@ -14,8 +14,8 @@ scatter_size=2
 fig, axes = plt.subplots(1, 3, figsize=(6, 1.5))
 plt.subplots_adjust(wspace=0.3)
 
-TmTc_df = pd.read_csv(os.path.join(config.analysis_directory, 'misc', 'TmTc_estimation.csv'))
-TmTc_df['Tm/Tc'] = TmTc_df['Tm'] / TmTc_df['Tc']
+TmTc_df = pd.read_csv(os.path.join(config.figure_directory, 'supp_table', 'TcTm_estimation.csv'))
+TmTc_df['Tm/Tc'] = 1 / TmTc_df['Tc/Tm']
 
 axes[0].scatter(TmTc_df['Tm/Tc'], TmTc_df['Close pair fraction'], s=scatter_size)
 axes[0].set_xlabel('Tm / Tc')
@@ -40,4 +40,4 @@ axes[2].set_xlabel('Tm / Tc')
 axes[2].set_ylabel('Fraction of "close pairs"')
 axes[2].set_title("Neutral simulation (extended)")
 
-fig.savefig(os.path.join(config.analysis_directory, 'misc', 'TmTc_compare.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_TmTc_compare.pdf'), bbox_inches='tight')

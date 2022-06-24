@@ -63,7 +63,7 @@ def process_one_species(species_name, block_size, debug=False):
     good_pairs = second_pass_stats['pair_idxs']
     if debug:
         # good_pairs = good_pairs[:5]
-        clade_cutoff_bin = config.empirical_histogram_bins  # for B vulgatus separate clade
+        clade_cutoff_bin = config.empirical_histogram_bins  # for B vulgatus/ A. shahii separate clade
     else:
         clade_cutoff_bin = None
 
@@ -123,7 +123,7 @@ logging.basicConfig(
 
 CLONAL_FRAC_CUTOFF = 0.5  # config.clonal_fraction_cutoff
 BLOCK_SIZE = config.second_pass_block_size
-DEBUG = False
+DEBUG = True
 
 black_list = ['Bacteroides_xylanisolvens_57185', # for having extremely short contigs and short total core genome
               'Escherichia_coli_58110'] # for having extremely short contigs
@@ -134,10 +134,11 @@ for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
     if species_name.startswith('.'):
         continue
     if DEBUG:
-        species_name = 'Bacteroides_vulgatus_57955'
+        # species_name = 'Bacteroides_vulgatus_57955'
+        species_name = 'Alistipes_shahii_62199'
         # species_name = 'Bacteroides_massiliensis_44749'
         second_path_save_path = os.path.join(config.analysis_directory,
-                                             "closely_related", "debug", "{}_two_clades.pickle".format(species_name))
+                                             "closely_related", "two_clades", "{}_two_clades.pickle".format(species_name))
     else:
         second_path_save_path = os.path.join(config.analysis_directory,
                                  "closely_related", "second_pass", "{}.pickle".format(species_name))

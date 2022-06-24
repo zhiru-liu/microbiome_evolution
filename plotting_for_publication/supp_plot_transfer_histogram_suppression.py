@@ -44,7 +44,14 @@ for i in range(len(files_to_plot)):
     # load HMM inferred transfer distribution
     save_path = os.path.join(config.analysis_directory,
                              "closely_related", "third_pass", "{}_all_transfers.pickle".format(species_name))
-    full_df = pd.read_pickle(save_path)
+    run_df = pd.read_pickle(save_path)
+    data_dir = os.path.join(config.analysis_directory, "closely_related")
+    raw_df = pd.read_pickle(os.path.join(data_dir, 'third_pass', species_name + '.pickle'))
+
+    cf_cutoff = config.clonal_fraction_cutoff
+    good_pairs = raw_df[raw_df['clonal fractions'] > cf_cutoff]['pairs']
+    mask = run_df['pairs'].isin(good_pairs)
+    full_df = run_df[mask]
 
     sim_transfers = np.loadtxt(os.path.join(
         config.analysis_directory, 'closely_related', 'simulated_transfers', species_name+'.csv'))
@@ -59,11 +66,11 @@ for i in range(len(files_to_plot)):
         density = histo[1, :] / histo[1, :].sum()
 
     # simulated
-    ax.bar(mids, density, width=mids[1] - mids[0], label='simulated', alpha=0.5)
-    # bins = np.arange(0, sim_transfers.max() + mids[1]-mids[0], mids[1]-mids[0])
-    # counts, bins = np.histogram(sim_transfers, bins=bins)
-    # new_mids = (bins[:-1] + bins[1:]) / 2
-    # ax.bar(new_mids, counts / np.sum(counts).astype(float), width=mids[1] - mids[0], label='simulated', alpha=0.5)
+    # ax.bar(mids, density, width=mids[1] - mids[0], label='simulated', alpha=0.5)
+    bins = np.arange(0, sim_transfers.max() + mids[1]-mids[0], mids[1]-mids[0])
+    counts, bins = np.histogram(sim_transfers, bins=bins)
+    new_mids = (bins[:-1] + bins[1:]) / 2
+    ax.bar(new_mids, counts / np.sum(counts).astype(float), width=mids[1] - mids[0], label='simulated', alpha=0.5)
     # ax.hist(sim_transfers, cumulative=-1, density=True, bins=bins, alpha=0.5)
 
     # bins = invert_bins(histo[0, :])
@@ -82,4 +89,5 @@ for i in range(axes.shape[0]):
 for j in range(axes.shape[1]):
     axes[-1, j].set_xlabel('transfer divergence (syn)')
 
-fig.savefig(os.path.join(config.figure_directory, 'supp_transfer_histo_suppresions_no_loc_control.pdf'), bbox_inches='tight')
+# fig.savefig(os.path.join(config.figure_directory, 'supp_transfer_histo_suppresions_no_loc_control.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp_transfer_histo_suppresions_only_closepairs.pdf'), bbox_inches='tight')

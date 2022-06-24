@@ -95,6 +95,7 @@ idx = 1
 xticks = []
 xticklabels = []
 plotted_species = []
+scatter_species = []
 connection_l = []
 connection_r = []
 
@@ -256,6 +257,7 @@ for species_full_name in species_order:
     else:
         axm.scatter(xloc, mid, s=5, color=color)
         axm.plot(xloc, mid, linestyle=':', linewidth=1, color=color)
+        scatter_species.append(species_name)
         # axm.vlines(xloc, mid - w, mid + w, alpha=0.2, color=color)
 
 
@@ -288,6 +290,7 @@ for species_full_name in species_order:
         ax1.set_xlabel("Clonal divergence")
         ax1.set_xlim([0, 1e-4])
         ax1.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
+        ax1.set_ylabel("# transfers per 1Mbps")
         axm.axvline(xloc[0] - 0.4, **kw)
         axm.axvline(xloc[-1] + 0.4, **kw)
         axd.axvline(xloc[0] - 0.4, **kw)
@@ -389,14 +392,14 @@ axm.set_yscale('log')
 
 ymax = axm.get_ylim()[1]
 # adding connection lines
-for i in range(3):
-    ax = [ax1, ax2, ax3][i]
-    cpl = ConnectionPatch((0, 0), (connection_l[i], ymax), "axes fraction", "data",
-                          axesA=ax, axesB=axm, **kw)
-    cpr = ConnectionPatch((1, 0), (connection_r[i], ymax), "axes fraction", "data",
-                          axesA=ax, axesB=axm, **kw)
-    axm.add_artist(cpl)
-    axm.add_artist(cpr)
+# for i in range(3):
+#     ax = [ax1, ax2, ax3][i]
+#     cpl = ConnectionPatch((0, 0), (connection_l[i], ymax), "axes fraction", "data",
+#                           axesA=ax, axesB=axm, **kw)
+#     cpr = ConnectionPatch((1, 0), (connection_r[i], ymax), "axes fraction", "data",
+#                           axesA=ax, axesB=axm, **kw)
+#     axm.add_artist(cpl)
+#     axm.add_artist(cpr)
 
 # axd.set_ylabel('Num transfers\n per 4d clonal snp')
 axd.set_ylabel('Transfer length')
@@ -418,10 +421,12 @@ _ = axd.set_xticklabels(xticklabels, rotation=90, ha='center', fontsize=5)
 json.dump(plotted_species, open(os.path.join(config.plotting_intermediate_directory, 'fig3_species.json'), 'w'))
 
 fig.tight_layout()
-fig.savefig(os.path.join(config.figure_directory, 'fig3_.pdf'), dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig3_no_lines.pdf'), dpi=600)
 
 
 total_events = 0
 for lengths in transfer_length_data:
     total_events += len(lengths)
 print("Total {} species; total {} pairs;  total {} detected events".format(len(transfer_length_data)-1, np.sum(all_num_pairs), total_events))
+
+print(scatter_species)
