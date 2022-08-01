@@ -288,7 +288,7 @@ for species_full_name in species_order:
                          fitted_data['y'] + fitted_data['sigma'], alpha=0.25)
         ax1.set_title(species_name)
         ax1.set_xlabel("Clonal divergence")
-        ax1.set_xlim([0, 1e-4])
+        ax1.set_xlim([0, 2e-4])
         ax1.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
         ax1.set_ylabel("# transfers per 1Mbps")
         axm.axvline(xloc[0] - 0.4, **kw)

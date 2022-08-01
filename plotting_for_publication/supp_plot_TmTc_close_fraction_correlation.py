@@ -33,11 +33,11 @@ axes[1].scatter(bsmc_df['Tm/Tc'], frac_close, scatter_size)
 axes[1].set_xlim(axes[0].get_xlim())
 axes[1].set_xlabel('Tm / Tc')
 axes[1].set_ylabel('Fraction of "close pairs"')
-axes[1].set_title("Neutral simulation")
+axes[1].set_title("Neutral simulation (zoom in)")
 
 axes[2].scatter(bsmc_df['Tm/Tc'], frac_close, scatter_size)
 axes[2].set_xlabel('Tm / Tc')
 axes[2].set_ylabel('Fraction of "close pairs"')
-axes[2].set_title("Neutral simulation (extended)")
+axes[2].set_title("Neutral simulation")
 
 fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_TmTc_compare.pdf'), bbox_inches='tight')

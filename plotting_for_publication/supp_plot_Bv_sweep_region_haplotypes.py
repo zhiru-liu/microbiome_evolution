@@ -4,6 +4,7 @@ import pandas as pd
 import itertools
 import os
 import config
+import json
 from utils import parallel_utils, close_pair_utils, pileup_utils
 
 

@@ -17,7 +17,8 @@ def init_hmm(species_name, genome_len, block_size):
     num_blocks = genome_len / block_size
     transfer_counts = 20.
     clonal_div = 5e-5
-    transfer_length = 1000.
+    # transfer_length = 10000.  # default 1000
+    transfer_length = 2810.  # default 1000
 
     transfer_rate = transfer_counts / num_blocks
     transfer_length = transfer_length / block_size
@@ -134,14 +135,16 @@ for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
     if species_name.startswith('.'):
         continue
     if DEBUG:
-        # species_name = 'Bacteroides_vulgatus_57955'
-        species_name = 'Alistipes_shahii_62199'
+        species_name = 'Bacteroides_vulgatus_57955'
+        # species_name = 'Alistipes_shahii_62199'
         # species_name = 'Bacteroides_massiliensis_44749'
         second_path_save_path = os.path.join(config.analysis_directory,
-                                             "closely_related", "two_clades", "{}_two_clades.pickle".format(species_name))
+                                             "closely_related", "HMM_length_robustness", "{}_2810.pickle".format(species_name))
     else:
+        # second_path_save_path = os.path.join(config.analysis_directory,
+        #                          "closely_related", "second_pass", "{}.pickle".format(species_name))
         second_path_save_path = os.path.join(config.analysis_directory,
-                                 "closely_related", "second_pass", "{}.pickle".format(species_name))
+                                             "closely_related", "iter_second_third_passes", "{}.pickle".format(species_name))
     if os.path.exists(second_path_save_path):
         logging.info("Skipping %s" % species_name)
         continue

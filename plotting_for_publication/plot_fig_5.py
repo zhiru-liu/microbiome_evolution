@@ -49,6 +49,7 @@ else:
     ckpt_dir = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical')
     all_cvs = []
     for species in os.listdir(ckpt_dir):
+        # species with > 50 contigs are not considered
         if species.startswith('.'):
             continue
         sharing_pileup = np.loadtxt(os.path.join(ckpt_dir, species, 'between_host.csv'))
@@ -62,11 +63,15 @@ sim_cvs = sim_cvs.reshape((-1, 100))
 mean_sim_cvs = sim_cvs.mean(axis=1)
 sigma_sim_cvs = np.std(sim_cvs, axis=1)
 print("Minimum real CV: {}".format(real_cvs.min()))
+print("Number of species: {}".format(real_cvs.shape[0]))
 print("Simulation CV mean: {}".format(mean_sim_cvs))
 print("Simulation CV std: {}".format(sigma_sim_cvs))
 print("Num std away: {}".format((real_cvs.min() - mean_sim_cvs)/sigma_sim_cvs))
-# print(ttest_ind(real_cvs[:, 0], sim_cvs.reshape((-1, 1)), equal_var=False))
-# print(ttest_ind(sim_cvs[0, :], sim_cvs.reshape((-1, 1)), equal_var = False))
+ps = []
+for i in range(sim_cvs.shape[0]):
+    res = ttest_ind(real_cvs[:, 0], sim_cvs[i, :], equal_var=False)
+    ps.append(res.pvalue)
+print("worst t test pval: {}".format(max(ps)))
 
 # plot comparison
 cvs_ax.scatter(real_cvs[:, 0], np.ones(real_cvs.shape[0]) + np.random.uniform(-0.1, 0.1, size=real_cvs.shape[0]), marker='o', alpha=0.5)
@@ -110,6 +115,7 @@ within_thresholds = np.loadtxt(os.path.join(base_path, 'between_host_thresholds.
 
 within_cumu_runs, between_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
     within_clade_path, between_clade_path, Bv_ax, ind_to_plot=0, ylim=0.3)
+print(within_thresholds[0], thresholds[0])
 highlight_sweep_region(Bv_ax, good_genes)
 
 

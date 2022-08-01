@@ -167,7 +167,7 @@ def plot_allele_freq_zoomin(axes, histo_axes, sample_pair, plot_locations=True):
     axes[1].plot(xs, local_copy_after, 'grey')
 
     axes[0].set_xticklabels([])
-    axes[1].set_xlabel('Site index in covered coding region')
+    axes[1].set_xlabel('Location along reference genome')
     axes[0].legend(loc='upper right')
     axes[0].set_ylim([0, 1.5])
     axes[1].set_ylim([0, 1.5])
@@ -228,6 +228,11 @@ def plot_example_snps(axes):
     axes[0].set_xticklabels([])
     axes[1].set_xticklabels([])
     axes[2].set_xticklabels([])
+    axes[3].set_xticklabels([])
+    axes[0].set_xticks([])
+    axes[1].set_xticks([])
+    axes[2].set_xticks([])
+    axes[3].set_xticks([])
 
     xmax = min(len(within_snp_vec1), len(within_snp_vec2), len(between_snp_vec1), len(between_snp_vec2))
     for ax in axes:
@@ -283,7 +288,7 @@ max_run_ax1 = fig.add_subplot(bottom_right_grid[0])
 max_run_ax2 = fig.add_subplot(bottom_right_grid[1])
 
 # plotting
-minimal_genes, maximal_genes = plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], [histo_ax1, histo_ax2], ['700114218', '700171115'], plot_locations=False)
+minimal_genes, maximal_genes = plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], [histo_ax1, histo_ax2], ['700114218', '700171115'], plot_locations=True)
 # plot_local_polymorphism([local_ax1, local_ax2], ['700114218', '700171115'])
 
 plot_max_run_histo(max_run_ax1, 'Bacteroides_vulgatus_57955_same_clade')

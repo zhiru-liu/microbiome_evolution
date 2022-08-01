@@ -12,7 +12,6 @@ bacteroides = [
     'Bacteroides_ovatus_58035',
     'Bacteroides_uniformis_57318',
     'Bacteroides_thetaiotaomicron_56941',
-    'Bacteroides_plebeius_61623',
     'Bacteroides_stercoris_56735',
     'Bacteroides_coprocola_61586',
     'Bacteroides_eggerthii_54457',
@@ -53,7 +52,7 @@ bacteroides_df['QP frac'] = bacteroides_df['species'].apply(qp_dict.get)
 concat_rates = np.concatenate(all_rates)
 concat_qp = np.concatenate([np.ones(len(all_rates[i])) * qp_dict[x] for i, x in enumerate(bacteroides)])
 
-fig, axes = plt.subplots(1, 1, figsize=(3, 2))
+fig, axes = plt.subplots(1, 1, figsize=(4, 3))
 # plt.subplots_adjust(wspace=0.5)
 # axes[0].plot(concat_qp, concat_rates, '.')
 # axes[0].set_ylim([0, 100000])
@@ -63,12 +62,21 @@ fig, axes = plt.subplots(1, 1, figsize=(3, 2))
 # print("Correlation using all points is:")
 # print(spearmanr(concat_qp, concat_rates))
 
-axes.plot(bacteroides_df['QP frac'], bacteroides_df['mean rates'], '.')
-axes.set_ylim([None, 100000])
+axes.plot(bacteroides_df['QP frac'], bacteroides_df['mean rates'].to_numpy(), '.', label=None)
+
+species = bacteroides_df['species']
+axes.plot(bacteroides_df[species=='Bacteroides_cellulosilyticus_58046']['QP frac'],
+          bacteroides_df[species=='Bacteroides_cellulosilyticus_58046']['mean rates'], '.', color='tab:orange',
+          label='Bacteroides cellulosilyticus')
+axes.plot(bacteroides_df[species=='Bacteroides_caccae_53434']['QP frac'],
+          bacteroides_df[species=='Bacteroides_caccae_53434']['mean rates'], '.', color='tab:green',
+          label='Bacteroides caccae')
+# axes.set_ylim([None, 110000])
 axes.set_yscale('log')
 axes.set_xlabel('Fraction of QP samples')
 axes.set_ylabel('Averaged transfer / divergence')
+axes.legend(loc='lower left')
 print("Correlation using only the mean is:")
 print(spearmanr(bacteroides_df['QP frac'], bacteroides_df['mean rates']))
-
+bacteroides_df.to_csv(os.path.join(config.analysis_directory, 'misc', 'bacteroides_QP_rate_statistics.csv'))
 plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_qp_frac_rate_corr.pdf'), bbox_inches='tight')

@@ -62,7 +62,7 @@ def plot_cf_pd_joint(axes):
     marg_ax.set_xticks([1, 500, 1000])
     marg_ax.set_xticklabels(['1', '500', '1k'])
 
-    scatter_ax.set_xlabel('Identical fraction')
+    scatter_ax.set_xlabel('Fraction of identical blocks')
     scatter_ax.set_ylabel('Pairwise syn divergence')
     scatter_ax.legend()
     scatter_ax.set_title(figure_utils.get_pretty_species_name(species_name))

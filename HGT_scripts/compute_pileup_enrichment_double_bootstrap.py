@@ -7,7 +7,7 @@ import config
 """
 Performing double bootstrap analysis for E rectale within-host vs between-host enrichment
 """
-num_reps = 100
+num_reps = 2000
 
 save_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'enrichment', 'E_rectale')
 within_cached_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'E_rectale_within_json')
@@ -42,8 +42,8 @@ test_num_great = np.sum(fake_diffs[1:, :] >= fake_diffs[0, :], axis=0)  # using 
 real_num_passed = np.zeros(genome_len)
 test_num_passed = np.zeros(genome_len)
 significant_regions = []
-significant_regions.append(np.sum(real_num_great < (num_reps * 5e-2)))  # record the number of sites that appear significant in q-val
-significant_regions.append(np.sum(test_num_great < (num_reps * 5e-2)))  # record the number of sites that appear significant in q-val
+significant_regions.append(np.sum(real_num_great < (num_reps * 1e-2)))  # record the number of sites that appear significant in q-val
+significant_regions.append(np.sum(test_num_great < (num_reps * 1e-2)))  # record the number of sites that appear significant in q-val
 
 for i in xrange(1, num_reps+1):
     mask = np.ones(num_reps+1).astype(bool)
@@ -51,7 +51,7 @@ for i in xrange(1, num_reps+1):
     mask[i] = False
     fake_num_great = np.sum(fake_diffs[mask, :] >= fake_diffs[i, :], axis=0)
 #     fake_q = np.convolve(num_great, np.ones(500)/500., mode='same') / (num_reps-1)
-    significant_regions.append(np.sum(fake_num_great < (num_reps * 5e-2)))  # record the number of sites that appear significant in q-val
+    significant_regions.append(np.sum(fake_num_great < (num_reps * 1e-2)))  # record the number of sites that appear significant in q-val
     real_num_passed += fake_num_great <= real_num_great  # count reps that are more significant than real data
     test_num_passed += fake_num_great <= test_num_great  # count reps that are more significant than test rep
 

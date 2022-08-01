@@ -67,6 +67,7 @@ class ClosePairHMM:
         # transmat is very sparse; no transitions between the recombined/transferred states
         self.transmat_ = np.zeros((self.n_components, self.n_components))
         # transitions from the recombined state
+        # TODO: modify this to allow state-wise exit rate
         self.transmat_[1:, 0] = self.exit_rate
         self.transmat_[np.diag_indices(self.n_components)] = 1 - self.exit_rate
         # transitions from the clonal state

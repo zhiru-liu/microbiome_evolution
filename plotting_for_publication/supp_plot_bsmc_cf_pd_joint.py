@@ -56,13 +56,13 @@ for i in range(3):
         #     marg_ax.set_xticks([1, 10, 100])
 
         if j==0:
-            scatter_ax.set_ylabel('$\\rho/\\mu=%.1f$\n\nPairwise syn divergence'%rbymus[i])
+            scatter_ax.set_ylabel('$r/\\mu=%.1f$\n\nPairwise syn divergence'%rbymus[i])
         if i==2:
-            scatter_ax.set_xlabel('Identical fraction')
+            scatter_ax.set_xlabel('Fraction of identical blocks')
         if i==0:
             # scatter_ax.set_title(r"$\rho/\mu=%f$")
-            scatter_ax.set_title(r"$l_r=%d$"%lambs[j])
+            scatter_ax.set_title("$\\lambda=%d$"%lambs[j])
         # scatter_ax.legend()
 
 
-fig.savefig(os.path.join(config.figure_directory, 'test_supp_joint_bsmc.pdf'), bbox_inches='tight', dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_joint_bsmc.pdf'), bbox_inches='tight', dpi=600)

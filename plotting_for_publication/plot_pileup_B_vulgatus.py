@@ -119,7 +119,7 @@ if compute_function_enrichment:
         return 'ribosomal protein' in x
     site_mask = within_cumu_runs[:, 0] > 0.1
     true_res, perm_res = pileup_utils.enrichment_test(good_genes, site_mask, if_rp, shuffle_size=10, shuffle_reps=int(reps))
-    print("p-val for glycosyltransferases is {:e}".format(np.sum(np.array(perm_res) >= true_res) / reps))
+    print("p-val for ribosomal protein is {:e}".format(np.sum(np.array(perm_res) >= true_res) / reps))
 
 """ Plot within host between host """
 if plot_within_host:

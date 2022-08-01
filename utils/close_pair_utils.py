@@ -513,7 +513,7 @@ def get_empirical_div_dist(local_divs, genome_divs, num_bins, separate_clades, c
 
 
 def prepare_HMM_results_for_B_vulgatus(save_path, cf_cutoff, cache_intermediate=True,
-                                       merge_threshold=0, mode='count', filter_threshold=2):
+                                       merge_threshold=0, mode='count', filter_threshold=5):
     """
     Handy function to extract useful data from HMM raw results
     Filtering genome pairs according to the clonal fraction, such that can control the degree of

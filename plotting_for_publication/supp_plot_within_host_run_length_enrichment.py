@@ -21,12 +21,15 @@ files = [
     'Bacteroides_stercoris_56735',
     'Bacteroides_thetaiotaomicron_56941',
     'Bacteroides_vulgatus_57955_diff_clade',
-    # 'Bacteroides_vulgatus_57955_same_clade',
-    # 'Eubacterium_rectale_56927',
+    'Bacteroides_vulgatus_57955_same_clade',
+    'Eubacterium_rectale_56927',
     'Parabacteroides_distasonis_56985',
     'Parabacteroides_merdae_56972'
 ]
-
+to_skip = [
+    'Bacteroides_vulgatus_57955_same_clade',
+    'Eubacterium_rectale_56927'
+]
 plot_idx = 0
 nrow = 2
 ncol = 4
@@ -40,7 +43,9 @@ for species_name in files:
     between_host_max_runs = np.loadtxt(os.path.join(max_run_dir, species_name + '_between.txt'))
     # in order to use one sided ks test, need to use python3's scipy
     ks_dist, p_val = ks_2samp(within_host_max_runs, between_host_max_runs, alternative='less')
-
+    if species_name in to_skip:
+        print("{} pval: {:.1e}".format(species_name, p_val))
+        continue
     ax = axes[row, col]
     ax.hist([between_host_max_runs, within_host_max_runs], bins=100, density=True,
             cumulative=-1, histtype='step', label=['Between host', 'Within host'])
