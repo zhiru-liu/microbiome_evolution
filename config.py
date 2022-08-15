@@ -67,12 +67,16 @@ within_host_min_haploid_sample_size = 10
 between_low_divergence_threshold = 2e-04
 
 # for close pair analysis
-clonal_fraction_cutoff = 0.8
+# clonal_fraction_cutoff = 0.8
+clonal_fraction_cutoff = 0.75
 first_pass_block_size = 1000
 second_pass_block_size = 10
 empirical_histogram_bins = 40
+# B_vulgatus_data_path = os.path.join(analysis_directory,
+#                          "closely_related", "two_clades", "{}_two_clades.pickle".format('Bacteroides_vulgatus_57955'))
 B_vulgatus_data_path = os.path.join(analysis_directory,
-                         "closely_related", "two_clades", "{}_two_clades.pickle".format('Bacteroides_vulgatus_57955'))
+                                    "closely_related", "iter_second_third_passes", 'converged_pass',
+                                    "{}.pickle".format('Bacteroides_vulgatus_57955'))
 
 # for typical pair analysis
 typical_clonal_fraction_cutoff = 0.1

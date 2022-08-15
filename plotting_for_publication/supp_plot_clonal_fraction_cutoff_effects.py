@@ -28,9 +28,12 @@ fig, axes = plt.subplots(3, 2, figsize=(4.2, 4.5))
 plt.subplots_adjust(wspace=0.4, hspace=0.5)
 idx = 0
 for i, cf_cutoff in enumerate(cutoffs):
-    clonal_divs, within_counts, between_counts, full_df = close_pair_utils.prepare_HMM_results_for_B_vulgatus(
+    clonal_divs, within_counts, between_counts, full_df, cf_mask = close_pair_utils.prepare_HMM_results_for_B_vulgatus(
         save_path, cf_cutoff, cache_intermediate=False, filter_threshold=5)
     number_events.append(full_df.shape[0])
+    clonal_divs = clonal_divs[cf_mask]
+    within_counts = within_counts[cf_mask]
+    between_counts = between_counts[cf_mask]
     within_lens = full_df[full_df['types']==0]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
     between_lens = full_df[full_df['types']==1]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
 

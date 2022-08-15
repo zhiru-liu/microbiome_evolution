@@ -16,6 +16,7 @@ mpl_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 # loading necessary data
 species_name = "Bacteroides_vulgatus_57955"
 # dh = parallel_utils.DataHoarder(species_name, mode="within")
+
 general_mask = parallel_utils.get_general_site_mask(species_name)
 snp_info = parallel_utils.get_snp_info(species_name)
 core_genes = core_gene_utils.get_sorted_core_genes(species_name)
@@ -99,13 +100,15 @@ def plot_allele_freq_zoomin(axes, histo_axes, sample_pair, plot_locations=True):
     histo_axes[0].set_xlim([0, 1000])
     histo_axes[1].set_xlim([0, 1000])
     histo_axes[0].set_xticklabels([])
+    histo_axes[1].set_xticks([0, 500, 1000])
+    histo_axes[1].set_xticklabels(['0', '500', '1k'])
     histo_axes[0].set_yticklabels([])
     histo_axes[1].set_yticklabels([])
     histo_axes[0].spines['top'].set_visible(False)
     histo_axes[0].spines['right'].set_visible(False)
     histo_axes[1].spines['top'].set_visible(False)
     histo_axes[1].spines['right'].set_visible(False)
-    histo_axes[1].set_xlabel('Site Frequency Spectrum')
+    histo_axes[1].set_xlabel('Site counts')
 
     # good_sites_before = good_sites_before[start:end]
     # good_sites_after = good_sites_after[start:end]
@@ -137,7 +140,7 @@ def plot_allele_freq_zoomin(axes, histo_axes, sample_pair, plot_locations=True):
     else:
         xs = np.arange(len(freq_before))
     axes[0].plot(xs[freq_before < 0.1], freq_before[freq_before < 0.1], '.', markersize=2,
-                 label='Alt allele frequency', rasterized=True, color=mpl_colors[0])
+                 label='Allele frequency', rasterized=True, color=mpl_colors[0])
     axes[0].plot(xs[freq_before > 0.1], freq_before[freq_before > 0.1], '.', markersize=2, color=mpl_colors[0])
 
     axes[1].plot(xs[freq_after < 0.1], freq_after[freq_after < 0.1], '.', markersize=2,
@@ -167,8 +170,8 @@ def plot_allele_freq_zoomin(axes, histo_axes, sample_pair, plot_locations=True):
     axes[1].plot(xs, local_copy_after, 'grey')
 
     axes[0].set_xticklabels([])
-    axes[1].set_xlabel('Location along reference genome')
-    axes[0].legend(loc='upper right')
+    axes[1].set_xlabel('Location along genome')
+    axes[0].legend(loc='lower center', bbox_to_anchor=(0.58, 1.0), ncol=3,)
     axes[0].set_ylim([0, 1.5])
     axes[1].set_ylim([0, 1.5])
 
@@ -185,10 +188,22 @@ def plot_max_run_histo(ax, species_name):
     within_host_max_runs = np.loadtxt(os.path.join(max_run_dir, species_name + '_within.txt'), ndmin=1)
     between_host_max_runs = np.loadtxt(os.path.join(max_run_dir, species_name + '_between.txt'))
     ax.hist([between_host_max_runs, within_host_max_runs], bins=100, density=True,
-            cumulative=-1, histtype='step', label=['Between host', 'Within host'], color=[config.between_host_color, config.within_host_color])
-    ax.set_xlabel('Max homozygous run length\n(4D syn sites), $x$')
-    ax.set_ylabel('Fraction $>x$')
-    ax.legend()
+            cumulative=-1, histtype='step', color=[config.between_host_color, config.within_host_color])
+    # ax.set_xlabel('Max homozygous run length\n(4D syn sites), $x$')
+    ax.set_xlabel('Max sharing length, $x$')
+    ax.set_ylabel('Fraction of pairs\n $>x$')
+    ax.plot([], [], color=config.between_host_color, label='Between hosts')
+    ax.plot([], [], color=config.within_host_color, label='Within hosts')
+    items = species_name.split('_')
+    name = ' '.join([items[0][0]+'.', items[1]])
+    if 'vulgatus' in species_name:
+        p_val = '9.1\\times 10^{-1}'  # copied from supp_plot_within_host_run_length_enrichment.py
+    else:
+        # E rectale
+        p_val = '4.9\\times 10^{-3}'  # copied from supp_plot_within_host_run_length_enrichment.py
+    ax.text(0.95, 0.85, name, transform=ax.transAxes, va='bottom', ha='right', fontsize=6)
+    ax.text(0.95, 0.8, "$n_w={}$\n$P={}$".format(len(within_host_max_runs), p_val),
+            transform=ax.transAxes, va='top', ha='right', fontsize=6)
 
 
 def plot_example_snps(axes):
@@ -234,6 +249,15 @@ def plot_example_snps(axes):
     axes[2].set_xticks([])
     axes[3].set_xticks([])
 
+    ymin = axes[1].get_ylim()[0]
+
+    # axes[2].arrow(x=110, y=-2, dx=0, dy=10, width=2, facecolor='red', edgecolor='none', clip_on = False)
+    xloc = 116.5
+    axes[1].annotate('',
+                xy=(xloc, ymin),
+                xytext=(xloc, ymin + 0.45),
+                arrowprops=dict(facecolor='tab:orange', shrink=0.0, width=2, headwidth=4, headlength=4))
+
     xmax = min(len(within_snp_vec1), len(within_snp_vec2), len(between_snp_vec1), len(between_snp_vec2))
     for ax in axes:
         ax.set_xlim([0, xmax / blk_size])
@@ -252,26 +276,27 @@ def save_interesting_genes(genes, path):
 mpl.rcParams['font.size'] = 7
 mpl.rcParams['lines.linewidth'] = 1
 mpl.rcParams['legend.fontsize'] = 'small'
+mpl.rcParams['legend.frameon'] = False
 
 fig = plt.figure(figsize=(7, 4.5))
 
-outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[2, 3.0], hspace=0.3, figure=fig)
+outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[2, 3.0], hspace=0.45, figure=fig)
 
-top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1.5,1],wspace=0,subplot_spec=outer_grid[0])
+top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1.8,1],wspace=0,subplot_spec=outer_grid[0])
 
 local_div_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.5, subplot_spec=top_grid[1])
 snp_grid_1 = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=local_div_grid[0])
 snp_grid_2 = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=local_div_grid[1])
 
-bottom_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[3., 1], wspace=0.4, subplot_spec=outer_grid[1])
+bottom_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[3., 1], wspace=0.3, subplot_spec=outer_grid[1])
 
 bottom_left_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[6, 1], wspace=0.05, subplot_spec=bottom_grid[0])
 
 bottom_right_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=bottom_grid[1])
 
-zoomin_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.1, subplot_spec=bottom_left_grid[0])
+zoomin_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.15, subplot_spec=bottom_left_grid[0])
 
-histo_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.1, subplot_spec=bottom_left_grid[1])
+histo_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.15, subplot_spec=bottom_left_grid[1])
 
 # adding axes
 snp_ax1 = fig.add_subplot(snp_grid_1[0])
@@ -288,17 +313,31 @@ max_run_ax1 = fig.add_subplot(bottom_right_grid[0])
 max_run_ax2 = fig.add_subplot(bottom_right_grid[1])
 
 # plotting
-minimal_genes, maximal_genes = plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], [histo_ax1, histo_ax2], ['700114218', '700171115'], plot_locations=True)
-# plot_local_polymorphism([local_ax1, local_ax2], ['700114218', '700171115'])
+minimal_genes, maximal_genes = plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], [histo_ax1, histo_ax2], ['700114218', '700171115'], plot_locations=False)
+save_interesting_genes(minimal_genes, os.path.join(config.figure_directory, 'supp_table', "temporal_sweep_genes.csv"))
 
 plot_max_run_histo(max_run_ax1, 'Bacteroides_vulgatus_57955_same_clade')
 plot_max_run_histo(max_run_ax2, 'Eubacterium_rectale_56927')
+max_run_ax1.legend(loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=2,)
 max_run_ax1.set_xlabel('')
 
 plot_example_snps([snp_ax1, snp_ax2, snp_ax3, snp_ax4])
+# snp_ax1.set_ylabel("$T_0$")
+# snp_ax2.set_ylabel("$T_1$")
+snp_ax4.set_xlabel("Location along genome")
 
+# unused
+# plot_local_polymorphism([local_ax1, local_ax2], ['700114218', '700171115'])
 # save_interesting_genes(minimal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "minimal.csv"))
-save_interesting_genes(minimal_genes, os.path.join(config.figure_directory, 'supp_table', "temporal_sweep_genes.csv"))
 # save_interesting_genes(maximal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "maximal.csv"))
+
+zoomin_ax1.text(-0.06, 1.24, "C", transform=zoomin_ax1.transAxes,
+           fontsize=9, fontweight='bold', va='top', ha='left')
+max_run_ax1.text(-0.45, 1.24, "D", transform=max_run_ax1.transAxes,
+                fontsize=9, fontweight='bold', va='top', ha='left')
+histo_ax1.text(0.16, 0.97, "$T_0$", transform=histo_ax1.transAxes,
+                 fontsize=7, va='top', ha='left')
+histo_ax2.text(0.16, 0.97, "$T_1$", transform=histo_ax2.transAxes,
+               fontsize=7, va='top', ha='left')
 
 fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig4.pdf'), bbox_inches="tight", dpi=600)

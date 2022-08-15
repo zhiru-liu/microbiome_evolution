@@ -3,17 +3,24 @@ import os
 import pickle
 import numpy as np
 import pandas as pd
+from itertools import compress
 sys.path.append("..")
 import config
 from utils import close_pair_utils, parallel_utils
 
 
-ckpt_path = os.path.join(config.analysis_directory,
-                         "closely_related", "second_pass")
+# ckpt_path = os.path.join(config.analysis_directory,
+#                          "closely_related", "second_pass")
+ckpt_path = os.path.join(config.analysis_directory, 'closely_related', 'iter_second_third_passes', 'converged_pass')
 for filename in os.listdir(ckpt_path):
     if filename.startswith('.'):
         continue
     species_name = filename.split('.')[0]
+
+    if ('vulgatus'in species_name) or ('shahii' in species_name):
+        two_clades = True
+    else:
+        two_clades = False
 
     print("Processing {}".format(species_name))
     first_pass_save_path = os.path.join(config.analysis_directory,
@@ -25,9 +32,10 @@ for filename in os.listdir(ckpt_path):
         print("{} already processed, skipping".format(species_name))
         continue
 
-    if 'shahii' in species_name:
-        second_path_save_path = os.path.join(config.analysis_directory,
-                                             "closely_related", "two_clades", "{}_two_clades.pickle".format(species_name))
+    if two_clades:
+        # second_path_save_path = os.path.join(config.analysis_directory,
+        #                                      "closely_related", "two_clades", "{}_two_clades.pickle".format(species_name))
+        second_path_save_path = os.path.join(ckpt_path, filename)
         data = pickle.load(open(second_path_save_path, 'rb'))
         within_counts, between_counts, all_transfer_df = close_pair_utils.merge_and_filter_transfers(data, separate_clade=True, merge_threshold=0, filter_threshold=5)
         transfer_counts = within_counts + between_counts
@@ -64,8 +72,11 @@ for filename in os.listdir(ckpt_path):
     # third_pass_df = third_pass_df[third_pass_df['clonal fractions'] >= config.clonal_fraction_cutoff]
     # print("Before additional clonal fraction filter, {} pairs".format(len(data['pairs'])))
     # print("After filter, {} pairs".format(third_pass_df.shape[0]))
+
+    # save which transfers are in close pairs
+    mask = third_pass_df['clonal fractions'] > config.clonal_fraction_cutoff
+    passed_pairs = list(compress(data['pairs'], mask))  # compress is concatenating lists
+    all_transfer_df['clonal fraction >75%'] = all_transfer_df['pairs'].isin(passed_pairs)
+
     third_pass_df.to_pickle(third_pass_path)
-    if 'shahii' in species_name:
-        all_transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass', species_name + '_all_transfers_two_clades.pickle'))
-    else:
-        all_transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass', species_name + '_all_transfers.pickle'))
+    all_transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass', species_name + '_all_transfers.pickle'))

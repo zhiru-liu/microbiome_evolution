@@ -68,10 +68,10 @@ def process_species(ax, species_name, len_threshold=None):
 
 if __name__ == '__main__':
     run_data_dir = os.path.join(config.analysis_directory, 'typical_pairs', 'runs_data')
-    for filename in os.listdir(os.path.join(run_data_dir, 'between_hosts')):
-        if filename.startswith('.'):
-            continue
-        species_name = filename.split('.')[0]
-        process_species(None, species_name)
+    # for filename in os.listdir(os.path.join(run_data_dir, 'between_hosts')):
+    #     if filename.startswith('.'):
+    #         continue
+    #     species_name = filename.split('.')[0]
+    #     process_species(None, species_name)
 
-# process_species('Eubacterium_rectale_56927', len_threshold=1160)
+    process_species(None, 'Eubacterium_rectale_56927')

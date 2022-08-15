@@ -132,7 +132,7 @@ for i, species_name in enumerate(species_to_plot):
 _ = ax.set_xticks(locs)
 pretty_names = [figure_utils.get_pretty_species_name(name) for name in plotted_species]
 _ = ax.set_xticklabels(pretty_names, rotation=90, ha='center', fontsize=5)
-ax.set_ylabel("Tc / Tm (pairwise est)")
+ax.set_ylabel("$T_{mrca} / T_{mosaic}$ (pairwise est)")
 ax2.set_ylim(ax.get_ylim())
 ax2.set_yticks([])
 

@@ -10,6 +10,7 @@ from scipy import interpolate
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from matplotlib.patches import Rectangle
 from matplotlib.patches import ConnectionPatch
 from scipy.stats import gaussian_kde
 
@@ -73,6 +74,8 @@ species_order = [
 
     'Akkermansia_muciniphila_55290']
 
+species_cutoff_dict = json.load(open(os.path.join(config.plotting_intermediate_directory, 'clonal_div_cutoff.json'), 'r'))
+species_cutoff_dict['Bacteroides_vulgatus_57955'] = 1e-4
 
 data_dir = os.path.join(config.analysis_directory, "closely_related")
 
@@ -151,7 +154,8 @@ for species_full_name in species_order:
     filename = species_full_name + '.csv'
 
     if 'vulgatus' in species_name:
-        data_path = os.path.join(data_dir, 'third_pass', species_full_name + '_all_transfers_processed.pickle')
+        # data_path = os.path.join(data_dir, 'third_pass', species_full_name + '_all_transfers_processed.pickle')
+        data_path = os.path.join(data_dir, 'third_pass', species_full_name + '_all_transfers.pickle')
     else:
         data_path = os.path.join(data_dir, 'third_pass', species_full_name + '_all_transfers.pickle')
 
@@ -164,17 +168,24 @@ for species_full_name in species_order:
     print(filename, n, n_filtered, raw_data['clonal divs'].max())
     plot_jitter = False
 
+    clonal_div_cutoff = species_cutoff_dict.get(species_full_name, 1)
+    if clonal_div_cutoff is None:
+        clonal_div_cutoff = 1
+
     if 'vulgatus' in species_name:
         # for B vulgatus, everything needs to be done twice
         trend_directory = os.path.join(config.plotting_intermediate_directory, "B_vulgatus_trend_line.csv")
         fitted_data = pd.read_csv(trend_directory)
 
 
-        x, y1, y2, _ = close_pair_utils.prepare_HMM_results_for_B_vulgatus(save_path=config.B_vulgatus_data_path,
+        x, y1, y2, _, cf_mask = close_pair_utils.prepare_HMM_results_for_B_vulgatus(save_path=config.B_vulgatus_data_path,
             cf_cutoff=config.clonal_fraction_cutoff, mode='fraction', cache_intermediate=False)
-        x_ = x[x > 0]
-        y1_ = y1[x > 0]
-        y2_ = y2[x > 0]
+        x = x[cf_mask]
+        y1 = y1[cf_mask]
+        y2= y2[cf_mask]
+        x_ = x[(x > 0) & (x<clonal_div_cutoff)]
+        y1_ = y1[(x > 0) & (x<clonal_div_cutoff)]
+        y2_ = y2[(x > 0) & (x<clonal_div_cutoff)]
 
         # within first
         mid = interpolate_curve(fitted_data['within_x'], fitted_data['within_y'])
@@ -182,8 +193,8 @@ for species_full_name in species_order:
         plot_loc.append(2 * idx)
         #
         xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
-        axm.scatter(xloc, mid, s=5)
-        axm.plot(xloc, mid, linestyle=':', linewidth=1)
+        axm.scatter(xloc, mid / 1e6, s=5)
+        axm.plot(xloc, mid / 1e6, linestyle=':', linewidth=1)
         # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
         good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=0)
@@ -205,8 +216,8 @@ for species_full_name in species_order:
         plot_loc.append(2 * idx)
 
         xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
-        axm.scatter(xloc, mid, s=5)
-        axm.plot(xloc, mid, linestyle=':', linewidth=1)
+        axm.scatter(xloc, mid / 1e6, s=5)
+        axm.plot(xloc, mid / 1e6, linestyle=':', linewidth=1)
         # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
         good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=1)
@@ -241,7 +252,7 @@ for species_full_name in species_order:
 
     # plotting species summary
     plot_loc.append(2 * idx)
-    good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data)
+    good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, clonal_div_cutoff=clonal_div_cutoff)
     transfer_length_data.append(good_runs)
     all_num_pairs.append(num_pairs)
     xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
@@ -249,14 +260,15 @@ for species_full_name in species_order:
     color = plot_colors[(idx-1) % len(plot_colors)]
     if plot_jitter:
         x, y = close_pair_utils.prepare_x_y(raw_data, mode='count')
-        x_ = x[x > 0]
-        y_ = y[x > 0]
-        rates = y_ / x_
+        # TODO: can impose the x cutoff here if we want for these species
+        x_ = x[(x > 0)&(x<clonal_div_cutoff)]
+        y_ = y[(x > 0)&(x<clonal_div_cutoff)]
+        rates = y_ / x_ / 1e6
         # frac_recombined = rates * 1e-4
         plot_jitters(axm, 2*idx, rates, width=0.4, colorVal=color, alpha=0.5, marker='^')
     else:
-        axm.scatter(xloc, mid, s=5, color=color)
-        axm.plot(xloc, mid, linestyle=':', linewidth=1, color=color)
+        axm.scatter(xloc, mid / 1e6, s=5, color=color)
+        axm.plot(xloc, mid / 1e6, linestyle=':', linewidth=1, color=color)
         scatter_species.append(species_name)
         # axm.vlines(xloc, mid - w, mid + w, alpha=0.2, color=color)
 
@@ -274,23 +286,29 @@ for species_full_name in species_order:
     # plot_jitters(axm, 2*idx, frac_recombined, width=0.4, colorVal=plot_colors[(idx-1) % len(plot_colors)])
 
     ########### Plot the count vs divergence highlights ########
-    x, y = close_pair_utils.prepare_x_y(raw_data)
+    x_, y_, cf_mask = close_pair_utils.prepare_x_y(raw_data, return_unfiltered=True)
+    x = x_[cf_mask]
+    y = y_[cf_mask]
     kw = dict(linestyle=":", linewidth=1, color='grey')
     xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
     x_highlight = np.array([2.5e-5, 5e-5, 7.5e-5, 1e-4])
     y_highlight = x_highlight * mid
     if 'caccae' in species_name:
         fitted_data = pd.read_csv(os.path.join(data_dir, 'fourth_pass', filename), index_col=0)
-        ax1.scatter(x, y, s=1)
+        ax1.scatter(x[x<clonal_div_cutoff], y[x<clonal_div_cutoff], s=1)
+        # ax1.scatter(x_[~cf_mask], y_[~cf_mask], s=2, facecolors='none', edgecolors='grey', linewidth=0.5, zorder=0)
         ax1.plot(fitted_data['x'], fitted_data['y'], linestyle=':', color=color)
         ax1.plot(x_highlight, y_highlight, '.', color=color, markersize=5)
         ax1.fill_between(fitted_data['x'], fitted_data['y'] - fitted_data['sigma'],
                          fitted_data['y'] + fitted_data['sigma'], alpha=0.25)
         ax1.set_title(species_name)
-        ax1.set_xlabel("Clonal divergence")
+        ax1.set_xlabel("Clonal divergence ($\\times 10^{-4}$)")
+        ax1.add_patch(Rectangle((clonal_div_cutoff, 0), 3e-4, 100, facecolor='grey', edgecolor=None, alpha=0.3))
         ax1.set_xlim([0, 2e-4])
-        ax1.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
-        ax1.set_ylabel("# transfers per 1Mbps")
+        ax1.set_xticks([0, 0.5e-4, 1e-4, 1.5e-4, 2e-4])
+        ax1.set_xticklabels([0, 0.5, 1, 1.5, 2])
+        # ax1.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
+        ax1.set_ylabel("# transfers / 1Mb")
         axm.axvline(xloc[0] - 0.4, **kw)
         axm.axvline(xloc[-1] + 0.4, **kw)
         axd.axvline(xloc[0] - 0.4, **kw)
@@ -301,14 +319,16 @@ for species_full_name in species_order:
     if 'massiliensis' in species_name:
         fitted_data = pd.read_csv(os.path.join(data_dir, 'fourth_pass', filename), index_col=0)
         ax2.scatter(x, y, s=1)
+        # ax2.scatter(x_[~cf_mask], y_[~cf_mask], s=2, facecolors='none', edgecolors='grey', linewidth=0.5, zorder=0)
         ax2.plot(fitted_data['x'], fitted_data['y'], linestyle='--', color=color)
         ax2.plot(x_highlight, y_highlight, '.', color=color, markersize=5)
         ax2.fill_between(fitted_data['x'], fitted_data['y'] - fitted_data['sigma'],
                          fitted_data['y'] + fitted_data['sigma'], alpha=0.25)
         ax2.set_title(species_name)
-        ax2.set_xlabel("Clonal divergence")
+        ax2.set_xlabel("Clonal divergence ($\\times 10^{-4}$)")
         ax2.set_xlim([0, 2e-4])
-        ax2.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
+        ax2.set_xticks([0, 0.5e-4, 1e-4, 1.5e-4, 2e-4])
+        ax2.set_xticklabels([0, 0.5, 1, 1.5, 2])
         axm.axvline(xloc[0] - 0.4, **kw)
         axm.axvline(xloc[-1] + 0.4, **kw)
         axd.axvline(xloc[0] - 0.4, **kw)
@@ -319,6 +339,7 @@ for species_full_name in species_order:
     if 'putredinis' in species_name:
         fitted_data = pd.read_csv(os.path.join(data_dir, 'fourth_pass', filename), index_col=0)
         ax3.scatter(x, y, s=1)
+        # ax3.scatter(x_[~cf_mask], y_[~cf_mask], s=2, facecolors='none', edgecolors='grey', linewidth=0.5, zorder=0)
         ax3.plot(x_highlight, y_highlight, '.', color=color, markersize=5)
 
         # select three examples pairs
@@ -331,8 +352,9 @@ for species_full_name in species_order:
         ax3.plot(fitted_data['x'], fitted_data['y'], linestyle='--', color=color)
         # ax3.set_xlim([0, 50])
         ax3.set_xlim([0, 2e-4])
-        ax3.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
-        ax3.set_xlabel("Clonal divergence")
+        ax3.set_xticks([0, 0.5e-4, 1e-4, 1.5e-4, 2e-4])
+        ax3.set_xticklabels([0, 0.5, 1, 1.5, 2])
+        ax3.set_xlabel("Clonal divergence ($\\times 10^{-4}$)")
         ax3.fill_between(fitted_data['x'], fitted_data['y'] - fitted_data['sigma'],
                          fitted_data['y'] + fitted_data['sigma'], alpha=0.25)
         ax3.set_title(species_name)
@@ -359,8 +381,8 @@ for i, loc in enumerate(plot_loc):
         ys = np.array(random.sample(ys, points_to_plot))
     # xs = np.ones(ys.shape) * loc + np.random.normal(scale=0.05, size=ys.shape)
     # axd.scatter(xs, ys, color=plot_colors[(i) % len(plot_colors)], s=0.2, rasterized=True, alpha=0.1)
-    plot_jitters(axd, loc, ys, width=0.4, colorVal=plot_colors[i % len(plot_colors)])
     print(xticklabels[i], np.median(ys), np.mean(ys))
+    plot_jitters(axd, loc, ys, width=0.4, colorVal=plot_colors[i % len(plot_colors)])
 
 # for i, pc in enumerate(violins['bodies']):
 #     pc.set_facecolor(plot_colors[(i) % len(plot_colors)])
@@ -384,7 +406,7 @@ for i, genus in enumerate(genera):
 print("In total {} species".format(len(genera)-1))
 # axm.set_ylabel('Num transfers')
 # axm.set_ylabel("Recombined fraction \n @ $d_c=10^{-4}$")
-axm.set_ylabel("Transfer / divergence")
+axm.set_ylabel("Transfer\n / SNV")
 axm.grid(linestyle='--', axis='y')
 axm.set_yscale('log')
 # axm.set_ylim([-0.5, axm.get_ylim()[1]])
@@ -394,12 +416,15 @@ ymax = axm.get_ylim()[1]
 # adding connection lines
 # for i in range(3):
 #     ax = [ax1, ax2, ax3][i]
-#     cpl = ConnectionPatch((0, 0), (connection_l[i], ymax), "axes fraction", "data",
+#     cpl = ConnectionPatch((0, -0.4), (connection_l[i], ymax), "axes fraction", "data",
 #                           axesA=ax, axesB=axm, **kw)
-#     cpr = ConnectionPatch((1, 0), (connection_r[i], ymax), "axes fraction", "data",
+#     cpr = ConnectionPatch((1, -0.4), (connection_r[i], ymax), "axes fraction", "data",
 #                           axesA=ax, axesB=axm, **kw)
 #     axm.add_artist(cpl)
 #     axm.add_artist(cpr)
+#     cprr = ConnectionPatch((1, -0.4), (1, 0), "axes fraction", "axes fraction",
+#                            axesA=ax, axesB=ax, **kw)
+#     ax.add_artist(cprr)
 
 # axd.set_ylabel('Num transfers\n per 4d clonal snp')
 axd.set_ylabel('Transfer length')
@@ -409,19 +434,32 @@ _ = axd.set_xticklabels([])
 # axd.set_yscale('log')
 axd.grid(linestyle='--', axis='y')
 axd.set_xlim(axm.get_xlim())
-axd.set_ylim([0, 50e3])
-axd.set_yticks([0, 20e3, 40e3])
-axd.set_yticklabels([0, '20kb', '40kb'])
-# axd.set_yscale('log')
+axd.set_ylim([0.9e3, 1.3e5])
+axd.set_yscale('log')
+axd.set_yticks([1e3, 1e4, 1e5])
+axd.set_yticklabels(['1kb', '10kb', '100kb'])
 axm.set_xlim([1, 2 * len(xticklabels) + 1])
 axd.set_xlim([1, 2 * len(xticklabels) + 1])
+ax1.set_ylim([0, 52])
 
 _ = axd.set_xticks(xticks)
 _ = axd.set_xticklabels(xticklabels, rotation=90, ha='center', fontsize=5)
 json.dump(plotted_species, open(os.path.join(config.plotting_intermediate_directory, 'fig3_species.json'), 'w'))
 
+
+ax1.text(-0.1, 1.12, "A", transform=ax1.transAxes,
+        fontsize=9, fontweight='bold', va='top', ha='left')
+ax2.text(-0.1, 1.12, "B", transform=ax2.transAxes,
+        fontsize=9, fontweight='bold', va='top', ha='left')
+ax3.text(-0.1, 1.12, "C", transform=ax3.transAxes,
+        fontsize=9, fontweight='bold', va='top', ha='left')
+axm.text(0.03, 0.9, "D", transform=axm.transAxes,
+        fontsize=9, fontweight='bold', va='top', ha='left')
+axd.text(0.03, 0.9, "E", transform=axd.transAxes,
+         fontsize=9, fontweight='bold', va='top', ha='left')
+
 fig.tight_layout()
-fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig3_no_lines.pdf'), dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig3.pdf'), dpi=600)
 
 
 total_events = 0

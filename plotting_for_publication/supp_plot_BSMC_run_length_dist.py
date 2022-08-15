@@ -64,14 +64,18 @@ for pair in pairs:
 
 xs = np.linspace(0, 10)
 ax.plot(xs, np.exp(-xs), label='Random mutations', color='tab:red')
+xs = np.linspace(0, 30)
+ax.plot(xs, (xs+1)**(-2), label='$x^{-2}$', color='tab:green')
+ax.plot(xs, (xs+1)**(-3), label='$x^{-3}$', linestyle='--', color='tab:green')
 
 ymin = 0.8 / max(num_runs)
 ax.set_ylim([ymin, ax.get_ylim()[1]])
 
-ax.set_xlim([0, 38])
+# ax.set_xlim([0, 38])
 ax.set_ylabel('Prob greater than $l$')
 ax.set_xlabel("Normalized run length ($l\cdot d$)")
 ax.set_yscale('log')
+ax.set_xscale('log')
 ax.legend()
 
 plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_BSMC_run_length_dist.pdf'), bbox_inches='tight')

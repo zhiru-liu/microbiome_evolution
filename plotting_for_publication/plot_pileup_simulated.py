@@ -10,7 +10,7 @@ from plotting_for_publication import default_fig_styles
 mpl.rcParams['font.size'] = 7
 mpl.rcParams['lines.linewidth'] = 0.5
 
-plot_neutral_sim = True
+plot_neutral_sim = False
 
 if plot_neutral_sim:
     ckpt_dir = os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'fastsimbac_rbymu_1')
@@ -76,9 +76,9 @@ plt.subplots_adjust(wspace=0.5, hspace=0.5)
 axes[0, 1].errorbar(rbymu, mean_sim_medians, yerr=sigma_sim_medians, fmt='o', markersize=3)
 axes[1, 1].errorbar(rbymu, mean_sim_cvs, yerr=sigma_sim_csv, fmt='o', markersize=3)
 axes[1, 1].set_ylim([0, 1])
-axes[0, 1].set_xlabel(r'$r/\mu$')
-axes[1, 1].set_xlabel(r'$r/\mu$')
-axes[0, 1].set_ylabel('Median sharing fraction')
+axes[0, 1].set_xlabel(r'$\rho/\theta$')
+axes[1, 1].set_xlabel(r'$\rho/\theta$')
+axes[0, 1].set_ylabel('Median sharing frequency')
 axes[1, 1].set_ylabel('CV')
 
 # plot threshold length scan
@@ -87,7 +87,7 @@ axes[1, 0].errorbar(thresholds, np.mean(length_scan_cvs, axis=0), yerr=np.std(le
 axes[1, 0].set_ylim([0, 1])
 axes[0, 0].set_xlabel('threshold / bps')
 axes[1, 0].set_xlabel('threshold / bps')
-axes[0, 0].set_ylabel('Median sharing fraction')
+axes[0, 0].set_ylabel('Median sharing frequency')
 axes[1, 0].set_ylabel('CV')
 
 # Hard coded B. vulgatus median sharing fraction...

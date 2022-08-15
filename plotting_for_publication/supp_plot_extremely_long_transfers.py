@@ -38,7 +38,7 @@ for i in range(2):
     # ax[i].set_ylim(-0.001, 0.045)
     # ax[i].set_xlim([0, 260000])
 ax[1].set_xlabel("Core genome synonymous location")
-ax[0].set_ylabel("SNP density")
-ax[1].set_ylabel("SNP density")
+ax[0].set_ylabel("SNV density")
+ax[1].set_ylabel("SNV density")
 
-fig.savefig(os.path.join(config.figure_directory, "long_transfers.pdf"), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', "supp_long_transfers.pdf"), bbox_inches='tight')

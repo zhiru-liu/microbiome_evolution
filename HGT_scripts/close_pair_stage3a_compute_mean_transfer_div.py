@@ -27,6 +27,7 @@ def compute_div_in_transfers(dh, transfer_df):
     ref_starts = []
     ref_ends = []
     ref_contigs = []
+    clonal_divs = []
     for pair in pd.unique(transfer_df['pairs']):
         full_snp_vec, full_coverage_vec = dh.get_snp_vector(pair)
         # snp_vec and coverage_vec in 4D core genome space
@@ -83,17 +84,18 @@ def compute_div_in_transfers(dh, transfer_df):
 
 
 if __name__ == "__main__":
-    second_pass_dir = os.path.join(config.analysis_directory, "closely_related", "second_pass")
+    # second_pass_dir = os.path.join(config.analysis_directory, "closely_related", "second_pass")
+    second_pass_dir = os.path.join(config.analysis_directory, 'closely_related', 'iter_second_third_passes', 'converged_pass')
     data_dir = os.path.join(config.analysis_directory, "closely_related", "third_pass")
 
-    species_name = 'Alistipes_shahii_62199'
-    filepath = os.path.join(config.analysis_directory, "closely_related", 'third_pass',
-                            'Alistipes_shahii_62199' + '_all_transfers_two_clades.pickle')
-    dh = parallel_utils.DataHoarder(species_name=species_name, mode='QP', allowed_variants=['1D', '2D', '3D', '4D'])
-    transfer_df = pd.read_pickle(filepath)
-    transfer_df = compute_div_in_transfers(dh, transfer_df)
-    transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass',
-                                       'Alistipes_shahii_62199' + '_all_transfers_processed.pickle'))
+    # species_name = 'Alistipes_shahii_62199'
+    # filepath = os.path.join(config.analysis_directory, "closely_related", 'third_pass',
+    #                         'Alistipes_shahii_62199' + '_all_transfers_two_clades.pickle')
+    # dh = parallel_utils.DataHoarder(species_name=species_name, mode='QP', allowed_variants=['1D', '2D', '3D', '4D'])
+    # transfer_df = pd.read_pickle(filepath)
+    # transfer_df = compute_div_in_transfers(dh, transfer_df)
+    # transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass',
+    #                                    'Alistipes_shahii_62199' + '_all_transfers_processed.pickle'))
 
     # species_name = 'Bacteroides_vulgatus_57955'
     # filepath = os.path.join(config.analysis_directory, "closely_related", 'third_pass',
@@ -104,16 +106,16 @@ if __name__ == "__main__":
     # transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass',
     #              'Bacteroides_vulgatus_57955' + '_all_transfers_processed.pickle'))
 
-    # for filename in os.listdir(second_pass_dir):
-    #     if filename.startswith('.'):
-    #         continue
-    #     species_name = filename.split('.')[0]
-    #     print("Processing {}".format(species_name))
-    #     filepath = os.path.join(data_dir, "%s_all_transfers.pickle" % species_name)
-    #     if not os.path.exists(filepath):
-    #         print("Intermediate file not found for {}, skipping".format(species_name))
-    #         continue
-    #     transfer_df = pd.read_pickle(filepath)
-    #     dh = parallel_utils.DataHoarder(species_name=species_name, mode='QP', allowed_variants=['1D', '2D', '3D','4D'])
-    #     transfer_df = compute_div_in_transfers(dh, transfer_df)
-    #     transfer_df.to_pickle(filepath)
+    for filename in os.listdir(second_pass_dir):
+        if filename.startswith('.'):
+            continue
+        species_name = filename.split('.')[0]
+        print("Processing {}".format(species_name))
+        filepath = os.path.join(data_dir, "%s_all_transfers.pickle" % species_name)
+        if not os.path.exists(filepath):
+            print("Intermediate file not found for {}, skipping".format(species_name))
+            continue
+        transfer_df = pd.read_pickle(filepath)
+        dh = parallel_utils.DataHoarder(species_name=species_name, mode='QP', allowed_variants=['1D', '2D', '3D','4D'])
+        transfer_df = compute_div_in_transfers(dh, transfer_df)
+        transfer_df.to_pickle(filepath)

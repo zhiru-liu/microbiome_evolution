@@ -44,7 +44,7 @@ def plot_mirror(between_cumu_runs, within_cumu_runs, ax, threshold_lens, ind_to_
     ax.set_xlim([0, between_cumu_runs.shape[0]])
     ax.set_ylim([-ylim, ylim])
     ax.set_xlabel("4D core genome location")
-    ax.set_ylabel("sharing fraction")
+    ax.set_ylabel("Sharing frequency")
     ax.legend(bbox_to_anchor=(1, 1))
     ax.set_yticklabels(np.around(map(np.abs, ax.get_yticks()), decimals=1))
 
@@ -63,7 +63,7 @@ def plot_mirror_single_threshold(between_cumu_runs, within_cumu_runs, ax, ind_to
     ax.set_xlim([0, between_cumu_runs.shape[0]])
     ax.set_ylim([-ylim, ylim])
     ax.set_xlabel("4D core genome location")
-    ax.set_ylabel("sharing fraction")
+    ax.set_ylabel("Sharing frequency")
     # ax.legend(bbox_to_anchor=(1, 1))
     ax.set_yticklabels(np.around(map(np.abs, ax.get_yticks()), decimals=1))
 
@@ -88,7 +88,7 @@ def plot_delta(between_host_path, within_host_path, ax, threshold_lens, ind_to_p
         ax.axvspan(x, y, alpha=0.5, color='red')
     ax.set_xlim([0, between_cumu_runs.shape[0]])
     ax.set_xlabel("4D core genome location")
-    ax.set_ylabel("sharing fraction")
+    ax.set_ylabel("sharing frequency")
     ax.legend(bbox_to_anchor=(1, 1))
 
 

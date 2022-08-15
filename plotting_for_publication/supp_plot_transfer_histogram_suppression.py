@@ -74,8 +74,8 @@ for i in range(len(files_to_plot)):
     # ax.hist(sim_transfers, cumulative=-1, density=True, bins=bins, alpha=0.5)
 
     # bins = invert_bins(histo[0, :])
-    bins = np.arange(0, full_df['divergences'].max() + mids[1]-mids[0], mids[1]-mids[0])
-    counts, bins = np.histogram(full_df['divergences'], bins=bins)
+    bins = np.arange(0, full_df['synonymous divergences'].max() + mids[1]-mids[0], mids[1]-mids[0])
+    counts, bins = np.histogram(full_df['synonymous divergences'], bins=bins)
     new_mids = (bins[:-1] + bins[1:]) / 2
     ax.bar(new_mids, counts / np.sum(counts).astype(float), width=mids[1] - mids[0], label='empirical', alpha=0.5)
     # ax.hist(full_df['divergences'], cumulative=-1, density=True, bins=bins, alpha=0.5)
@@ -90,4 +90,4 @@ for j in range(axes.shape[1]):
     axes[-1, j].set_xlabel('transfer divergence (syn)')
 
 # fig.savefig(os.path.join(config.figure_directory, 'supp_transfer_histo_suppresions_no_loc_control.pdf'), bbox_inches='tight')
-fig.savefig(os.path.join(config.figure_directory, 'supp_transfer_histo_suppresions_only_closepairs.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_transfer_histograms.pdf'), bbox_inches='tight')

@@ -91,7 +91,8 @@ if __name__ == "__main__":
     trend_line = True
     colored = True  # whether to use clonal fraction for color code
     if_counts = False
-    second_pass_dir = os.path.join(config.analysis_directory, "closely_related", "second_pass")
+    # second_pass_dir = os.path.join(config.analysis_directory, "closely_related", "second_pass")
+    second_pass_dir = os.path.join(config.analysis_directory, 'closely_related', 'iter_second_third_passes', 'converged_pass')
     data_dir = os.path.join(config.analysis_directory, "closely_related", "third_pass")
 
     for filename in os.listdir(second_pass_dir):
@@ -145,7 +146,10 @@ if __name__ == "__main__":
             else:
                 y_fit = 1 - df['clonal fractions'].to_numpy()
 
-            cf_cutoff = config.clonal_fraction_cutoff
+            if if_counts:
+                cf_cutoff = config.clonal_fraction_cutoff
+            else:
+                cf_cutoff = 0
             x_fit = x_fit[cf >= cf_cutoff]
             y_fit = y_fit[cf >= cf_cutoff]
             x_plot, y_plot, sigmas = prepare_trend_line(x_fit, y_fit)

@@ -425,7 +425,7 @@ def sample_blocks(dh, num_samples=5000, block_size=1000):
     return local_divs, genome_divs
 
 
-def prepare_x_y(df, mode='count', cf_cutoff=config.clonal_fraction_cutoff):
+def prepare_x_y(df, mode='count', cf_cutoff=config.clonal_fraction_cutoff, return_unfiltered=False):
     if mode not in ['count', 'length', 'fraction', 'rate']:
         raise ValueError("Mode not implemented")
     # Multiple choice of x&y to plot
@@ -435,29 +435,32 @@ def prepare_x_y(df, mode='count', cf_cutoff=config.clonal_fraction_cutoff):
     # exp_snps = df['num_clonal_snps'] / clonal_fraction
     # x = exp_snps.to_numpy()
     # y = df['transfer_len'].to_numpy()
+    cf = df['clonal fractions']
+    mask = cf >= cf_cutoff
     if mode == 'count':
-        cf = df['clonal fractions']
-        x = df['clonal divs'].to_numpy()[cf >= cf_cutoff]
-        y = df['normalized transfer counts'].to_numpy()[cf >= cf_cutoff]
+        x = df['clonal divs'].to_numpy()
+        y = df['normalized transfer counts'].to_numpy()
     elif mode == 'length':
-        cf = df['clonal fractions']
-        x = df['clonal divs'].to_numpy()[cf >= cf_cutoff]
-        y = df['total transfer lengths'].to_numpy()[cf >= cf_cutoff]
+        x = df['clonal divs'].to_numpy()
+        y = df['total transfer lengths'].to_numpy()
     elif mode == 'fraction':
         cf = df['clonal fractions']
-        x = df['clonal divs'].to_numpy()[cf >= cf_cutoff]
-        y = 1 - cf[cf >= cf_cutoff]
+        x = df['clonal divs'].to_numpy()
+        y = 1 - cf
     elif mode == 'rate':
-        cf = df['clonal fractions']
-        x = df['clonal divs'].to_numpy()[cf >= cf_cutoff]
-        y = df['normalized transfer counts'].to_numpy()[cf >= cf_cutoff]
+        x = df['clonal divs'].to_numpy()
+        y = df['normalized transfer counts'].to_numpy()
         y /= x * 1e6  # num transfers per mutation
-    return x, y
+
+    if return_unfiltered:
+        return x, y, mask
+    else:
+        return x[mask], y[mask]
 
 
-def prepare_run_lengths(raw_df, run_df, desired_type=0, cf_cutoff=config.clonal_fraction_cutoff):
+def prepare_run_lengths(raw_df, run_df, desired_type=0, cf_cutoff=config.clonal_fraction_cutoff, clonal_div_cutoff=1):
     # keeping only data from pairs passing the cf cutoff
-    good_pairs = raw_df[raw_df['clonal fractions'] > cf_cutoff]['pairs']
+    good_pairs = raw_df[(raw_df['clonal fractions'] > cf_cutoff) & (raw_df['clonal divs'] < clonal_div_cutoff)]['pairs']
     mask = run_df['pairs'].isin(good_pairs)
     sub_df = run_df[mask]
     num_pairs = len(sub_df['pairs'].unique())
@@ -513,7 +516,7 @@ def get_empirical_div_dist(local_divs, genome_divs, num_bins, separate_clades, c
 
 
 def prepare_HMM_results_for_B_vulgatus(save_path, cf_cutoff, cache_intermediate=True,
-                                       merge_threshold=0, mode='count', filter_threshold=5):
+                                       merge_threshold=0, mode='count', filter_threshold=5, clonal_div_cutoff=1e-4):
     """
     Handy function to extract useful data from HMM raw results
     Filtering genome pairs according to the clonal fraction, such that can control the degree of
@@ -553,20 +556,20 @@ def prepare_HMM_results_for_B_vulgatus(save_path, cf_cutoff, cache_intermediate=
     clonal_lens = np.array(dat['clonal lengths'])
     # clonal_divs = clonal_snps / clonal_lens.astype(float)
     clonal_divs = np.array(dat['clonal divs'])[:, 1]  # column 0: naive clonal divergence; col 1: estimated clonal div
-    mask = clonal_fractions > cf_cutoff
+    mask = (clonal_fractions > cf_cutoff) & (clonal_divs < clonal_div_cutoff)
 
-    x = clonal_divs[mask]
+    x = clonal_divs
     if mode=='count':
         # normalize to transfer per 1Mbp
         core_genome_len = 2057681
-        y1 = within_counts[mask] * 1e6 / core_genome_len
-        y2 = between_counts[mask] * 1e6 / core_genome_len
+        y1 = within_counts * 1e6 / core_genome_len
+        y2 = between_counts * 1e6 / core_genome_len
     elif mode == 'length':
-        y1 = within_full_lengths[mask]
-        y2 = between_full_lengths[mask]
+        y1 = within_full_lengths
+        y2 = between_full_lengths
     elif mode == 'fraction':
-        y1 = within_fractions[mask]
-        y2 = between_fractions[mask]
+        y1 = within_fractions
+        y2 = between_fractions
 
     if cache_intermediate:
         intermediate_data = pd.DataFrame({'clonal divs': x, 'within counts': y1,
@@ -578,9 +581,9 @@ def prepare_HMM_results_for_B_vulgatus(save_path, cf_cutoff, cache_intermediate=
     passed_full_df = full_df[full_df['pairs'].isin(passed_pairs)]
 
     if cache_intermediate:
-        full_df['clonal fraction >80%'] = full_df['pairs'].isin(passed_pairs)
+        full_df['plotted in fig2'] = full_df['pairs'].isin(passed_pairs)
         full_df.to_pickle(
             os.path.join(config.analysis_directory, "closely_related", 'third_pass',
                          'Bacteroides_vulgatus_57955' + '_all_transfers_two_clades.pickle'))
 
-    return x, y1, y2, passed_full_df
+    return x, y1, y2, passed_full_df, mask

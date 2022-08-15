@@ -13,24 +13,26 @@ from plotting_for_publication import plot_pileup_mirror
 
 mpl.rcParams['font.size'] = 7
 mpl.rcParams['lines.linewidth'] = 0.5
+# mpl.rcParams['legend.frameon'] = False
+mpl.rcParams['legend.fontsize'] = 'small'
 
 # mapping out grid
-fig = plt.figure(figsize=(7, 4.5), dpi=600)
+fig = plt.figure(figsize=(7, 4.8), dpi=600)
 
 gs_pi = gridspec.GridSpec(1, 1)
-gs_pi.update(left=0.36, right=0.98, top=0.95, bottom=0.86)
+gs_pi.update(left=0.40, right=0.98, top=0.97, bottom=0.88)
 
 gs_Bv = gridspec.GridSpec(1, 1)
-gs_Bv.update(left=0.36, right=0.98, top=0.84, bottom=0.59)
+gs_Bv.update(left=0.40, right=0.98, top=0.86, bottom=0.62)
 
 gs_neutral = gridspec.GridSpec(1, 1)
-gs_neutral.update(left=0.36, right=0.98, top=0.52, bottom=0.395)
+gs_neutral.update(left=0.40, right=0.98, top=0.53, bottom=0.41)
 
 gs_Er = gridspec.GridSpec(1, 1)
-gs_Er.update(left=0.36, right=0.98, top=0.33, bottom=0.08)
+gs_Er.update(left=0.40, right=0.98, top=0.32, bottom=0.08)
 
 gs_cvs = gridspec.GridSpec(1, 1)
-gs_cvs.update(left=0.075, right=0.275, top=0.33, bottom=0.08)
+gs_cvs.update(left=0.095, right=0.295, top=0.32, bottom=0.08)
 
 # adding axes
 pi_ax = fig.add_subplot(gs_pi[0,0])
@@ -52,18 +54,29 @@ else:
         # species with > 50 contigs are not considered
         if species.startswith('.'):
             continue
+        elif (species=='Bacteroides_vulgatus_57955') or (species=='Eubacterium_rectale_56927'):
+            continue
         sharing_pileup = np.loadtxt(os.path.join(ckpt_dir, species, 'between_host.csv'))
         cv = np.std(sharing_pileup, axis=0) / np.mean(sharing_pileup, axis=0)
         all_cvs.append(cv)
     real_cvs = np.array(all_cvs)
     np.savetxt(cvs_path, real_cvs)
+
+ckpt_dir = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical')
+sharing_pileup = np.loadtxt(os.path.join(ckpt_dir, 'Bacteroides_vulgatus_57955', 'between_host.csv'))
+Bv_cv = np.std(sharing_pileup, axis=0) / np.mean(sharing_pileup, axis=0)
+sharing_pileup = np.loadtxt(os.path.join(ckpt_dir, 'Eubacterium_rectale_56927', 'between_host.csv'))
+Er_cv = np.std(sharing_pileup, axis=0) / np.mean(sharing_pileup, axis=0)
+print('B. vulgatus CV: {}'.format(Bv_cv))
+print('E. rectale CV: {}'.format(Er_cv))
+
 # load sim data
 sim_cvs = np.loadtxt(os.path.join(config.analysis_directory, 'sharing_pileup', 'simulated', 'r_scan_statistics', 'cvs.csv'))
 sim_cvs = sim_cvs.reshape((-1, 100))
 mean_sim_cvs = sim_cvs.mean(axis=1)
 sigma_sim_cvs = np.std(sim_cvs, axis=1)
 print("Minimum real CV: {}".format(real_cvs.min()))
-print("Number of species: {}".format(real_cvs.shape[0]))
+print("Number of species: {}".format(real_cvs.shape[0] + 2))
 print("Simulation CV mean: {}".format(mean_sim_cvs))
 print("Simulation CV std: {}".format(sigma_sim_cvs))
 print("Num std away: {}".format((real_cvs.min() - mean_sim_cvs)/sigma_sim_cvs))
@@ -74,11 +87,15 @@ for i in range(sim_cvs.shape[0]):
 print("worst t test pval: {}".format(max(ps)))
 
 # plot comparison
-cvs_ax.scatter(real_cvs[:, 0], np.ones(real_cvs.shape[0]) + np.random.uniform(-0.1, 0.1, size=real_cvs.shape[0]), marker='o', alpha=0.5)
-cvs_ax.errorbar(mean_sim_cvs, np.zeros(mean_sim_cvs.shape) + np.random.uniform(-0.1, 0.1, size=mean_sim_cvs.shape), xerr=sigma_sim_cvs, fmt='o', color='grey', alpha=0.3)
+cvs_ax.scatter(real_cvs[:, 0], np.ones(real_cvs.shape[0]) + np.random.uniform(-0.2, 0.2, size=real_cvs.shape[0]), marker='o', alpha=0.5)
+cvs_ax.scatter(Bv_cv[0], 1 + 0.15, marker='^', color='tab:pink', label='B. vulgatus', alpha=0.5)
+cvs_ax.scatter(Er_cv[0], 1 - 0.1, marker='v', color='tab:pink', label='E. rectale', alpha=0.5)
+cvs_ax.errorbar(mean_sim_cvs, np.zeros(mean_sim_cvs.shape) + np.random.uniform(-0.2, 0.2, size=mean_sim_cvs.shape), xerr=sigma_sim_cvs, fmt='o', color='grey', alpha=0.3)
 cvs_ax.set_yticks([0, 1])
-cvs_ax.set_yticklabels(['Neutral', 'Real'])
-cvs_ax.set_xlabel('CV')
+cvs_ax.set_ylim([-0.3, 1.5])
+cvs_ax.set_yticklabels(['Neutral\nsimulation', 'Observed'])
+cvs_ax.set_xlabel('Sharing frequency CV')
+cvs_ax.legend()
 
 
 ####################### Plot Bv #######################
@@ -93,18 +110,6 @@ def highlight_sweep_region(ax, genes):
 
 species_name = 'Bacteroides_vulgatus_57955'
 # loading the gene name array
-data_dir = os.path.join(config.data_directory, 'zarr_snps', species_name, 'site_info.txt')
-res = parallel_utils.parse_snp_info(data_dir)
-chromosomes = res[0]
-gene_names = res[2]
-variants = res[3]
-pvalues = res[4]
-
-core_genes = core_gene_utils.get_sorted_core_genes(species_name)
-general_mask = parallel_utils._get_general_site_mask(
-    gene_names, variants, pvalues, core_genes, allowed_variants=['4D'])
-good_genes = gene_names[general_mask]
-
 base_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', 'Bacteroides_vulgatus_57955_between')
 between_clade_path = os.path.join(base_path, 'between_host.csv')
 thresholds = np.loadtxt(os.path.join(base_path, 'between_host_thresholds.txt'))
@@ -116,6 +121,20 @@ within_thresholds = np.loadtxt(os.path.join(base_path, 'between_host_thresholds.
 within_cumu_runs, between_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
     within_clade_path, between_clade_path, Bv_ax, ind_to_plot=0, ylim=0.3)
 print(within_thresholds[0], thresholds[0])
+
+data_dir = os.path.join(config.data_directory, 'zarr_snps', species_name, 'site_info.txt')
+
+res = parallel_utils.parse_snp_info(data_dir)
+chromosomes = res[0]
+gene_names = res[2]
+variants = res[3]
+pvalues = res[4]
+
+core_genes = core_gene_utils.get_sorted_core_genes(species_name)
+general_mask = parallel_utils._get_general_site_mask(
+    gene_names, variants, pvalues, core_genes, allowed_variants=['4D'])
+good_genes = gene_names[general_mask]
+
 highlight_sweep_region(Bv_ax, good_genes)
 
 
@@ -135,8 +154,11 @@ pi_ax.plot(np.convolve(pi, kernel, mode='same'), color='tab:orange', label='with
 pi_ax.plot(np.convolve(clade_pi, kernel, mode='same'), color='tab:blue', label='within largest clade')
 # pi_ax.legend()
 pi_ax.set_xlim([0, between_cumu_runs.shape[0]])
-pi_ax.set_xlabel("Genome location")
-pi_ax.set_ylabel('$\pi$')
+pi_ax.set_xticklabels([])
+# pi_ax.set_xlabel("Genome location")
+pi_ax.set_yticks([0, 0.02, 0.04])
+pi_ax.set_yticklabels(['0', '2%', '4%'])
+pi_ax.set_ylabel('Divergence')
 
 
 # Plot neutral
@@ -151,6 +173,23 @@ for sim_id in range(400, 500):
         neutral_ax.plot(cumu_runs, color='grey', linewidth=1, alpha=0.15, rasterized=True)
 neutral_ax.set_ylim([0, 0.3])
 neutral_ax.set_xlim([0, 280000])
+neutral_ax.set_xlabel('Genome location')
+neutral_ax.set_ylabel('Sharing frequency')
+
+pi_ax.text(-0.03, 1.24, "B", transform=pi_ax.transAxes,
+         fontsize=9, fontweight='bold', va='top', ha='left')
+neutral_ax.text(-0.03, 1.18, "C", transform=neutral_ax.transAxes,
+         fontsize=9, fontweight='bold', va='top', ha='left')
+Er_ax.text(-0.03, 1.12, "D", transform=Er_ax.transAxes,
+         fontsize=9, fontweight='bold', va='top', ha='left')
+cvs_ax.text(-0.22, 1.12, "E", transform=cvs_ax.transAxes,
+         fontsize=9, fontweight='bold', va='top', ha='left')
+
+Bv_ax.text(0.78, 0.8, "B. vulgatus\n(within clade)", transform=Bv_ax.transAxes)
+Bv_ax.text(0.78, 0.05, "between clade", transform=Bv_ax.transAxes)
+neutral_ax.text(0.75, 0.7, "Neutral simulation", transform=neutral_ax.transAxes)
+Er_ax.text(0.78, 0.9, "E. rectale", transform=Er_ax.transAxes)
+Er_ax.text(0.78, 0.05, "within hosts", transform=Er_ax.transAxes)
 
 # Plot Er
 species_name = 'Eubacterium_rectale_56927'
@@ -165,4 +204,4 @@ within_thresholds = np.loadtxt(os.path.join(base_path, 'within_host_thresholds.t
 between_cumu_runs, within_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
     between_host_path, within_host_path, Er_ax, ind_to_plot=0, ylim=0.5, colors=[config.between_host_color, config.within_host_color])
 
-fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig5.pdf'))
+fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig5.pdf'), bbox_inches='tight')

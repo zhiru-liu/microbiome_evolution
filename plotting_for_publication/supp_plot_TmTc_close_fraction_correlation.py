@@ -18,7 +18,7 @@ TmTc_df = pd.read_csv(os.path.join(config.figure_directory, 'supp_table', 'TcTm_
 TmTc_df['Tm/Tc'] = 1 / TmTc_df['Tc/Tm']
 
 axes[0].scatter(TmTc_df['Tm/Tc'], TmTc_df['Close pair fraction'], s=scatter_size)
-axes[0].set_xlabel('Tm / Tc')
+axes[0].set_xlabel('$T_{mosaic} / T_{mrca}$')
 axes[0].set_ylabel('Fraction of "close pairs"')
 axes[0].set_title("Empirical")
 
@@ -31,12 +31,12 @@ bsmc_df['Tm/Tc'] = bsmc_df['t'] / (bsmc_df['rho'] * bsmc_df['lambda'] * bsmc_df[
 
 axes[1].scatter(bsmc_df['Tm/Tc'], frac_close, scatter_size)
 axes[1].set_xlim(axes[0].get_xlim())
-axes[1].set_xlabel('Tm / Tc')
+axes[1].set_xlabel('$T_{mosaic} / T_{mrca}$')
 axes[1].set_ylabel('Fraction of "close pairs"')
 axes[1].set_title("Neutral simulation (zoom in)")
 
 axes[2].scatter(bsmc_df['Tm/Tc'], frac_close, scatter_size)
-axes[2].set_xlabel('Tm / Tc')
+axes[2].set_xlabel('$T_{mosaic} / T_{mrca}$')
 axes[2].set_ylabel('Fraction of "close pairs"')
 axes[2].set_title("Neutral simulation")
 

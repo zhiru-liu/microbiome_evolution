@@ -30,6 +30,10 @@ class ClosePairHMM:
         self.transition_prior = self.transition_prior.astype(np.float32) / np.sum(self.transition_prior)
         self.transfer_rate = transfer_rate
         self.init_transfer_rate = transfer_rate
+        if isinstance(transfer_length, np.ndarray):
+            # then we need to make sure transfer length is state specific, i.e. have the same length as the number of R states
+            if len(transfer_length) != (n_components - 1):
+                raise ValueError("Transfer length must have the same dimension as the number of states in the HMM!")
         self.exit_rate = 1. / transfer_length  # rate of leaving the transferred state
         self._init_transitions()
 
@@ -67,9 +71,10 @@ class ClosePairHMM:
         # transmat is very sparse; no transitions between the recombined/transferred states
         self.transmat_ = np.zeros((self.n_components, self.n_components))
         # transitions from the recombined state
-        # TODO: modify this to allow state-wise exit rate
+        # note that the following also works when exit_rate is an array
         self.transmat_[1:, 0] = self.exit_rate
-        self.transmat_[np.diag_indices(self.n_components)] = 1 - self.exit_rate
+        diag_indices = (np.arange(1, self.n_components), np.arange(1, self.n_components))
+        self.transmat_[diag_indices] = 1 - self.exit_rate
         # transitions from the clonal state
         self.transmat_[0, 0] = 1 - self.transfer_rate
         self.transmat_[0, 1:] = self.transfer_rate * self.transition_prior

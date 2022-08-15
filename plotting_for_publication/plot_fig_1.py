@@ -40,8 +40,8 @@ def plot_example_genomes(axes):
         axes[i].set_xlim([0, 25000])
     axes[0].set_xticklabels([])
     axes[1].set_xticklabels([])
-    axes[2].set_xlabel("Core genome synonymous location")
-    axes[1].set_ylabel("SNP density")
+    axes[2].set_xlabel("Location along core genome")
+    axes[1].set_ylabel("SNV density")
 
 
 def plot_cf_pd_joint(axes):
@@ -53,7 +53,7 @@ def plot_cf_pd_joint(axes):
 
     xs = np.linspace(0.01, 1, 100)
     ys = -np.log(xs) / config.first_pass_block_size
-    scatter_ax.plot(xs, ys, '--r', zorder=1, label='indep. SNPs')
+    scatter_ax.plot(xs, ys, '--r', zorder=1, label='indep. SNVs')
 
     scatter_ax.scatter(x, y, s=0.6, linewidth=0, zorder=2, rasterized=True)
     marg_ax.hist(y, orientation='horizontal', bins=100, alpha=0.6)
@@ -63,7 +63,9 @@ def plot_cf_pd_joint(axes):
     marg_ax.set_xticklabels(['1', '500', '1k'])
 
     scatter_ax.set_xlabel('Fraction of identical blocks')
-    scatter_ax.set_ylabel('Pairwise syn divergence')
+    scatter_ax.set_ylabel('Pairwise syn divergence (%)')
+    scatter_ax.set_yticks([0, 0.5e-2, 1e-2, 1.5e-2, 2e-2, 2.5e-2])
+    scatter_ax.set_yticklabels(['0', '0.5', '1', '1.5', '2', '2.5'])
     scatter_ax.legend()
     scatter_ax.set_title(figure_utils.get_pretty_species_name(species_name))
 
@@ -78,7 +80,7 @@ def plot_cf_pd_joint(axes):
 
 
 fig = plt.figure(figsize=(6, 6.5))
-outer_grid = gridspec.GridSpec(ncols=1, nrows=3, height_ratios=[2, 2.5, 2.5], hspace=0.5, figure=fig)
+outer_grid = gridspec.GridSpec(ncols=1, nrows=3, height_ratios=[2.5, 2.5, 2.5], hspace=0.5, figure=fig)
 
 mid_grid = gridspec.GridSpecFromSubplotSpec(ncols=2, nrows=1, width_ratios=[1,1],wspace=0.3,subplot_spec=outer_grid[1])
 joint_plot_grid = gridspec.GridSpecFromSubplotSpec(1,2, width_ratios=[4,1],wspace=0.1,subplot_spec=mid_grid[0])
@@ -89,6 +91,8 @@ bottom_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspac
 
 # adding axes
 cartoon_ax = fig.add_subplot(outer_grid[0])
+cartoon_ax.set_yticklabels([])
+cartoon_ax.set_xticklabels([])
 # cartoon_ax.set_visible(False)
 scatter_ax = fig.add_subplot(joint_plot_grid[0])
 marg_ax = fig.add_subplot(joint_plot_grid[1], sharey=scatter_ax)
@@ -103,5 +107,13 @@ var_exp_ax2 = fig.add_subplot(bottom_grid[1])
 plot_cf_pd_joint([scatter_ax, marg_ax])
 plot_example_genomes([example_ax1, example_ax2, example_ax3])
 plot_var_exaplained([var_exp_ax1, var_exp_ax2])
+
+
+scatter_ax.text(-0.1, 1.12, "B", transform=scatter_ax.transAxes,
+         fontsize=9, fontweight='bold', va='top', ha='left')
+example_ax1.text(-0.1, 1.45, "C", transform=example_ax1.transAxes,
+         fontsize=9, fontweight='bold', va='top', ha='left')
+var_exp_ax1.text(-0.1, 1.12, "D", transform=var_exp_ax1.transAxes,
+         fontsize=9, fontweight='bold', va='top', ha='left')
 
 fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig1.pdf'), bbox_inches='tight', dpi=1200)

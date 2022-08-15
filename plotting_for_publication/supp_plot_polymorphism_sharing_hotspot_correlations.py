@@ -54,7 +54,7 @@ axes.plot(smooth_pi[mask], between_data[mask, 1], '.', markersize=1, rasterized=
 axes.plot(smooth_pi[~mask], between_data[~mask, 1], '.', markersize=1, color='tab:orange', rasterized=True, label='enriched for\nribosomal proteins')
 mpl.rcParams['legend.frameon']  = True
 axes.legend()
-axes.set_xlabel('$\pi$')
+axes.set_xlabel('Within-clade divergence')
 axes.set_ylabel('Sharing fraction')
 
 plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_pi_pileup_correlation.pdf'), bbox_inches='tight')

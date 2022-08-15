@@ -1,4 +1,5 @@
 """ Use python3 to use updated scipy package that has ks_2samp"""
+""" old script; use supp_plot_long_run_statistics_within_between_host.py instead"""
 import numpy as np
 import os
 import sys
@@ -44,7 +45,7 @@ for species_name in files:
     # in order to use one sided ks test, need to use python3's scipy
     ks_dist, p_val = ks_2samp(within_host_max_runs, between_host_max_runs, alternative='less')
     if species_name in to_skip:
-        print("{} pval: {:.1e}".format(species_name, p_val))
+        print("{}; n samples: {}; pval: {:.1e}".format(species_name, len(within_host_max_runs), p_val))
         continue
     ax = axes[row, col]
     ax.hist([between_host_max_runs, within_host_max_runs], bins=100, density=True,
@@ -61,5 +62,5 @@ for ax in axes[-1, :]:
     ax.set_xlabel('Max homozygous run length \n(4D syn sites)')
 fig.delaxes(axes[-1, -1])
 
-fig.savefig(os.path.join(config.figure_directory, 'supp_within_between_max_runs.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_within_between_max_runs.pdf'), bbox_inches='tight')
 plt.close()
