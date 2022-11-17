@@ -56,7 +56,7 @@ species_order = [
     'Alistipes_finegoldii_56071',
     'Alistipes_sp_60764',
 
-    'Lachnospiraceae_bacterium_51870',
+    # 'Lachnospiraceae_bacterium_51870',  # removed because of lack of close pairs
     'Coprococcus_sp_62244',
     'Roseburia_intestinalis_56239',
 
@@ -75,7 +75,7 @@ species_order = [
     'Akkermansia_muciniphila_55290']
 
 species_cutoff_dict = json.load(open(os.path.join(config.plotting_intermediate_directory, 'clonal_div_cutoff.json'), 'r'))
-species_cutoff_dict['Bacteroides_vulgatus_57955'] = 1e-4
+species_cutoff_dict['Bacteroides_vulgatus_57955'] = config.Bv_clonal_div_cutoff
 
 data_dir = os.path.join(config.analysis_directory, "closely_related")
 
@@ -197,7 +197,7 @@ for species_full_name in species_order:
         axm.plot(xloc, mid / 1e6, linestyle=':', linewidth=1)
         # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
-        good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=0)
+        good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=0, clonal_div_cutoff=clonal_div_cutoff)
         transfer_length_data.append(good_runs)
         all_num_pairs.append(num_pairs)
 
@@ -220,7 +220,7 @@ for species_full_name in species_order:
         axm.plot(xloc, mid / 1e6, linestyle=':', linewidth=1)
         # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
-        good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=1)
+        good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=1, clonal_div_cutoff=clonal_div_cutoff)
         transfer_length_data.append(good_runs)
         all_num_pairs.append(num_pairs)
 
@@ -260,7 +260,6 @@ for species_full_name in species_order:
     color = plot_colors[(idx-1) % len(plot_colors)]
     if plot_jitter:
         x, y = close_pair_utils.prepare_x_y(raw_data, mode='count')
-        # TODO: can impose the x cutoff here if we want for these species
         x_ = x[(x > 0)&(x<clonal_div_cutoff)]
         y_ = y[(x > 0)&(x<clonal_div_cutoff)]
         rates = y_ / x_ / 1e6
@@ -308,7 +307,7 @@ for species_full_name in species_order:
         ax1.set_xticks([0, 0.5e-4, 1e-4, 1.5e-4, 2e-4])
         ax1.set_xticklabels([0, 0.5, 1, 1.5, 2])
         # ax1.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
-        ax1.set_ylabel("# transfers / 1Mb")
+        ax1.set_ylabel("# transfers / Mb")
         axm.axvline(xloc[0] - 0.4, **kw)
         axm.axvline(xloc[-1] + 0.4, **kw)
         axd.axvline(xloc[0] - 0.4, **kw)
@@ -406,10 +405,10 @@ for i, genus in enumerate(genera):
 print("In total {} species".format(len(genera)-1))
 # axm.set_ylabel('Num transfers')
 # axm.set_ylabel("Recombined fraction \n @ $d_c=10^{-4}$")
-axm.set_ylabel("Transfer\n / SNV")
+axm.set_ylabel("Transfers / SNV")
 axm.grid(linestyle='--', axis='y')
 axm.set_yscale('log')
-# axm.set_ylim([-0.5, axm.get_ylim()[1]])
+axm.set_ylim([2e-3, 2])
 # axm.set_ylim([-0.05, 0.5])
 
 ymax = axm.get_ylim()[1]

@@ -124,8 +124,9 @@ def parse_global_marker_gene_coverages():
 
 def parse_species_marker_gene_coverages(desired_species_name):
     
-    species_coverage_matrix, samples, species = parse_species_marker_gene_coverages()
-    
+    # species_coverage_matrix, samples, species = parse_species_marker_gene_coverages()
+    species_coverage_matrix, samples, species = parse_global_marker_gene_coverages()
+
     for species_idx in xrange(0,len(species)):
         species_name = species[species_idx]
         if species_name==desired_species_name:

@@ -33,10 +33,13 @@ def invert_bins(arr):
     return np.arange(start, end, dx)
 
 bottom_offset = 1e-3  # some bars are thinner than the bottom axis
+count = 0
 for i in range(len(files_to_plot)):
-    idx = np.unravel_index(i, axes.shape)
-    ax = axes[idx]
     species_name = files_to_plot[i].split('.')[0]
+    if 'Lachnospiraceae' in species_name:
+        continue
+    idx = np.unravel_index(count, axes.shape)
+    ax = axes[idx]
 
     # load simulated transfer distribution
     histo = np.loadtxt(os.path.join(config.hmm_data_directory, species_name + '.csv'))
@@ -79,15 +82,19 @@ for i in range(len(files_to_plot)):
     new_mids = (bins[:-1] + bins[1:]) / 2
     ax.bar(new_mids, counts / np.sum(counts).astype(float), width=mids[1] - mids[0], label='empirical', alpha=0.5)
     # ax.hist(full_df['divergences'], cumulative=-1, density=True, bins=bins, alpha=0.5)
-    ax.legend()
+    # ax.legend()
     # ax.set_xlabel('transfer divergence')
     ax.set_title(figure_utils.get_pretty_species_name(species_name))
     ax.set_ylim(bottom=-bottom_offset)
+    count += 1
 
 for i in range(axes.shape[0]):
     axes[i, 0].set_ylabel('probability density')
-for j in range(axes.shape[1]):
+for j in range(axes.shape[1]-1):
     axes[-1, j].set_xlabel('transfer divergence (syn)')
+axes[-2, -1].set_xlabel('transfer divergence (syn)')
+axes[-1, -2].legend(loc='center', bbox_to_anchor=(1.7, 0.45), fontsize=8)
+fig.delaxes(axes[-1, -1])
 
 # fig.savefig(os.path.join(config.figure_directory, 'supp_transfer_histo_suppresions_no_loc_control.pdf'), bbox_inches='tight')
 fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_transfer_histograms.pdf'), bbox_inches='tight')

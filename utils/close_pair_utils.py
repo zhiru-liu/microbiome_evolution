@@ -460,7 +460,8 @@ def prepare_x_y(df, mode='count', cf_cutoff=config.clonal_fraction_cutoff, retur
 
 def prepare_run_lengths(raw_df, run_df, desired_type=0, cf_cutoff=config.clonal_fraction_cutoff, clonal_div_cutoff=1):
     # keeping only data from pairs passing the cf cutoff
-    good_pairs = raw_df[(raw_df['clonal fractions'] > cf_cutoff) & (raw_df['clonal divs'] < clonal_div_cutoff)]['pairs']
+    # TODO: also need to filter pairs that fail the clonal divergence cutoff
+    good_pairs = raw_df[(raw_df['clonal fractions'] >= cf_cutoff) & (raw_df['clonal divs'] <= clonal_div_cutoff)]['pairs']
     mask = run_df['pairs'].isin(good_pairs)
     sub_df = run_df[mask]
     num_pairs = len(sub_df['pairs'].unique())

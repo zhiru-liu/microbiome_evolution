@@ -98,14 +98,14 @@ for i in range(5):
                         y_plot + sigmas, alpha=0.25)
         max_x, max_y = max(x), max(y)
         if div_cutoff is not None:
-            ax.add_patch(Rectangle((species_cutoff_dict[species], 0), 3e-4, 1, facecolor='grey', edgecolor=None, alpha=0.3))
+            ax.add_patch(Rectangle((species_cutoff_dict[species], 0), 4e-4, 1, facecolor='grey', edgecolor=None, alpha=0.3))
         ax.set_xlim([0, max(x)*1.05])
         ax.set_ylim([0, max(y)*1.05])
         ax.set_title(figure_utils.get_pretty_species_name(species))
         ax.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
 
 for ax in axes1[:, 0]:
-    ax.set_ylabel("Num transfer per 1Mbps")
+    ax.set_ylabel("Num transfer per Mb")
 for ax in axes1[-1, :]:
     ax.set_xlabel("Syn clonal divergence")
 for ax in axes2[:, 0]:

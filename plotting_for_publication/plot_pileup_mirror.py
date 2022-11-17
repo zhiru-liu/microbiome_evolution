@@ -62,7 +62,7 @@ def plot_mirror_single_threshold(between_cumu_runs, within_cumu_runs, ax, ind_to
     ax.hlines(0, 0, between_cumu_runs.shape[0], 'black', linewidth=1)
     ax.set_xlim([0, between_cumu_runs.shape[0]])
     ax.set_ylim([-ylim, ylim])
-    ax.set_xlabel("4D core genome location")
+    ax.set_xlabel("Location along core genome")
     ax.set_ylabel("Sharing frequency")
     # ax.legend(bbox_to_anchor=(1, 1))
     ax.set_yticklabels(np.around(map(np.abs, ax.get_yticks()), decimals=1))

@@ -190,10 +190,8 @@ def plot_max_run_histo(ax, species_name):
     ax.hist([between_host_max_runs, within_host_max_runs], bins=100, density=True,
             cumulative=-1, histtype='step', color=[config.between_host_color, config.within_host_color])
     # ax.set_xlabel('Max homozygous run length\n(4D syn sites), $x$')
-    ax.set_xlabel('Max sharing length, $x$')
-    ax.set_ylabel('Fraction of pairs\n $>x$')
-    ax.plot([], [], color=config.between_host_color, label='Between hosts')
-    ax.plot([], [], color=config.within_host_color, label='Within hosts')
+    ax.set_xlabel(r'Max sharing length, $\ell$')
+    ax.set_ylabel(r'Fraction pairs$\geq\ell$')
     items = species_name.split('_')
     name = ' '.join([items[0][0]+'.', items[1]])
     if 'vulgatus' in species_name:
@@ -318,13 +316,32 @@ save_interesting_genes(minimal_genes, os.path.join(config.figure_directory, 'sup
 
 plot_max_run_histo(max_run_ax1, 'Bacteroides_vulgatus_57955_same_clade')
 plot_max_run_histo(max_run_ax2, 'Eubacterium_rectale_56927')
-max_run_ax1.legend(loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=2,)
 max_run_ax1.set_xlabel('')
+max_run_ax1.set_xlim([0, 10000])
+max_run_ax1.set_xticks([0, 5000, 10000])
+max_run_ax2.set_xlim([0, 5000])
 
 plot_example_snps([snp_ax1, snp_ax2, snp_ax3, snp_ax4])
 # snp_ax1.set_ylabel("$T_0$")
 # snp_ax2.set_ylabel("$T_1$")
-snp_ax4.set_xlabel("Location along genome")
+snp_ax4.set_xlabel("SNVs along core genome")
+
+# also plot the mean transfer length
+transfer_df_path = os.path.join(config.analysis_directory, 'closely_related/third_pass',
+                                'Eubacterium_rectale_56927_all_transfers.pickle')
+transfer_df = pd.read_pickle(transfer_df_path)
+Er_mean = transfer_df['lengths'][(transfer_df['clonal divergence']<1e-4) & (transfer_df['clonal fraction'] > 0.75) & (transfer_df['types']==0)].mean() * config.second_pass_block_size
+
+transfer_df_path = os.path.join(config.analysis_directory, 'closely_related/third_pass',
+                                'Bacteroides_vulgatus_57955_all_transfers.pickle')
+transfer_df = pd.read_pickle(transfer_df_path)
+Bv_mean = transfer_df['lengths'][(transfer_df['clonal divergence']<1e-4) & (transfer_df['clonal fraction'] > 0.75) & (transfer_df['types']==0)].mean() * config.second_pass_block_size
+max_run_ax1.plot([], [], color=config.between_host_color, label='Between hosts')
+max_run_ax1.plot([], [], color=config.within_host_color, label='Within hosts')
+max_run_ax1.legend(loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=2,)
+l = max_run_ax1.axvline(x=Bv_mean, linestyle='--', linewidth=0.5, color='grey', label='mean transfer length')
+max_run_ax2.axvline(x=Er_mean, linestyle='--', linewidth=0.5, color='grey')
+
 
 # unused
 # plot_local_polymorphism([local_ax1, local_ax2], ['700114218', '700171115'])

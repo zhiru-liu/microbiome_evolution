@@ -67,8 +67,11 @@ def compute_div_in_transfers(dh, transfer_df):
             contig = dh.chromosomes[ref_start]
             if contig != dh.chromosomes[ref_end]:
                 raise RuntimeWarning("Potential bug: Run event spanning two contigs! Species: {}; Pair: {}".format(species_name, pair))
-            contig_start = dh.locations[ref_location_to_contig_location(ref_start, contig, contig_list, contig_cum_lens)]
-            contig_end = dh.locations[ref_location_to_contig_location(ref_end, contig, contig_list, contig_cum_lens)]
+            # WRONG! Should use the location directly
+            # contig_start = dh.locations[ref_location_to_contig_location(ref_start, contig, contig_list, contig_cum_lens)]
+            # contig_end = dh.locations[ref_location_to_contig_location(ref_end, contig, contig_list, contig_cum_lens)]
+            contig_start = dh.locations[ref_start]
+            contig_end = dh.locations[ref_end]
             ref_contigs.append(contig)
             ref_starts.append(contig_start)
             ref_ends.append(contig_end)

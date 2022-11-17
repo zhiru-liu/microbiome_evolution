@@ -70,13 +70,20 @@ for filename in os.listdir(ckpt_path):
                                        third_pass_df['genome lengths'].astype(float)
     # one more round of clonal fraction cutoff based on detected transfers
     # third_pass_df = third_pass_df[third_pass_df['clonal fractions'] >= config.clonal_fraction_cutoff]
-    # print("Before additional clonal fraction filter, {} pairs".format(len(data['pairs'])))
-    # print("After filter, {} pairs".format(third_pass_df.shape[0]))
+    # filter pairs later according to cf cutoff
+    print("Before additional clonal fraction filter, {} pairs".format(len(data['pairs'])))
+    print("After filter by {} clonal fraction, {} pairs".format(config.clonal_fraction_cutoff,
+                                                                np.sum(third_pass_df['clonal fractions']>=config.clonal_fraction_cutoff)))
 
     # save which transfers are in close pairs
     mask = third_pass_df['clonal fractions'] > config.clonal_fraction_cutoff
-    passed_pairs = list(compress(data['pairs'], mask))  # compress is concatenating lists
-    all_transfer_df['clonal fraction >75%'] = all_transfer_df['pairs'].isin(passed_pairs)
+    cf_dict = dict(zip(third_pass_df['pairs'], third_pass_df['clonal fractions']))
+    cd_dict = dict(zip(third_pass_df['pairs'], third_pass_df['clonal divs']))
+    all_transfer_df['clonal divergence'] = all_transfer_df['pairs'].map(cd_dict)
+    all_transfer_df['clonal fraction'] = all_transfer_df['pairs'].map(cf_dict)
+
+    # passed_pairs = list(compress(data['pairs'], mask))  # compress is concatenating lists
+    # all_transfer_df['clonal fraction >75%'] = all_transfer_df['pairs'].isin(passed_pairs)
 
     third_pass_df.to_pickle(third_pass_path)
     all_transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass', species_name + '_all_transfers.pickle'))

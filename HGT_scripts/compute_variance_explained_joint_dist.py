@@ -115,7 +115,7 @@ def prepare_var_explained_data():
 ###################################
 ##### finally plot the statistics
 ###################################
-def plot_var_exaplained(axes):
+def plot_var_exaplained(axes, plot_only_y=True):
     var_df = pd.read_csv(os.path.join(config.plotting_intermediate_directory, 'variance_explained.csv'))
     var_df['Genus'] = var_df['Species'].apply(lambda x: x.split('_')[0])
     var_df = var_df.set_index('Species')
@@ -139,19 +139,20 @@ def plot_var_exaplained(axes):
     ys = 0-np.arange(0,num_species)
 
     axes[0].bar(ys+0.5, var_df['Variance explained weighted control'],color=light_haploid_color,label='Largest clade',linewidth=0,zorder=1)
-    axes[0].bar(ys+0.5, var_df['Variance explained weighted'],color=haploid_color,linewidth=0,zorder=1)
+    axes[0].bar(ys+0.5, var_df['Variance explained weighted'],color=haploid_color,linewidth=0,zorder=1, label='All pairs')
 
-    axes[1].bar(ys+0.5, -var_df['Variance explained control'],color=light_haploid_color,label='Largest clade',linewidth=0,zorder=1)
-    axes[1].bar(ys+0.5, -var_df['Variance explained'],color=haploid_color,linewidth=0,zorder=1)
+    if not plot_only_y:
+        axes[1].bar(ys+0.5, -var_df['Variance explained control'],color=light_haploid_color,label='Largest clade',linewidth=0,zorder=1)
+        axes[1].bar(ys+0.5, -var_df['Variance explained'],color=haploid_color,linewidth=0,zorder=1)
+        axes[1].set_ylim([-1,0])
+        axes[1].set_yticks([-1,-0.5])
+        axes[1].set_yticklabels(['1.0', '0.5'])
 
     print("R2y explained >50% in {} species out of {}".format(sum(var_df['Variance explained weighted control']>0.5), var_df.shape[0]))
     print("R2 explained >50% in {} species out of {}".format(sum(var_df['Variance explained control']>0.5), var_df.shape[0]))
 
     # ax.barh(ys+0.5, num_samples,color=light_haploid_color,linewidth=0,label='hard non-QP',zorder=0)
     # ax.barh(ys+0.5, num_within_samples,left=num_qp_samples,color=good_witin_color,linewidth=0,label='simple non-QP')
-    axes[1].set_ylim([-1,0])
-    axes[1].set_yticks([-1,-0.5])
-    axes[1].set_yticklabels(['1.0', '0.5'])
     axes[0].set_ylim([0,1])
     axes[0].set_yticks([0,0.5,1])
     #
@@ -159,18 +160,27 @@ def plot_var_exaplained(axes):
     # axes[0].xaxis.tick_bottom()
     # axes[1].xaxis.tick_bottom()
     #
-    axes[0].set_xticks([])
-    axes[1].set_xticks(ys+0.5)
-    species_names = map(lambda x: figure_utils.get_pretty_species_name(x, manual=True), var_df.index.to_numpy())
-    axes[1].set_xticklabels(species_names,fontsize=4, rotation = 90)
-    axes[0].set_xlim([-1*num_species+0.5,1.5])
-    axes[1].set_xlim([-1*num_species+0.5,1.5])
-    #
-    # axes[1].tick_params(axis='y', direction='out',length=3,pad=1)
-    #
-    axes[1].legend(loc='lower right',frameon=False)
-    axes[0].set_ylabel(r"$R^2_Y$")
-    axes[1].set_ylabel(r"$R^2$")
+    if not plot_only_y:
+        axes[0].set_xticks([])
+        axes[1].set_xticks(ys+0.5)
+        species_names = map(lambda x: figure_utils.get_pretty_species_name(x, manual=True), var_df.index.to_numpy())
+        axes[1].set_xticklabels(species_names,fontsize=4, rotation = 90)
+        axes[0].set_xlim([-1*num_species+0.5,1.5])
+        axes[1].set_xlim([-1*num_species+0.5,1.5])
+        #
+        # axes[1].tick_params(axis='y', direction='out',length=3,pad=1)
+        #
+        axes[1].legend(loc='lower right',frameon=False)
+        axes[0].set_ylabel(r"$R^2_Y$")
+        axes[1].set_ylabel(r"$R^2$")
+    else:
+        axes[0].set_ylabel(r"Weighted $R^2$")
+        axes[0].set_xticks(ys+0.5)
+        species_names = map(lambda x: figure_utils.get_pretty_species_name(x, manual=True), var_df.index.to_numpy())
+        axes[0].set_xticklabels(species_names,fontsize=5, rotation = 90)
+        axes[0].set_xlim([-1*num_species+0.5,1.5])
+        axes[0].legend(loc='upper right',frameon=False)
+
 
 if __name__ == "__main__":
     # prepare_var_explained_data()

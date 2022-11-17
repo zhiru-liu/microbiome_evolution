@@ -26,13 +26,13 @@ gs_Bv = gridspec.GridSpec(1, 1)
 gs_Bv.update(left=0.40, right=0.98, top=0.86, bottom=0.62)
 
 gs_neutral = gridspec.GridSpec(1, 1)
-gs_neutral.update(left=0.40, right=0.98, top=0.53, bottom=0.41)
+gs_neutral.update(left=0.40, right=0.98, top=0.53+0.09, bottom=0.41+0.09)
 
 gs_Er = gridspec.GridSpec(1, 1)
-gs_Er.update(left=0.40, right=0.98, top=0.32, bottom=0.08)
+gs_Er.update(left=0.40, right=0.98, top=0.32+0.08, bottom=0.08+0.08)
 
 gs_cvs = gridspec.GridSpec(1, 1)
-gs_cvs.update(left=0.095, right=0.295, top=0.32, bottom=0.08)
+gs_cvs.update(left=0.095, right=0.295, top=0.32+0.08, bottom=0.08+0.08)
 
 # adding axes
 pi_ax = fig.add_subplot(gs_pi[0,0])
@@ -106,7 +106,13 @@ def highlight_sweep_region(ax, genes):
     # using the run finding function to find the stretch
     runs, starts, ends= parallel_utils._compute_runs_single_chromosome(~mask, return_locs=True)
     for start, end in zip(starts, ends):
-        ax.axvspan(start, end, color='red', alpha=0.2, linewidth=1, zorder=3)
+        ax.axvspan(start, end, color='red', alpha=0.2, ymin=0.5, linewidth=1, zorder=3)
+        xloc = (start + end) / 2
+        ymin = ax.get_ylim()[1]
+        ax.annotate('',
+                     xy=(xloc, ymin),
+                     xytext=(xloc, ymin + 0.04),
+                     arrowprops=dict(facecolor='tab:orange', shrink=0.0, width=2, headwidth=4, headlength=3))
 
 species_name = 'Bacteroides_vulgatus_57955'
 # loading the gene name array
@@ -121,6 +127,7 @@ within_thresholds = np.loadtxt(os.path.join(base_path, 'between_host_thresholds.
 within_cumu_runs, between_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
     within_clade_path, between_clade_path, Bv_ax, ind_to_plot=0, ylim=0.3)
 print(within_thresholds[0], thresholds[0])
+Bv_ax.set_xticklabels([])
 
 data_dir = os.path.join(config.data_directory, 'zarr_snps', species_name, 'site_info.txt')
 
@@ -172,24 +179,26 @@ for sim_id in range(400, 500):
     else:
         neutral_ax.plot(cumu_runs, color='grey', linewidth=1, alpha=0.15, rasterized=True)
 neutral_ax.set_ylim([0, 0.3])
-neutral_ax.set_xlim([0, 280000])
-neutral_ax.set_xlabel('Genome location')
-neutral_ax.set_ylabel('Sharing frequency')
+# neutral_ax.set_xlim([0, 280000])
+neutral_ax.set_xlim([0, between_cumu_runs.shape[0]])
+neutral_ax.set_xlabel('Location along core genome')
+neutral_ax.set_ylabel('Sharing\nfrequency')
 
 pi_ax.text(-0.03, 1.24, "B", transform=pi_ax.transAxes,
          fontsize=9, fontweight='bold', va='top', ha='left')
-neutral_ax.text(-0.03, 1.18, "C", transform=neutral_ax.transAxes,
+# neutral_ax.text(-0.03, 1.18, "C", transform=neutral_ax.transAxes,
+#          fontsize=9, fontweight='bold', va='top', ha='left')
+Er_ax.text(-0.03, 1.12, "C", transform=Er_ax.transAxes,
          fontsize=9, fontweight='bold', va='top', ha='left')
-Er_ax.text(-0.03, 1.12, "D", transform=Er_ax.transAxes,
-         fontsize=9, fontweight='bold', va='top', ha='left')
-cvs_ax.text(-0.22, 1.12, "E", transform=cvs_ax.transAxes,
+cvs_ax.text(-0.22, 1.12, "D", transform=cvs_ax.transAxes,
          fontsize=9, fontweight='bold', va='top', ha='left')
 
+Bv_ax.set_ylabel('Sharing\nfrequency')
 Bv_ax.text(0.78, 0.8, "B. vulgatus\n(within clade)", transform=Bv_ax.transAxes)
 Bv_ax.text(0.78, 0.05, "between clade", transform=Bv_ax.transAxes)
 neutral_ax.text(0.75, 0.7, "Neutral simulation", transform=neutral_ax.transAxes)
-Er_ax.text(0.78, 0.9, "E. rectale", transform=Er_ax.transAxes)
-Er_ax.text(0.78, 0.05, "within hosts", transform=Er_ax.transAxes)
+Er_ax.text(0.77, 0.8, "E. rectale\n(between hosts)", transform=Er_ax.transAxes)
+Er_ax.text(0.77, 0.05, "within hosts", transform=Er_ax.transAxes)
 
 # Plot Er
 species_name = 'Eubacterium_rectale_56927'

@@ -56,7 +56,7 @@ for i in range(3):
         #     marg_ax.set_xticks([1, 10, 100])
 
         if j==0:
-            scatter_ax.set_ylabel('$r/\\mu=%.1f$\n\nPairwise syn divergence'%rbymus[i])
+            scatter_ax.set_ylabel('$\\rho/\\theta=%.1f$\n\nPairwise syn divergence'%rbymus[i])
         if i==2:
             scatter_ax.set_xlabel('Fraction of identical blocks')
         if i==0:

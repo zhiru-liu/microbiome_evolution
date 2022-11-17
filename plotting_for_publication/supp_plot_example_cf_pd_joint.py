@@ -20,7 +20,8 @@ outer_grid = gridspec.GridSpec(3,2, width_ratios=[1,1],wspace=0.3,figure=fig)
 plt.subplots_adjust(wspace=0.25, hspace=0.6)
 
 ex1 = 'Prevotella_copri_61740'  # lack of close pairs
-ex2 = 'Roseburia_inulinivorans_61943'  # lack of close pairs
+ex2 = 'Lachnospiraceae_bacterium_51870' # lack of typical pairs
+# ex2 = 'Roseburia_inulinivorans_61943'  # lack of close pairs
 ex3 = 'Barnesiella_intestinihominis_62208'  # minimal spread in joint plot
 ex4 = 'Bacteroides_caccae_53434' # uneven distribution along cf
 ex5 = 'Bacteroides_vulgatus_57955'  # population structure
@@ -39,22 +40,23 @@ for i in range(3):
 
         species_name = species[i*2+j]
         x,y = get_joint_plot_x_y(species_name)
+        y = y * 100
 
         xs = np.linspace(0.01, 1, 100)
-        ys = -np.log(xs) / config.first_pass_block_size
+        ys = -np.log(xs) / config.first_pass_block_size * 100
         scatter_ax.plot(xs, ys, '--r', zorder=1, label='random mutations')
 
         scatter_ax.scatter(x, y, s=0.6, linewidth=0, zorder=2, rasterized=True)
         marg_ax.hist(y, orientation='horizontal', bins=100, alpha=0.6)
 
         marg_ax.set_xscale('log')
-        if ('copri' in species_name) or ('Roseburia' in species_name):
+        if ('copri' in species_name) or ('Roseburia' in species_name) or ('Lachnospiraceae' in species_name):
             marg_ax.set_xticks([1, 10, 100])
         else:
             marg_ax.set_xticks([1, 100])
 
         scatter_ax.set_xlabel('Fraction of identical blocks')
-        scatter_ax.set_ylabel('Pairwise syn divergence')
+        scatter_ax.set_ylabel('Pairwise syn divergence (%)')
         scatter_ax.legend()
         scatter_ax.set_title(figure_utils.get_pretty_species_name(species_name))
 

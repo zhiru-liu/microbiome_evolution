@@ -38,9 +38,10 @@ def plot_example_genomes(axes):
         axes[i].set_ylim(-0.001, 0.085)
         #     ax[i].set_xlim([0, 260000])
         axes[i].set_xlim([0, 25000])
+    axes[2].set_xticklabels([0, 5, 10, 15, 20, 25])
     axes[0].set_xticklabels([])
     axes[1].set_xticklabels([])
-    axes[2].set_xlabel("Location along core genome")
+    axes[2].set_xlabel("Location along core genome (kb)")
     axes[1].set_ylabel("SNV density")
 
 
@@ -53,7 +54,7 @@ def plot_cf_pd_joint(axes):
 
     xs = np.linspace(0.01, 1, 100)
     ys = -np.log(xs) / config.first_pass_block_size
-    scatter_ax.plot(xs, ys, '--r', zorder=1, label='indep. SNVs')
+    scatter_ax.plot(xs, ys, '--r', zorder=1, label='random mut\'s')
 
     scatter_ax.scatter(x, y, s=0.6, linewidth=0, zorder=2, rasterized=True)
     marg_ax.hist(y, orientation='horizontal', bins=100, alpha=0.6)
@@ -86,7 +87,7 @@ mid_grid = gridspec.GridSpecFromSubplotSpec(ncols=2, nrows=1, width_ratios=[1,1]
 joint_plot_grid = gridspec.GridSpecFromSubplotSpec(1,2, width_ratios=[4,1],wspace=0.1,subplot_spec=mid_grid[0])
 example_grid = gridspec.GridSpecFromSubplotSpec(ncols=1,nrows=3, height_ratios=[1,1,1],hspace=0.2,subplot_spec=mid_grid[1])
 
-bottom_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0., subplot_spec=outer_grid[2])
+bottom_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 0.4], hspace=0., subplot_spec=outer_grid[2])
 
 
 # adding axes
@@ -106,7 +107,8 @@ var_exp_ax2 = fig.add_subplot(bottom_grid[1])
 
 plot_cf_pd_joint([scatter_ax, marg_ax])
 plot_example_genomes([example_ax1, example_ax2, example_ax3])
-plot_var_exaplained([var_exp_ax1, var_exp_ax2])
+plot_var_exaplained([var_exp_ax1, var_exp_ax2], plot_only_y=True)
+fig.delaxes(var_exp_ax2)
 
 
 scatter_ax.text(-0.1, 1.12, "B", transform=scatter_ax.transAxes,

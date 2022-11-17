@@ -40,4 +40,11 @@ axes[2].set_xlabel('$T_{mosaic} / T_{mrca}$')
 axes[2].set_ylabel('Fraction of "close pairs"')
 axes[2].set_title("Neutral simulation")
 
+texts = ['A', 'B', 'C']
+for i in range(3):
+    text = texts[i]
+    ax = axes[i]
+    ax.text(-0.12, 1.02, text, transform=ax.transAxes,
+               fontsize=9, fontweight='bold', va='top', ha='left')
+
 fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_TmTc_compare.pdf'), bbox_inches='tight')

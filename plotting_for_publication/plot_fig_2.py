@@ -41,7 +41,7 @@ def plot_typical_pair(ax, dh, pair):
     ax.set_xlim([0, 264000])
     ax.set_xticks([0, 5e4, 1e5, 1.5e5, 2e5, 2.5e5])
     ax.set_xticklabels(['0', '50', '100', '150', '200', '250'])
-    ax.set_xlabel('Location along core genome (Kb)')
+    ax.set_xlabel('Location along core genome (kb)')
     ax.legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1))
 
 
@@ -103,7 +103,7 @@ def plot_example_pair(ax, dh, pair, full_df, if_legend=True, patch_ymin=None):
     ax.set_xlim([0, 264000])
     ax.set_xticks([0, 5e4, 1e5, 1.5e5, 2e5, 2.5e5])
     ax.set_xticklabels(['0', '50', '100', '150', '200', '250'])
-    ax.set_xlabel('Location along core genome (Kb)')
+    ax.set_xlabel('Location along core genome (kb)')
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
 
@@ -130,7 +130,7 @@ def plot_scatter(ax, x, y1, y2, mask, if_trend_line=True):
     ax.plot(x, np.zeros(x.shape), 'k-')
 
     # ax.set_xlim([0, 2e-4])
-    ax.set_xlim([0, 1.1e-4])
+    ax.set_xlim([0, config.Bv_clonal_div_cutoff])
     ax.set_ylim([-7.5, 17.5])
     # ax.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
     ax.set_xticks([0, 0.5e-4, 1e-4])
@@ -140,7 +140,7 @@ def plot_scatter(ax, x, y1, y2, mask, if_trend_line=True):
     ax.set_yticklabels(['5', '0', '5', '10', '15'])
     ax.xaxis.major.formatter._useMathText = True
 
-    ax.set_ylabel("# transfers / 1Mb")
+    ax.set_ylabel("# transfers / Mb")
     ax.set_xlabel("Clonal divergence ($\\times 10^{-4}$)")
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
@@ -172,8 +172,8 @@ def plot_distributions(fig, ax, within_lens, between_lens, inset_location=[0.7, 
     ax.set_yticklabels(['0','','','','1'])
     ax.set_xticks([0, 50e3, 100e3, 150e3])
     ax.set_xticklabels([0, 50, 100, 150])
-    ax.set_xlabel('Transfer length / Kb')
-    ax.set_ylabel('Prob greater')
+    ax.set_xlabel(r'Transfer length, $\ell$ (kb)')
+    ax.set_ylabel(r'Fraction $\geq \ell$')
     ax.yaxis.set_label_coords(-.1, .5)
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
@@ -197,6 +197,7 @@ if __name__ == "__main__":
     BLOCK_SIZE = config.second_pass_block_size
     clonal_divs, within_counts, between_counts, filtered_full_df, cf_mask = close_pair_utils.prepare_HMM_results_for_B_vulgatus(
         save_path, config.clonal_fraction_cutoff, cache_intermediate=True, merge_threshold=0)
+    cd_mask = clonal_divs <= config.Bv_clonal_div_cutoff
 
     print(np.sum((within_counts>0) | (between_counts>0)))
 
@@ -205,7 +206,8 @@ if __name__ == "__main__":
     if not os.path.exists(transfer_df_path):
         raise RuntimeError("Please run stage 3a scripts to obtain full genome length and divergences")
     transfer_df = pd.read_pickle(transfer_df_path)
-    transfer_df = transfer_df[transfer_df['clonal fraction >75%']]  # TODO!
+    transfer_df = transfer_df[transfer_df['clonal fraction']>=config.clonal_fraction_cutoff]  # TODO!
+    transfer_df = transfer_df[transfer_df['clonal divergence']<=config.Bv_clonal_div_cutoff]  # TODO!
 
     # within_lens = full_df[full_df['types']==0]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
     within_lens = transfer_df[transfer_df['types']==0]['transfer lengths (core genome)'].to_numpy()
@@ -215,7 +217,8 @@ if __name__ == "__main__":
     print("Median within transfer length: {}; mean within transfer length: {}".format(np.median(within_lens), np.mean(within_lens)))
     print("Median between transfer length: {}; mean between transfer length: {}".format(np.median(between_lens), np.mean(between_lens)))
     print("Total number of close pairs: %d, detected transfers: %d, within transfers: %d, between transfers: %d, mean length: %f" % (
-        len(clonal_divs[cf_mask]), filtered_full_df.shape[0], np.sum(filtered_full_df['types'] == 0), np.sum(filtered_full_df['types'] == 1), np.mean(np.concatenate([within_lens, between_lens]))))
+        len(clonal_divs[cf_mask & cd_mask]), transfer_df.shape[0],
+        np.sum(transfer_df['types'] == 0), np.sum(transfer_df['types'] == 1), np.mean(np.concatenate([within_lens, between_lens]))))
 
     # mapping out grid
     fig = plt.figure(figsize=(7, 1.5))
@@ -274,24 +277,11 @@ if __name__ == "__main__":
                      fontsize=9, fontweight='bold', va='top', ha='left')
     len_dist_ax.text(0.15, 1., "D", transform=len_dist_ax.transAxes,
                      fontsize=9, fontweight='bold', va='top', ha='left')
+    ex1_ax.text(1, 1, "Pair 1", transform=ex1_ax.transAxes,
+                fontsize=6, va='top', ha='right',
+                bbox=dict(fc='w',boxstyle='square,pad=0.15', ec='white',))
+    ex2_ax.text(1, 0.8, "Pair 2", transform=ex2_ax.transAxes,
+                fontsize=6, backgroundcolor='white', va='top', ha='right',
+                bbox=dict(fc='w',boxstyle='square,pad=0.15', ec='white'))
 
     fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig2.pdf'))
-
-    # preparing the supp table of all transfer events
-    # TODO: collect this for all species
-    # good_df = transfer_df
-    # sample_mask, sample_names = parallel_utils.get_QP_sample_mask(species_name)
-    # good_samples = sample_names[sample_mask]
-    # good_df['Sample 1'] = [good_samples[pair[0]] for pair in good_df['pairs']]
-    # good_df['Sample 2'] = [good_samples[pair[1]] for pair in good_df['pairs']]
-    # good_df['between clade?'] = [['F', 'T'][i] for i in good_df['types']]
-    # good_df.drop(columns=['starts', 'ends', 'types', 'lengths', 'pairs', 'clonal fraction >80%'], inplace=True)
-    # df_to_save = good_df[
-    #     ['Sample 1', 'Sample 2', 'between clade?', 'synonymous divergences', 'divergences', 'core genome starts',
-    #      'core genome ends', 'transfer lengths (core genome)', 'contigs',
-    #      'reference genome starts', 'reference genome ends']]
-    # df_to_save.columns = ['Sample 1', 'Sample 2', 'between clade?', 'synonymous divergences', 'divergences',
-    #                       'core genome starts',
-    #                       'core genome ends', 'transfer lengths (covered sites on core genome)', 'contigs',
-    #                       'reference genome starts', 'reference genome ends', ]
-    # df_to_save.to_csv(os.path.join(config.figure_directory, 'supp_table', 'Bv_all_detected_transfers.csv'))

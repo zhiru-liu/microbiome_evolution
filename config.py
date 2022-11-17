@@ -74,6 +74,7 @@ second_pass_block_size = 10
 empirical_histogram_bins = 40
 # B_vulgatus_data_path = os.path.join(analysis_directory,
 #                          "closely_related", "two_clades", "{}_two_clades.pickle".format('Bacteroides_vulgatus_57955'))
+Bv_clonal_div_cutoff = 1.1e-4
 B_vulgatus_data_path = os.path.join(analysis_directory,
                                     "closely_related", "iter_second_third_passes", 'converged_pass',
                                     "{}.pickle".format('Bacteroides_vulgatus_57955'))
