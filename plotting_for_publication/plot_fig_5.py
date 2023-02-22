@@ -142,7 +142,7 @@ general_mask = parallel_utils._get_general_site_mask(
     gene_names, variants, pvalues, core_genes, allowed_variants=['4D'])
 good_genes = gene_names[general_mask]
 
-highlight_sweep_region(Bv_ax, good_genes)
+# highlight_sweep_region(Bv_ax, good_genes)
 
 
 ####################### Plot pi #######################
@@ -213,4 +213,4 @@ within_thresholds = np.loadtxt(os.path.join(base_path, 'within_host_thresholds.t
 between_cumu_runs, within_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
     between_host_path, within_host_path, Er_ax, ind_to_plot=0, ylim=0.5, colors=[config.between_host_color, config.within_host_color])
 
-fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig5.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig5_no_highlight.pdf'), bbox_inches='tight')
