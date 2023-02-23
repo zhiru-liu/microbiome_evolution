@@ -16,6 +16,9 @@ scripts_directory = os.path.expanduser("/Users/Device6/Documents/Research/bgoodl
 patric_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/patric_db/")
 midas_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/midas_db/")
 hmm_data_directory = os.path.expanduser("~/Documents/Research/bgoodlab/microbiome_evolution/cphmm/dat/")
+uhgg_directory = "/Volumes/Botein/uhgg/"
+uhgg_core_gene_directory = os.path.join(uhgg_directory, 'core_genes')
+isolate_directory = os.path.join(uhgg_directory, 'dh_format')
 
 # We use this one to debug because it was the first one we looked at
 debug_species_name = 'Bacteroides_uniformis_57318'

@@ -65,8 +65,9 @@ def plot_one_species(x, y, asexual_line=True, fit_line=True, same_ylim=None, log
 
 
 if __name__ == "__main__":
-    base_dir = 'zarr_snps'
-    for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
+    # base_dir = 'zarr_snps'
+    # for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
+    for species_name in ['MGYG-HGUT-02478']:
         if species_name.startswith('.'):
             continue
         # if 'vulgatus' not in species_name:

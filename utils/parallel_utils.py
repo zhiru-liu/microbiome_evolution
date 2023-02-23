@@ -2,6 +2,7 @@ import zarr
 import dask.array as da
 import numpy as np
 import pandas as pd
+import json
 from scipy import stats
 import time
 import os
@@ -248,10 +249,35 @@ class DataHoarder:
         self.species_name = species_name
         self.data_dir = os.path.join(
                 config.data_directory, 'zarr_snps', species_name)
+
+        if mode == "isolates":
+            # massaged the uhgg snv tables into DH compatible formats
+            # species name is the accession name
+            path = os.path.join(config.uhgg_core_gene_directory, species_name, 'core_genes.json')
+            genes = json.load(open(path, 'r'))
+            # work with integer gene ids
+            core_genes = [int(x) for x in genes]
+            self.mode = mode
+            self.data_dir = os.path.join(config.isolate_directory, species_name)
+            self.chromosomes = np.load(os.path.join(self.data_dir, 'chromosomes.npy'))
+            self.locations= np.load(os.path.join(self.data_dir, 'locations.npy'))
+            self.gene_names = np.load(os.path.join(self.data_dir, 'gene_names.npy'))
+            self.variants = np.load(os.path.join(self.data_dir, 'variants.npy'))
+            self.pvalues = np.load(os.path.join(self.data_dir, 'pvalues.npy'))
+            self.good_samples = np.load(os.path.join(self.data_dir, 'good_genomes.npy'))
+            self.general_mask = _get_general_site_mask(
+                self.gene_names, self.variants, self.pvalues, core_genes,
+                allowed_variants=allowed_variants)
+            self.core_chromosomes = self.chromosomes[self.general_mask]
+
+            self.snp_arr = np.load(os.path.join(self.data_dir, 'snp_array.npy'))[self.general_mask, :]
+            self.covered_arr = np.load(os.path.join(self.data_dir, 'covered_array.npy'))[self.general_mask, :]
+            print("Keeping only isolate samples, which is {} in total".format(len(self.good_samples)))
+            return
+
         if not os.path.exists(self.data_dir):
             raise ValueError('No data found for {} at default dir:\n{}'
                              .format(species_name, self.data_dir))
-
         if (mode == "QP"):
             self.sample_mask, sample_names = get_QP_sample_mask(species_name)
             self.good_samples = sample_names[self.sample_mask]
@@ -265,7 +291,7 @@ class DataHoarder:
             print("Keeping only simple within host samples, which is %d in total" %
                   np.sum(self.sample_mask))
         else:
-            raise ValueError("Only support QP or within modes")
+            raise ValueError("Only support QP, within or isolates modes")
 
         self.single_subject_samples = self.get_single_subject_idxs()
 
@@ -385,7 +411,7 @@ class DataHoarder:
         return get_single_subject_idxs_from_list(self.good_samples)
 
     def get_snp_vector(self, idx):
-        if self.mode == 'QP':
+        if (self.mode == 'QP') or (self.mode=='isolates'):
             return self.get_two_QP_sample_snp_vector(idx)
         else:
             return self.get_within_sample_snp_vector(idx)

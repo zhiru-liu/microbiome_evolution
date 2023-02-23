@@ -244,15 +244,26 @@ def get_joint_plot_x_y(species_name, clade_cutoff=None):
     :param clade_cutoff: If provided, will be used to cluster into major clades, and provide x,y for only the biggest clade
     :return:
     """
-    single_sub_idxs = load_single_subject_sample_idxs(species_name)
-    clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
-                                   'between_hosts', '%s.csv' % species_name)
-    clonal_frac_mat = np.loadtxt(clonal_frac_dir, delimiter=',')
-    clonal_frac_mat = clonal_frac_mat[single_sub_idxs, :][:, single_sub_idxs]
+    if species_name.startswith('MGYG'):
+        # isolates
+        clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
+                                       'isolates', '%s.csv' % species_name)
+        div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
+                               'isolates', '%s.csv' % species_name)
+        clonal_frac_mat = np.loadtxt(clonal_frac_dir, delimiter=',')
+        div_mat = np.loadtxt(div_dir, delimiter=',')
+        single_sub_idxs = np.arange(div_mat.shape[0])
+    else:
+        clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
+                                       'between_hosts', '%s.csv' % species_name)
+        div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
+                               'between_hosts', '%s.csv' % species_name)
+        clonal_frac_mat = np.loadtxt(clonal_frac_dir, delimiter=',')
+        div_mat = np.loadtxt(div_dir, delimiter=',')
+        single_sub_idxs = load_single_subject_sample_idxs(species_name)
 
-    div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
-                           'between_hosts', '%s.csv' % species_name)
-    div_mat = np.loadtxt(div_dir, delimiter=',')
+
+    clonal_frac_mat = clonal_frac_mat[single_sub_idxs, :][:, single_sub_idxs]
     div_mat = div_mat[single_sub_idxs, :][:, single_sub_idxs]
 
     if clade_cutoff is not None:
