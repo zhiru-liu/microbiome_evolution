@@ -11,23 +11,30 @@ from utils import close_pair_utils, parallel_utils
 
 # ckpt_path = os.path.join(config.analysis_directory,
 #                          "closely_related", "second_pass")
-ckpt_path = os.path.join(config.analysis_directory, 'closely_related', 'iter_second_third_passes', 'converged_pass')
-for filename in os.listdir(ckpt_path):
+
+# for analyzing regular species
+#ckpt_path = os.path.join(config.analysis_directory, 'closely_related', 'iter_second_third_passes', 'converged_pass')
+#for filename in os.listdir(ckpt_path):
+
+# for analyzing isolates
+ckpt_path = os.path.join(config.analysis_directory, "closely_related", "isolates")
+for filename in ['MGYG-HGUT-02478.pickle']:
     if filename.startswith('.'):
         continue
     species_name = filename.split('.')[0]
 
-    if ('vulgatus'in species_name) or ('shahii' in species_name):
-        two_clades = True
-    else:
-        two_clades = False
+    # if ('vulgatus'in species_name) or ('shahii' in species_name):
+    #     two_clades = True
+    # else:
+    #     two_clades = False
+    two_clades = True
 
     print("Processing {}".format(species_name))
     first_pass_save_path = os.path.join(config.analysis_directory,
                                         "closely_related", "first_pass", "{}.pickle".format(species_name))
     first_pass_df = pd.read_pickle(first_pass_save_path)
 
-    third_pass_path = os.path.join(config.analysis_directory, "closely_related", 'third_pass', species_name + '.pickle')
+    third_pass_path = os.path.join(config.analysis_directory, "closely_related", 'isolates', "{}_thirdpass.pickle".format(species_name))
     if os.path.exists(third_pass_path):
         print("{} already processed, skipping".format(species_name))
         continue
@@ -86,4 +93,4 @@ for filename in os.listdir(ckpt_path):
     # all_transfer_df['clonal fraction >75%'] = all_transfer_df['pairs'].isin(passed_pairs)
 
     third_pass_df.to_pickle(third_pass_path)
-    all_transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass', species_name + '_all_transfers.pickle'))
+    all_transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'isolates', species_name + '_all_transfers.pickle'))

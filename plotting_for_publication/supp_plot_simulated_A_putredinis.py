@@ -63,7 +63,7 @@ mpl.rcParams['font.size'] = 7
 mpl.rcParams['lines.linewidth'] = 1
 mpl.rcParams['legend.fontsize']  = 'small'
 
-fig, axes = plt.subplots(2, 4, figsize=(6.5, 2.8))
+fig, axes = plt.subplots(2, 5, figsize=(8.1, 2.8))
 plt.subplots_adjust(wspace=0.4, hspace=0.5)
 # gs_lf = gridspec.GridSpec(1, 1)
 # gs_rt = gridspec.GridSpec(1, 1)
@@ -73,10 +73,11 @@ plt.subplots_adjust(wspace=0.4, hspace=0.5)
 # # now the plots are on top of each other, we'll have to adjust their edges so that they won't overlap
 # gs_lf.update(right=0.48, top=0.8, bottom=0.2)
 # gs_rt.update(left=0.63, top=0.76, bottom=0.24)
-files = ['Alistipes_putredinis_61533_EM_025.pickle', 'Alistipes_putredinis_61533_EM_050.pickle', 'Alistipes_putredinis_61533_EM_100.pickle']
+# files = ['Alistipes_putredinis_61533_EM_025.pickle', 'Alistipes_putredinis_61533_EM_050.pickle', 'Alistipes_putredinis_61533_EM_100.pickle']
+files = ['Alistipes_putredinis_61533_EM_large.pickle', 'Alistipes_putredinis_61533_EM_025.pickle', 'Alistipes_putredinis_61533_EM_050.pickle', 'Alistipes_putredinis_61533_EM_100.pickle']
 # rates = [r'2.5\times 10^{-5}', r'5\times 10^{-5}', r'1\times 10^{-4}']
-rates = [r'$r/\mu=5.2$', r'$r/\mu=3.4$', r'$r/\mu=2.1$']
-for i in range(3):
+rates = [r'$r/\mu=10$',r'$r/\mu=5.2$', r'$r/\mu=3.4$', r'$r/\mu=2.1$']
+for i in range(len(rates)):
     path = os.path.join(config.analysis_directory, 'HMM_validation', files[i])
     genome_len = 2.5e5
     data = pickle.load(open(path, 'rb'), encoding='latin1')
@@ -108,14 +109,16 @@ cf_cutoff = config.clonal_fraction_cutoff
 cf = df['clonal fractions']
 x = df['clonal divs'].to_numpy()[cf >= cf_cutoff]
 y = df['transfer counts'].to_numpy()[cf >= cf_cutoff]
-plot_scatter(axes[1, 3], x, y)
-axes[1, 3].set_title("Real data")
-axes[1, 3].set_xlabel(r"Clonal divergence ($\times 10^{-4}$)")
+plot_scatter(axes[1, -1], x, y)
+axes[1, -1].set_title("Real data")
+axes[1, -1].set_xlabel(r"Clonal divergence ($\times 10^{-4}$)")
 
-fig.delaxes(axes[0, 3])
+fig.delaxes(axes[0, -1])
 
-for i in range(1, 4):
+axes[0, 0].set_ylim(bottom=0)
+axes[1, 0].set_ylim(bottom=0)
+for i in range(1, 5):
     axes[0, i].set_ylim(axes[0, 0].get_ylim())
     axes[1, i].set_ylim(axes[1, 0].get_ylim())
 
-fig.savefig(os.path.join(config.figure_directory, "supp", "supp_simulated_Ap.pdf"), bbox_inches="tight")
+fig.savefig(os.path.join(config.figure_directory, "supp", "supp_simulated_Ap_larger_rmu.pdf"), bbox_inches="tight")

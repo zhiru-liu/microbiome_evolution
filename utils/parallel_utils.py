@@ -133,12 +133,19 @@ def get_contig_lengths(good_chromo):
 
 
 def get_genome_length(species_name, if_syn=False):
-    df = pd.read_csv(os.path.join(config.analysis_directory, 'misc', 'genome_length.csv'))
-    df = df.set_index('Species names')
-    if if_syn:
-        return df.loc[species_name, '4D synonymous site counts']
+    if species_name=='MGYG-HGUT-02478':
+        # hard code the genome lengths of uhgg isolates
+        syn_len = 208669
+        core_len = 1497264
     else:
-        return df.loc[species_name, 'Core genome length']
+        df = pd.read_csv(os.path.join(config.analysis_directory, 'misc', 'genome_length.csv'))
+        df = df.set_index('Species names')
+        syn_len = df.loc[species_name, '4D synonymous site counts']
+        core_len = df.loc[species_name, 'Core genome length']
+    if if_syn:
+        return syn_len
+    else:
+        return core_len
 
 
 
@@ -256,7 +263,7 @@ class DataHoarder:
             path = os.path.join(config.uhgg_core_gene_directory, species_name, 'core_genes.json')
             genes = json.load(open(path, 'r'))
             # work with integer gene ids
-            core_genes = [int(x) for x in genes]
+            self.core_genes = [int(x) for x in genes]
             self.mode = mode
             self.data_dir = os.path.join(config.isolate_directory, species_name)
             self.chromosomes = np.load(os.path.join(self.data_dir, 'chromosomes.npy'))
@@ -266,7 +273,7 @@ class DataHoarder:
             self.pvalues = np.load(os.path.join(self.data_dir, 'pvalues.npy'))
             self.good_samples = np.load(os.path.join(self.data_dir, 'good_genomes.npy'))
             self.general_mask = _get_general_site_mask(
-                self.gene_names, self.variants, self.pvalues, core_genes,
+                self.gene_names, self.variants, self.pvalues, self.core_genes,
                 allowed_variants=allowed_variants)
             self.core_chromosomes = self.chromosomes[self.general_mask]
 
@@ -408,7 +415,10 @@ class DataHoarder:
         return prev_mask & snp_mask
 
     def get_single_subject_idxs(self):
-        return get_single_subject_idxs_from_list(self.good_samples)
+        if self.mode=='isolates':
+            return np.arange(len(self.good_samples))
+        else:
+            return get_single_subject_idxs_from_list(self.good_samples)
 
     def get_snp_vector(self, idx):
         if (self.mode == 'QP') or (self.mode=='isolates'):

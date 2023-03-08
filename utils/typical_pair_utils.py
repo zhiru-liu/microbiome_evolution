@@ -29,7 +29,10 @@ def load_clonal_frac_mat(species_name, desired_samples=None, between_hosts=True)
     :param between_hosts: whether load the between host array (2d) or within host array (1d)
     :return: np.array of clonal fractions between pairs of QP samples
     """
-    if between_hosts:
+    if species_name.startswith('MGYG'):
+        clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
+                                       'isolates', '%s.csv' % species_name)
+    elif between_hosts:
         clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',
                                    'between_hosts', '%s.csv' % species_name)
     else:
@@ -52,7 +55,10 @@ def load_clonal_frac_mat(species_name, desired_samples=None, between_hosts=True)
 
 
 def load_pairwise_div_mat(species_name, between_hosts=True):
-    if between_hosts:
+    if species_name.startswith('MGYG'):
+        div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
+                                       'isolates', '%s.csv' % species_name)
+    elif between_hosts:
         div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
                                        'between_hosts', '%s.csv' % species_name)
     else:

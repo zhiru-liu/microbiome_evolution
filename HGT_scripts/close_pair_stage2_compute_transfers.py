@@ -37,11 +37,11 @@ def process_one_species(species_name, block_size, debug=False):
     :param debug: Flag to determine whether running the debug version
     :return: a DataFrame for first pass statistics, and a dict for second pass statistics (including clonal snps etc)
     """
-    dh = parallel_utils.DataHoarder(species_name, mode="QP")
+    dh = parallel_utils.DataHoarder(species_name, mode="isolates")  # TODO this ugly change for isolates
     good_chromo = dh.chromosomes[dh.general_mask]  # will be used in contig-wise transfer computation
 
     div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence',
-                           'between_hosts', '%s.csv' % species_name)
+                           'isolates', '%s.csv' % species_name)
     div_mat = np.loadtxt(div_dir, delimiter=',')
     cf_mat = typical_pair_utils.load_clonal_frac_mat(species_name)
     pairs = close_pair_utils.find_close_pairs(CLONAL_FRAC_CUTOFF, cf_mat, dh.get_single_subject_idxs())
@@ -135,11 +135,12 @@ for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
     if species_name.startswith('.'):
         continue
     if DEBUG:
-        species_name = 'Bacteroides_vulgatus_57955'
+        # species_name = 'Bacteroides_vulgatus_57955'
+        species_name = 'MGYG-HGUT-02478'
         # species_name = 'Alistipes_shahii_62199'
         # species_name = 'Bacteroides_massiliensis_44749'
         second_path_save_path = os.path.join(config.analysis_directory,
-                                             "closely_related", "HMM_length_robustness", "{}_2810.pickle".format(species_name))
+                                             "closely_related", "isolates", "{}.pickle".format(species_name))
     else:
         # second_path_save_path = os.path.join(config.analysis_directory,
         #                          "closely_related", "second_pass", "{}.pickle".format(species_name))

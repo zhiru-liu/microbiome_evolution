@@ -26,28 +26,47 @@ def get_empirical_div_dist(local_divs, genome_divs, num_bins, separate_clades=Tr
     return divs, counts
 
 
-base_dir = 'zarr_snps'
-for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
-    if species_name.startswith('.'):
-        continue
-    print('Processing ' + species_name)
-    save_path = os.path.join(config.hmm_data_directory, species_name + '.csv')
-    if os.path.exists(save_path):
-        print("%s already processed" % species_name)
-        continue
-    if species_name == 'Bacteroides_vulgatus_57955':
-        separate_clades = True
-        clade_cutoff = 0.03
-    elif species_name == 'Alistipes_shahii_62199':
-        separate_clades = True
-        clade_cutoff = 0.04
-    else:
-        separate_clades = False
-        clade_cutoff = None
-    dh = parallel_utils.DataHoarder(species_name, mode="QP")
-    local_divs, genome_divs = sample_blocks(dh)
-    divs, counts = get_empirical_div_dist(local_divs, genome_divs,
-                                          num_bins=40, separate_clades=separate_clades,
-                                          clade_cutoff=clade_cutoff)
-    save_path = os.path.join(config.hmm_data_directory, species_name + '.csv')
-    np.savetxt(save_path, np.vstack([divs, counts]))
+# base_dir = 'zarr_snps'
+# for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
+#     if species_name.startswith('.'):
+#         continue
+#     print('Processing ' + species_name)
+#     save_path = os.path.join(config.hmm_data_directory, species_name + '.csv')
+#     if os.path.exists(save_path):
+#         print("%s already processed" % species_name)
+#         continue
+#     if species_name == 'Bacteroides_vulgatus_57955':
+#         separate_clades = True
+#         clade_cutoff = 0.03
+#     elif species_name == 'Alistipes_shahii_62199':
+#         separate_clades = True
+#         clade_cutoff = 0.04
+#     else:
+#         separate_clades = False
+#         clade_cutoff = None
+#     dh = parallel_utils.DataHoarder(species_name, mode="QP")
+#     local_divs, genome_divs = sample_blocks(dh)
+#     divs, counts = get_empirical_div_dist(local_divs, genome_divs,
+#                                           num_bins=40, separate_clades=separate_clades,
+#                                           clade_cutoff=clade_cutoff)
+#     save_path = os.path.join(config.hmm_data_directory, species_name + '.csv')
+#     np.savetxt(save_path, np.vstack([divs, counts]))
+
+species_name = 'MGYG-HGUT-02478'
+print('Processing ' + species_name)
+save_path = os.path.join(config.hmm_data_directory, species_name + '.csv')
+if os.path.exists(save_path):
+    print("%s already processed" % species_name)
+if species_name == 'MGYG-HGUT-02478':
+    separate_clades = True
+    clade_cutoff = 0.03
+else:
+    separate_clades = False
+    clade_cutoff = None
+dh = parallel_utils.DataHoarder(species_name, mode="isolates")
+local_divs, genome_divs = sample_blocks(dh)
+divs, counts = get_empirical_div_dist(local_divs, genome_divs,
+                                      num_bins=40, separate_clades=separate_clades,
+                                      clade_cutoff=clade_cutoff)
+save_path = os.path.join(config.hmm_data_directory, species_name + '.csv')
+np.savetxt(save_path, np.vstack([divs, counts]))

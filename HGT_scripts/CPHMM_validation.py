@@ -135,7 +135,7 @@ def test_species(species_name, species_params={}):
     cphmm = init_hmm(species_name, L, BLOCK_SIZE)
 
     for T in Ts:
-        for i in xrange(num_reps):
+        for idx in xrange(num_reps):
             g, div, clonal_len, sim_starts, sim_lens, sim_origins = generate_fake_genome(
                 T, mean_transfer_len, rbymu, int(L))
             blk_seq = close_pair_utils.to_block(g, BLOCK_SIZE).reshape((-1, 1))
@@ -160,8 +160,8 @@ def test_species(species_name, species_params={}):
             dat['naive T est'].append(naive_div)
             dat['clonal fraction'].append(len(clonal_seq)*BLOCK_SIZE / L)
 
-            if i % 20 == 0:
-                print("Finished {} reps".format(i))
+            if (idx % 20) == 0:
+                print("Finished {} reps".format(idx))
 
     save_path = os.path.join(
         config.analysis_directory, 'HMM_validation', '%s.pickle' % (species_name+species_params['suffix']))
@@ -176,9 +176,10 @@ def test_species(species_name, species_params={}):
 all_species = ['Bacteroides_vulgatus_57955', 'Alistipes_putredinis_61533']
 all_species_params = [
     # {'species': 'Bacteroides_vulgatus_57955', 'suffix': '', 'genome length':2.8e5, 'transfer len': 2600, 'rbymu': 0.65, 'reps':16, 'clade cutoff': 0.03},  # matched post hoc
-    {'species': 'Alistipes_putredinis_61533', 'suffix': '_EM_025', 'genome length':2.5e5, 'transfer len': 800, 'rbymu': 5.2, 'reps':100, 'clade cutoff': None},  # estimated using transfer/divergence
-    {'species': 'Alistipes_putredinis_61533', 'suffix': '_EM_050', 'genome length':2.5e5, 'transfer len': 800, 'rbymu': 3.4, 'reps':100, 'clade cutoff': None},  # estimated using transfer/divergence
-    {'species': 'Alistipes_putredinis_61533', 'suffix': '_EM_100', 'genome length':2.5e5, 'transfer len': 800, 'rbymu': 2.1, 'reps':100, 'clade cutoff': None},  # estimated using transfer/divergence
+    # {'species': 'Alistipes_putredinis_61533', 'suffix': '_EM_025', 'genome length':2.5e5, 'transfer len': 800, 'rbymu': 5.2, 'reps':100, 'clade cutoff': None},  # estimated using transfer/divergence
+    # {'species': 'Alistipes_putredinis_61533', 'suffix': '_EM_050', 'genome length':2.5e5, 'transfer len': 800, 'rbymu': 3.4, 'reps':100, 'clade cutoff': None},  # estimated using transfer/divergence
+    # {'species': 'Alistipes_putredinis_61533', 'suffix': '_EM_100', 'genome length':2.5e5, 'transfer len': 800, 'rbymu': 2.1, 'reps':100, 'clade cutoff': None},  # estimated using transfer/divergence
+    {'species': 'Alistipes_putredinis_61533', 'suffix': '_EM_large', 'genome length':2.5e5, 'transfer len': 800, 'rbymu': 10, 'reps':100, 'clade cutoff': None},  # estimated using transfer/divergence
 ]
 
 for d in all_species_params:
