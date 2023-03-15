@@ -55,14 +55,14 @@ def process_one_species(species_name):
                 return None
         alleles = np.zeros((syn_core_length, 2))
 
-        sample1 = row1['Sample 1']
-        sample2 = row1['Sample 2']
+        sample1 = str(row1['Sample 1'])
+        sample2 = str(row1['Sample 2'])
         pair1 = sample_to_idx[sample1], sample_to_idx[sample2]
         snp_vec1, covered1 = dh.get_snp_vector(pair1)
         alleles[covered1, 0] = snp_vec1
 
-        sample1 = row2['Sample 1']
-        sample2 = row2['Sample 2']
+        sample1 = str(row2['Sample 1'])
+        sample2 = str(row2['Sample 2'])
         pair2 = sample_to_idx[sample1], sample_to_idx[sample2]
         snp_vec2, covered2 = dh.get_snp_vector(pair2)
         alleles[covered2, 1] = snp_vec2

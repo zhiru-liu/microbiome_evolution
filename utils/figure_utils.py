@@ -1,3 +1,5 @@
+import numpy as np
+from scipy.stats import gaussian_kde
 
 def get_pretty_species_name(species_name, include_number=False, manual=False):
     
@@ -23,3 +25,31 @@ def get_abbreviated_species_name(species_name):
     pretty_name = "%s. %s" % (items[0][0], items[1])
         
     return pretty_name
+
+
+def plot_jitters(ax, X, ys, width, colorVal='tab:blue', alpha=0.5):
+    kernel = gaussian_kde(ys)
+
+    theory_ys = np.linspace(ys.min(),ys.max(),100)
+    theory_pdf = kernel(theory_ys)
+
+    scale = width/theory_pdf.max()
+
+    xs = np.random.uniform(-1,1,size=len(ys))*kernel(ys)*scale
+
+    q25 = np.quantile(ys,0.25)
+    q50 = np.quantile(ys,0.5)
+    q75 = np.quantile(ys,0.75)
+
+    if len(ys)<900:
+        ax.plot(X+xs,ys,'.',color=colorVal,alpha=alpha,markersize=5,markeredgewidth=0.0)
+    else:
+        ax.plot(X+xs,ys,'.',color=colorVal,alpha=alpha,markersize=5,markeredgewidth=0.0, rasterized=True)
+
+    # ax.fill_betweenx(theory_ys, X-theory_pdf*scale,X+theory_pdf*scale,linewidth=0.25,facecolor=light_colorVal,edgecolor=colorVal)
+    other_width = width+0.1
+    ax.plot([X-other_width,X+other_width],[q25,q25],'-',color=colorVal,linewidth=1)
+    ax.plot([X-other_width,X+other_width],[q50,q50],'-',color='tab:orange',linewidth=1)
+    ax.plot([X-other_width,X+other_width],[q75,q75],'-',color=colorVal,linewidth=1)
+    ax.plot([X-other_width,X-other_width],[q25,q75],'-',color=colorVal,linewidth=1)
+    ax.plot([X+other_width,X+other_width],[q25,q75],'-',color=colorVal,linewidth=1)

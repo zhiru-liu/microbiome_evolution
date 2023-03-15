@@ -10,7 +10,7 @@ import pickle
 import itertools
 sys.path.append("..")
 import config
-from utils import close_pair_utils
+from utils import close_pair_utils, figure_utils
 
 
 def preprocess_data(data):
@@ -30,7 +30,7 @@ def plot_count_correlation(fig, ax, true_counts, true_Ts, total_ct, true_recombi
     #     ax.plot(true_counts[mask], total_ct[mask], marker=markers.next(), markersize=2, linestyle='none', label="pi=%.e" % T)
     im = ax.scatter(true_counts, total_ct, c=true_recombined_fractions, s=2)
     xs = np.linspace(0, ax.get_xlim()[1])
-    ax.plot(xs, xs, '--', label='y=x', color='tab:orange')
+    ax.plot(xs, xs, '--', label=r'$y=x$', color='tab:orange')
     ax.set_aspect('equal')
     ax.legend(ncol=2, loc='upper left')
     ax.set_xlabel("True transfers")
@@ -59,7 +59,7 @@ def plot_clonal_T_estimation(ax, true_Ts, est_Ts):
     _ = ax.boxplot(plotting_dat, medianprops={'color':'orange'}, flierprops={'markersize': 1})
     xs = np.linspace(1, 10, 10)
     ys = np.linspace(1e-5, 1e-4, 10)
-    ax.plot(xs, ys, '--', label='y=x')
+    ax.plot(xs, ys, '--', label=r'$y=x$')
     ax.plot([],'-', color='orange',label='median')
     ax.set_xlabel(r"True $2\mu T$ $(* 10^{-5})$")
     ax.set_ylabel("Clonal divergence")
@@ -71,7 +71,7 @@ def plot_clonal_T_est_correlation(ax, true_Ts, est_Ts):
     # markers = itertools.cycle(('+', '.', 'x', '^'))
     ax.plot(true_Ts, est_Ts, '.', markersize=2)
     xs = np.linspace(0, ax.get_xlim()[1])
-    ax.plot(xs, xs, '--', label='y=x')
+    ax.plot(xs, xs, '--', label=r'$y=x$')
     # ax.legend(ncol=2, loc='center left', bbox_to_anchor=(1, 0.5))
     ax.set_aspect('equal')
     ax.set_xlabel("True clonal div " r"($\times 10^{-4}$)")
@@ -90,7 +90,7 @@ def plot_clonal_frac_correlation(ax, true_cfs, est_cfs):
     # markers = itertools.cycle(('+', '.', 'x', '^'))
     ax.plot(true_cfs, est_cfs, '.', markersize=2)
     xs = np.linspace(ax.get_xlim()[0], ax.get_xlim()[1])
-    ax.plot(xs, xs, '--', label='y=x')
+    ax.plot(xs, xs, '--', label=r'$y=x$')
     # ax.legend(ncol=2, loc='center left', bbox_to_anchor=(1, 0.5))
     ax.set_aspect('equal')
     ax.set_xlabel("True clonal fraction")
@@ -104,14 +104,46 @@ def plot_clonal_frac_correlation(ax, true_cfs, est_cfs):
     ax.legend(loc='upper left')
     return
 
-def plot_length_distributions(ax, true_lens, detected_lens):
-    _ = ax.hist(detected_lens * config.second_pass_block_size, histtype='step', bins=100, density=True, label='Detected dist')
-    _ = ax.hist(true_lens, histtype='step', bins=100, density=True, label='True dist')
+def plot_length_distributions(ax, true_lens, detected_lens, density=True):
+    print("Num detected: {}; num true: {}".format(len(detected_lens), len(true_lens)))
+    res = ax.hist(detected_lens * config.second_pass_block_size, histtype='step', bins=50, density=density, label='Detected dist')
+    _ = ax.hist(true_lens, histtype='step', bins=res[1], density=density, label='True dist')
     ax.set_xlabel('Transfer length / bps')
-    ax.set_ylabel(r'Density ($\times 10^{-4})$')
-    ax.set_yticklabels([0, 1, 2, 3, 4])
+    if density:
+        ax.set_ylabel(r'Density ($\times 10^{-4})$')
+        ax.set_yticklabels([0, 1, 2, 3, 4])
+    else:
+        ax.set_ylabel('Counts')
     ax.legend()
     return
+
+def plot_TcTm_dist(ax, est_T, true_div, est_clonal_frac, true_clonal_frac):
+    Tc = 0.0094  # can be found using typical_pair_utils._compute_theta
+    est_recomb_frac = 1 - est_clonal_frac
+    true_recomb_frac = 1 - true_clonal_frac
+
+    figure_utils.plot_jitters(ax, 2, est_recomb_frac / est_T * Tc, 0.1, alpha=0.35)
+    figure_utils.plot_jitters(ax, 1, true_recomb_frac / true_div * Tc, 0.1, alpha=0.35)
+    ax.axhline(Tc * 2600 * 0.65, linestyle='--', alpha=0.35, color='k', label=r'$r/m$')  # simulation parameter
+    ax.set_ylabel(r'$T_{mrca}/T_{mosaic}$')
+    ax.set_xticks([1, 2])
+    ax.set_xticklabels(['True', 'Inferred'])
+    ax.legend()
+    return
+
+def plot_TcTm_corr(ax, est_T, true_div, est_clonal_frac, true_clonal_frac):
+    ax.set_aspect('equal')
+    Tc = 0.0094  # can be found using typical_pair_utils._compute_theta
+    est_recomb_frac = 1 - est_clonal_frac
+    true_recomb_frac = 1 - true_clonal_frac
+    ax.plot(true_recomb_frac / true_div * Tc, est_recomb_frac / est_T * Tc, '.', markersize=2)
+    xs = np.linspace(0, 75)
+    ax.plot(xs, xs, label=r'$y=x$', linestyle='--')
+    ax.set_xlim([0, 50])
+    ax.set_ylim([0, 50])
+    ax.set_xlabel(r'True pairwise $T_{mrca}/T_{mosaic}$')
+    ax.set_ylabel(r'Inferred pairwise $T_{mrca}/T_{mosaic}$')
+    ax.legend()
 
 
 # set up figure
@@ -132,23 +164,33 @@ mpl.rcParams['legend.fontsize']  = 'small'
 # between_within_len_ax = fig.add_subplot(lower_grid[1])
 # between_within_count_ax = fig.add_subplot(lower_grid[0])
 # fig, axes = plt.subplots(ncols=3, nrows=1, figsize=(6.5, 2.), gridspec_kw={'width_ratios': [1,1.1,0.7], 'wspace':0.6})
-fig = plt.figure(figsize=(5, 3.7))
+fig = plt.figure(figsize=(6, 3.7))
 # create a 1-row 3-column container as the left container
 gs_tl = gridspec.GridSpec(1, 1)
+gs_tm = gridspec.GridSpec(1, 1)
 gs_tr = gridspec.GridSpec(1, 1)
 gs_bl = gridspec.GridSpec(1, 1)
+gs_bm = gridspec.GridSpec(1, 1)
 gs_br = gridspec.GridSpec(1, 1)
 
 # add plots to the nested structure
 T_est_ax = fig.add_subplot(gs_tl[0,0])
 count_ax = fig.add_subplot(gs_tr[0,0])
 true_len_ax = fig.add_subplot(gs_br[0,0])
-cf_ax = fig.add_subplot(gs_bl[0,0])
+cf_ax = fig.add_subplot(gs_tm[0,0])
+TcTm_corr_ax = fig.add_subplot(gs_bl[0,0])
+TcTm_dist_ax = fig.add_subplot(gs_bm[0,0])
 
-gs_tl.update(left=0.1, right=0.4, top=0.95, bottom=0.60)
-gs_tr.update(left=0.4, right=0.85, top=0.95, bottom=0.60)
-gs_bl.update(left=0.1, right=0.4, top=0.45, bottom=0.10)
-gs_br.update(left=0.55, right=0.9, top=0.45, bottom=0.10)
+# gs_tl.update(left=0.1, right=0.4, top=0.95, bottom=0.60)
+# gs_tr.update(left=0.4, right=0.85, top=0.95, bottom=0.60)
+# gs_bl.update(left=0.1, right=0.4, top=0.45, bottom=0.10)
+# gs_br.update(left=0.55, right=0.9, top=0.45, bottom=0.10)
+gs_tl.update(left=0.1, right=0.3, top=0.95, bottom=0.60)
+gs_tm.update(left=0.39, right=0.59, top=0.95, bottom=0.60)
+gs_tr.update(left=0.63, right=0.91, top=0.95, bottom=0.60)
+gs_bl.update(left=0.1, right=0.3, top=0.45, bottom=0.10)
+gs_bm.update(left=0.42, right=0.54, top=0.45, bottom=0.10)
+gs_br.update(left=0.65, right=0.95, top=0.45, bottom=0.10)
 
 # fig2, axes2 = plt.subplots(ncols=2, nrows=1, figsize=(3, 2.5), gridspec_kw={'width_ratios': [1,1]})
 # load up data
@@ -171,17 +213,24 @@ total_counts, within_counts, between_counts, full_df = preprocess_data(data)
 plot_count_correlation(fig, count_ax, true_counts, true_Ts, total_counts, true_total_lens / genome_len)
 # plot_clonal_T_estimation(T_est_ax, true_Ts, est_Ts)
 plot_clonal_T_est_correlation(T_est_ax, true_divs, est_Ts)
-plot_length_distributions(true_len_ax, true_lens, full_df['lengths'].astype(float))
+plot_length_distributions(true_len_ax, true_lens, full_df['lengths'].astype(float), density=False)
 plot_clonal_frac_correlation(cf_ax, true_cf, inferred_cf)
+
+plot_TcTm_dist(TcTm_dist_ax, est_Ts, true_divs, inferred_cf, true_cf)
+plot_TcTm_corr(TcTm_corr_ax, est_Ts, true_divs, inferred_cf, true_cf)
 
 
 T_est_ax.text(-0.08, 1.12, "A", transform=T_est_ax.transAxes,
         fontsize=7, fontweight='bold', va='top', ha='left')
-count_ax.text(-0.08, 1.12, "B", transform=count_ax.transAxes,
+cf_ax.text(-0.08, 1.12, "B", transform=cf_ax.transAxes,
         fontsize=7, fontweight='bold', va='top', ha='left')
-cf_ax.text(-0.08, 1.12, "C", transform=cf_ax.transAxes,
+count_ax.text(-0.08, 1.12, "C", transform=count_ax.transAxes,
+              fontsize=7, fontweight='bold', va='top', ha='left')
+true_len_ax.text(-0.08, 1.12, "F", transform=true_len_ax.transAxes,
         fontsize=7, fontweight='bold', va='top', ha='left')
-true_len_ax.text(-0.08, 1.12, "D", transform=true_len_ax.transAxes,
-        fontsize=7, fontweight='bold', va='top', ha='left')
+TcTm_corr_ax.text(-0.08, 1.12, "D", transform=TcTm_corr_ax.transAxes,
+                 fontsize=7, fontweight='bold', va='top', ha='left')
+TcTm_dist_ax.text(-0.08, 1.12, "E", transform=TcTm_dist_ax.transAxes,
+                 fontsize=7, fontweight='bold', va='top', ha='left')
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', "supp_HMM_validation.pdf"), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, "supp", "supp_HMM_validation.pdf"), bbox_inches='tight')
