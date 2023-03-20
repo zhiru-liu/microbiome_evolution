@@ -4,6 +4,7 @@ import logging
 import json
 import pickle
 import numpy as np
+import pandas as pd
 import traceback
 sys.path.append("..")
 import config
@@ -124,14 +125,15 @@ logging.basicConfig(
 
 CLONAL_FRAC_CUTOFF = 0.5  # config.clonal_fraction_cutoff
 BLOCK_SIZE = config.second_pass_block_size
-DEBUG = True
+DEBUG = False
 
 black_list = ['Bacteroides_xylanisolvens_57185', # for having extremely short contigs and short total core genome
               'Escherichia_coli_58110'] # for having extremely short contigs
 
 cutoff_dict = json.load(open('./same_clade_div_cutoffs.json', 'r'))
-base_dir = 'zarr_snps'
-for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
+# for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
+isolate_metadata = pd.read_csv(os.path.join(config.isolate_directory, 'isolate_info.csv'), index_col='MGnify_accession')
+for species_name, row in isolate_metadata.iterrows():
     if species_name.startswith('.'):
         continue
     if DEBUG:
@@ -145,7 +147,7 @@ for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
         # second_path_save_path = os.path.join(config.analysis_directory,
         #                          "closely_related", "second_pass", "{}.pickle".format(species_name))
         second_path_save_path = os.path.join(config.analysis_directory,
-                                             "closely_related", "iter_second_third_passes", "{}.pickle".format(species_name))
+                                             "closely_related", "isolates", "{}.pickle".format(species_name))
     if os.path.exists(second_path_save_path):
         logging.info("Skipping %s" % species_name)
         continue

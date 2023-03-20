@@ -312,10 +312,10 @@ class Pileup_Helper:
         :param clade_cutoff: Only for B vulgatus to select the major clade
         :param close_pair_cutoff: For reducing overcounting of sharing
         """
-        self.dh = parallel_utils.DataHoarder(species_name, mode='QP', allowed_variants=allowed_variants)
+        self.dh = parallel_utils.DataHoarder(species_name, mode='isolates', allowed_variants=allowed_variants)
         self.good_chromo = self.dh.chromosomes[self.dh.general_mask]
 
-        div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence', 'between_hosts',
+        div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence', 'isolates',
                                '%s.csv' % species_name)
         self.div_mat = np.loadtxt(div_dir, delimiter=',')
         self.cf_mat = typical_pair_utils.load_clonal_frac_mat(species_name)

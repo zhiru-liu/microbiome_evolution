@@ -2,6 +2,7 @@ import sys
 import os
 import random
 import numpy as np
+import pandas as pd
 sys.path.append("..")
 import config
 from utils import parallel_utils
@@ -52,21 +53,24 @@ def get_empirical_div_dist(local_divs, genome_divs, num_bins, separate_clades=Tr
 #     save_path = os.path.join(config.hmm_data_directory, species_name + '.csv')
 #     np.savetxt(save_path, np.vstack([divs, counts]))
 
-species_name = 'MGYG-HGUT-02478'
-print('Processing ' + species_name)
-save_path = os.path.join(config.hmm_data_directory, species_name + '.csv')
-if os.path.exists(save_path):
-    print("%s already processed" % species_name)
-if species_name == 'MGYG-HGUT-02478':
-    separate_clades = True
-    clade_cutoff = 0.03
-else:
-    separate_clades = False
-    clade_cutoff = None
-dh = parallel_utils.DataHoarder(species_name, mode="isolates")
-local_divs, genome_divs = sample_blocks(dh)
-divs, counts = get_empirical_div_dist(local_divs, genome_divs,
-                                      num_bins=40, separate_clades=separate_clades,
-                                      clade_cutoff=clade_cutoff)
-save_path = os.path.join(config.hmm_data_directory, species_name + '.csv')
-np.savetxt(save_path, np.vstack([divs, counts]))
+isolate_metadata = pd.read_csv(os.path.join(config.isolate_directory, 'isolate_info.csv'), index_col='MGnify_accession')
+for species_name, row in isolate_metadata.iterrows():
+    # species_name = 'MGYG-HGUT-02478'
+    print('Processing {} ({})'.format(species_name, row['Species']))
+    save_path = os.path.join(config.hmm_data_directory, species_name + '.csv')
+    if os.path.exists(save_path):
+        print("%s already processed" % species_name)
+        continue
+    if species_name == 'MGYG-HGUT-02478':
+        separate_clades = True
+        clade_cutoff = 0.03
+    else:
+        separate_clades = False
+        clade_cutoff = None
+    dh = parallel_utils.DataHoarder(species_name, mode="isolates")
+    local_divs, genome_divs = sample_blocks(dh)
+    divs, counts = get_empirical_div_dist(local_divs, genome_divs,
+                                          num_bins=40, separate_clades=separate_clades,
+                                          clade_cutoff=clade_cutoff)
+    save_path = os.path.join(config.hmm_data_directory, species_name + '.csv')
+    np.savetxt(save_path, np.vstack([divs, counts]))

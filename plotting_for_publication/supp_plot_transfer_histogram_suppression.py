@@ -69,7 +69,7 @@ for i in range(len(files_to_plot)):
         density = histo[1, :] / histo[1, :].sum()
 
     # simulated
-    # ax.bar(mids, density, width=mids[1] - mids[0], label='simulated', alpha=0.5)
+    # ax.bar(mids, density, width=mids[1] - mids[0], label='simulated', alpha=0.5)  # using hmm prior without controlling locations
     bins = np.arange(0, sim_transfers.max() + mids[1]-mids[0], mids[1]-mids[0])
     counts, bins = np.histogram(sim_transfers, bins=bins)
     new_mids = (bins[:-1] + bins[1:]) / 2

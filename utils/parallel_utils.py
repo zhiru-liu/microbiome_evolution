@@ -113,6 +113,22 @@ def parse_snp_info(info_filename):
 
 
 def get_general_site_mask(species_name, allowed_variants=['4D']):
+    if species_name.startswith('MGYG'):
+        path = os.path.join(config.uhgg_core_gene_directory, species_name, 'core_genes.json')
+        genes = json.load(open(path, 'r'))
+        # work with integer gene ids
+        core_genes = [int(x) for x in genes]
+        data_dir = os.path.join(config.isolate_directory, species_name)
+        chromosomes = np.load(os.path.join(data_dir, 'chromosomes.npy'))
+        locations = np.load(os.path.join(data_dir, 'locations.npy'))
+        gene_names = np.load(os.path.join(data_dir, 'gene_names.npy'))
+        variants = np.load(os.path.join(data_dir, 'variants.npy'))
+        pvalues = np.load(os.path.join(data_dir, 'pvalues.npy'))
+        general_mask = _get_general_site_mask(
+            gene_names, variants, pvalues, core_genes,
+            allowed_variants=allowed_variants)
+        return general_mask
+
     core_genes = core_gene_utils.get_sorted_core_genes(species_name)
     res = get_snp_info(species_name)
     return _get_general_site_mask(res[2], res[3], res[4], core_genes, allowed_variants=allowed_variants)
@@ -133,10 +149,10 @@ def get_contig_lengths(good_chromo):
 
 
 def get_genome_length(species_name, if_syn=False):
-    if species_name=='MGYG-HGUT-02478':
-        # hard code the genome lengths of uhgg isolates
-        syn_len = 208669
-        core_len = 1497264
+    if species_name.startswith('MGYG'):
+        df = pd.read_csv(os.path.join(config.isolate_directory, 'isolate_info.csv'), index_col='MGnify_accession')
+        syn_len = df.loc[species_name, '4D synonymous site counts']
+        core_len = df.loc[species_name, 'Core genome length']
     else:
         df = pd.read_csv(os.path.join(config.analysis_directory, 'misc', 'genome_length.csv'))
         df = df.set_index('Species names')

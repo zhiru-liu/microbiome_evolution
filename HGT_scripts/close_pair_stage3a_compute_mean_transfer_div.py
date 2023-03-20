@@ -88,8 +88,8 @@ def compute_div_in_transfers(dh, transfer_df):
 
 if __name__ == "__main__":
     # second_pass_dir = os.path.join(config.analysis_directory, "closely_related", "second_pass")
-    second_pass_dir = os.path.join(config.analysis_directory, 'closely_related', 'iter_second_third_passes', 'converged_pass')
-    data_dir = os.path.join(config.analysis_directory, "closely_related", "third_pass")
+    second_pass_dir = os.path.join(config.analysis_directory, 'closely_related', 'isolates')
+    data_dir = os.path.join(config.analysis_directory, "closely_related", "isolates")
 
     # species_name = 'Alistipes_shahii_62199'
     # filepath = os.path.join(config.analysis_directory, "closely_related", 'third_pass',
@@ -109,16 +109,20 @@ if __name__ == "__main__":
     # transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass',
     #              'Bacteroides_vulgatus_57955' + '_all_transfers_processed.pickle'))
 
-    for filename in os.listdir(second_pass_dir):
-        if filename.startswith('.'):
-            continue
-        species_name = filename.split('.')[0]
+    # for filename in os.listdir(second_pass_dir):
+    isolate_metadata = pd.read_csv(os.path.join(config.isolate_directory, 'isolate_info.csv'), index_col='MGnify_accession')
+    for species_name, row in isolate_metadata.iterrows():
+        # if filename.startswith('.'):
+        #     continue
+        # species_name = filename.split('.')[0]
+        # species_name = 'MGYG-HGUT-02422'
         print("Processing {}".format(species_name))
         filepath = os.path.join(data_dir, "%s_all_transfers.pickle" % species_name)
         if not os.path.exists(filepath):
             print("Intermediate file not found for {}, skipping".format(species_name))
             continue
         transfer_df = pd.read_pickle(filepath)
-        dh = parallel_utils.DataHoarder(species_name=species_name, mode='QP', allowed_variants=['1D', '2D', '3D','4D'])
+        dh = parallel_utils.DataHoarder(species_name=species_name, mode='isolates', allowed_variants=['1D', '2D', '3D','4D'])
         transfer_df = compute_div_in_transfers(dh, transfer_df)
         transfer_df.to_pickle(filepath)
+        # break

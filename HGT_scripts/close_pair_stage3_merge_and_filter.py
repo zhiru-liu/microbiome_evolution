@@ -18,20 +18,25 @@ from utils import close_pair_utils, parallel_utils
 
 # for analyzing isolates
 ckpt_path = os.path.join(config.analysis_directory, "closely_related", "isolates")
-for filename in ['MGYG-HGUT-02478.pickle']:
-    if filename.startswith('.'):
-        continue
-    species_name = filename.split('.')[0]
 
+isolate_metadata = pd.read_csv(os.path.join(config.isolate_directory, 'isolate_info.csv'), index_col='MGnify_accession')
+for species_name, row in isolate_metadata.iterrows():
+    filename = '{}.pickle'.format(species_name)
     # if ('vulgatus'in species_name) or ('shahii' in species_name):
     #     two_clades = True
     # else:
     #     two_clades = False
-    two_clades = True
+    if species_name=='MGYG-HGUT-02478':
+        two_clades = True
+    else:
+        two_clades = False
 
     print("Processing {}".format(species_name))
     first_pass_save_path = os.path.join(config.analysis_directory,
                                         "closely_related", "first_pass", "{}.pickle".format(species_name))
+    if not os.path.exists(first_pass_save_path):
+        print("{} did not have enough pairs.".format(species_name))
+        continue
     first_pass_df = pd.read_pickle(first_pass_save_path)
 
     third_pass_path = os.path.join(config.analysis_directory, "closely_related", 'isolates', "{}_thirdpass.pickle".format(species_name))

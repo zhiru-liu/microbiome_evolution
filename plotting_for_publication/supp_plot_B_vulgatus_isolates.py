@@ -146,4 +146,4 @@ plot_between_within_clade(between_within_count_ax, clonal_divs[mask], within_cou
 # plot_between_within_clade(between_within_count_ax, true_divs, true_within_counts, true_between_counts)
 plot_between_within_length_distributions(between_within_len_ax, full_df)
 
-fig.savefig(os.path.join(config.figure_directory, "supp_isolates_Bv.pdf"), bbox_inches="tight")
+fig.savefig(os.path.join(config.figure_directory, "supp_isolates_Bv_.pdf"), bbox_inches="tight")

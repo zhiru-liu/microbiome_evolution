@@ -3,6 +3,7 @@ import os
 import sys
 import json
 import itertools
+import pandas as pd
 sys.path.append("..")
 from utils import pileup_utils, parallel_utils, typical_pair_utils
 import config
@@ -17,7 +18,7 @@ def compute_between_host(species_name, thresholds, save_path=None, cache_runs=No
         clade_cutoff = None
 
     if save_path is None:
-        ckpt_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', species_name)
+        ckpt_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'isolates')
     else:
         ckpt_path = save_path
     # if os.path.exists(ckpt_path):
@@ -29,8 +30,8 @@ def compute_between_host(species_name, thresholds, save_path=None, cache_runs=No
         ph.cluster_dict, ph.get_event_start_end, genome_len, thresholds=thresholds, cache_start_end=cache_runs)
     if not os.path.exists(ckpt_path):
         os.makedirs(ckpt_path)
-    np.savetxt(os.path.join(ckpt_path, 'between_host.csv'), cumu_runs)
-    np.savetxt(os.path.join(ckpt_path, 'between_host_thresholds.txt'), thresholds)
+    np.savetxt(os.path.join(ckpt_path, '{}.csv'.format(species_name)), cumu_runs)
+    np.savetxt(os.path.join(ckpt_path, '{}_thresholds.txt'.format(species_name)), thresholds)
 
 
 def compute_B_vulgatus_between_clade(thresholds):
@@ -93,7 +94,7 @@ def compute_within_host(species_name, thresholds, b_vulgatus_between_clade=False
 
 
 if __name__ == '__main__':
-    contig_data = json.load(open(os.path.join(config.data_directory, 'contig_counts.json'), 'r'))
+    # contig_data = json.load(open(os.path.join(config.data_directory, 'contig_counts.json'), 'r'))
     # thresholds = [1600, 2400, 3200]
     # thresholds = [1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
     # species_name = 'Bacteroides_vulgatus_57955'
@@ -105,30 +106,26 @@ if __name__ == '__main__':
     # thresholds = [220, 340, 450]
     # compute_B_vulgatus_between_clade(thresholds)
 
-    for species_name in contig_data:
-        if contig_data[species_name] > 50:
-            continue
-        print("Processing %s" % species_name)
-        # only processing one species
-        # if 'rectale' not in species_name:
-        #     continue
-        if 'rectale' in species_name:
-            theta = typical_pair_utils.compute_theta(species_name)
-            thresholds = np.array([15, 20, 25]) / theta
-            compute_E_rectale_between_host(thresholds)
-        if 'vulgatus' in species_name:
-            within_theta, between_theta = typical_pair_utils.compute_theta(species_name, clade_cutoff=[None, 0.03], return_both=True)
-            thresholds = np.array([15, 20, 25]) / within_theta
-
-            cache_dir = os.path.join(config.analysis_directory, 'sharing_pileup', 'cached', 'B_vulgatus_between_host_within_clade')
-            compute_between_host(species_name, thresholds, cache_runs=cache_dir)
-            compute_within_host(species_name, thresholds)
-
-            thresholds = np.array([15, 20, 25]) / between_theta
-            compute_B_vulgatus_between_clade(thresholds)
-            compute_within_host(species_name, thresholds, b_vulgatus_between_clade=True)
+    ckpt_path = os.path.join(config.analysis_directory, "closely_related", "isolates")
+    isolate_metadata = pd.read_csv(os.path.join(config.isolate_directory, 'isolate_info.csv'), index_col='MGnify_accession')
+    for species_name, row in isolate_metadata.iterrows():
+        if '1346' in species_name:
+            cutoff = [None, 0.06]
+        elif '1378' in species_name:
+            cutoff = [None, 0.07]
+        elif '2366' in species_name:
+            cutoff = [None, 0.07]
+        elif '2422' in species_name:
+            cutoff = [None, 0.04]
+        elif '2438' in species_name:
+            cutoff = [None, 0.04]
+        elif '2478' in species_name:
+            cutoff = [None, 0.04]
+        elif '2538' in species_name:
+            cutoff = [None, 0.03]
         else:
-            theta = typical_pair_utils.compute_theta(species_name)
-            thresholds = np.array([15, 20, 25]) / theta
-            compute_between_host(species_name, thresholds)
-            compute_within_host(species_name, thresholds)
+            cutoff = [None, None]
+
+        theta = typical_pair_utils._compute_theta(species_name, None, clade_cutoff=cutoff)
+        thresholds = np.array([15, 20, 25]) / theta
+        compute_between_host(species_name, thresholds)

@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import sys
+import pandas as pd
 sys.path.append("..")
 from utils import close_pair_utils, parallel_utils
 import config
@@ -103,7 +104,9 @@ def main():
     #         continue
     #     print("processing %s" % species_name)
     #     compute_one_species(species_name)
-    compute_one_species_isolate("MGYG-HGUT-02478")
+    isolate_metadata = pd.read_csv(os.path.join(config.isolate_directory, 'isolate_info.csv'), index_col='MGnify_accession')
+    for species_name, row in isolate_metadata.iterrows():
+        compute_one_species_isolate(species_name)
 
 
 if __name__ == "__main__":

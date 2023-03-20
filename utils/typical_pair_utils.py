@@ -79,9 +79,11 @@ def compute_theta(species_name, clade_cutoff=[None, None], cf_cutoff=0.05, retur
 
 def _compute_theta(species_name, single_sub_idxs, clade_cutoff=[None, None], cf_cutoff=0.05, return_both=False):
     pd_mat = load_pairwise_div_mat(species_name)
-    pd_mat = pd_mat[single_sub_idxs, :][:, single_sub_idxs]
+    if single_sub_idxs is not None:
+        pd_mat = pd_mat[single_sub_idxs, :][:, single_sub_idxs]
     cf_mat = load_clonal_frac_mat(species_name)
-    cf_mat = cf_mat[single_sub_idxs, :][:, single_sub_idxs]
+    if single_sub_idxs is not None:
+        cf_mat = cf_mat[single_sub_idxs, :][:, single_sub_idxs]
     uptri = np.triu_indices(pd_mat.shape[0], 1)
     pds = pd_mat[uptri]
     cfs = cf_mat[uptri]

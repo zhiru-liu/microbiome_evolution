@@ -2,6 +2,7 @@ import numpy as np
 import os
 import sys
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from utils.typical_pair_utils import get_joint_plot_x_y, fit_quadratic_curve
 
@@ -67,7 +68,9 @@ def plot_one_species(x, y, asexual_line=True, fit_line=True, same_ylim=None, log
 if __name__ == "__main__":
     # base_dir = 'zarr_snps'
     # for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
-    for species_name in ['MGYG-HGUT-02478']:
+    isolate_metadata = pd.read_csv(os.path.join(config.isolate_directory, 'isolate_info.csv'), index_col='MGnify_accession')
+    for species_name, row in isolate_metadata.iterrows():
+    # for species_name in ['MGYG-HGUT-02478']:
         if species_name.startswith('.'):
             continue
         # if 'vulgatus' not in species_name:
@@ -76,7 +79,7 @@ if __name__ == "__main__":
         x, y = get_joint_plot_x_y(species_name)
 
         save_path = os.path.join(config.analysis_directory, 'clonal_frac_pairwise_div_joint',
-                                 'default', '{}.pdf'.format(species_name))
+                                 'isolates', '{}.pdf'.format(species_name))
         f, axes = plot_one_species(x, y, asexual_line=True, fit_line=True, same_ylim=None, semilogy=False)
 
         f.savefig(save_path, dpi=600)

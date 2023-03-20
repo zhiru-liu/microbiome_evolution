@@ -373,6 +373,8 @@ for species_full_name in species_order:
 # violins = axd.violinplot(transfer_length_data[:], positions=plot_loc[:], vert=True, showmedians=True, showextrema=False,
 #                          widths=0.8)
 print("\nSpecies name, median transfer, mean transfer")
+all_median = []
+all_mean = []
 for i, loc in enumerate(plot_loc):
     points_to_plot = 1000
     ys = transfer_length_data[i]
@@ -381,7 +383,14 @@ for i, loc in enumerate(plot_loc):
     # xs = np.ones(ys.shape) * loc + np.random.normal(scale=0.05, size=ys.shape)
     # axd.scatter(xs, ys, color=plot_colors[(i) % len(plot_colors)], s=0.2, rasterized=True, alpha=0.1)
     print(xticklabels[i], np.median(ys), np.mean(ys))
+    all_median.append(np.median(ys))
+    all_mean.append(np.mean(ys))
     plot_jitters(axd, loc, ys, width=0.4, colorVal=plot_colors[i % len(plot_colors)])
+
+species_transfer_len_df = pd.DataFrame(xticklabels, columns=['Species name'])
+species_transfer_len_df['Median length (bp)'] = all_median
+species_transfer_len_df['Mean length (bp)'] = all_mean
+species_transfer_len_df.to_csv(os.path.join(config.analysis_directory, 'misc', 'fig3_transfer_length.csv'))
 
 # for i, pc in enumerate(violins['bodies']):
 #     pc.set_facecolor(plot_colors[(i) % len(plot_colors)])

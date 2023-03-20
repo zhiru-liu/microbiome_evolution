@@ -146,6 +146,12 @@ def test_species(species_name, species_params={}):
                 blk_seq_fit, cphmm, sequence_with_snps=blk_seq, clade_cutoff_bin=clade_cutoff_bin)
             naive_div, est_div = close_pair_utils.estimate_clonal_divergence(clonal_seq)
 
+            # TODO: can measure the measured diverged of these locations
+            start = close_pair_utils.block_loc_to_genome_loc(row['starts'], contig_lengths, block_size, left=True)
+            end = close_pair_utils.block_loc_to_genome_loc(row['ends'], contig_lengths, block_size, left=False)
+            div = np.sum(g[int(start):int(end)]) / float(end - start)
+            divs.append(div)
+
             # saving data
             dat['true counts'].append(len(sim_starts))
             dat['true lengths'].append(sim_lens)
