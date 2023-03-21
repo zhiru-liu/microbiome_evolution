@@ -82,6 +82,10 @@ def find_event_divergences(starts, ends, blk_seq):
 
 
 def generate_fake_transfer_dist(species_name, total_reps=5):
+    dist_save_path = os.path.join(config.analysis_directory, 'closely_related', 'simulated_transfers_cphmm', '{}.csv'.format(species_name))
+    if os.path.exists(dist_save_path):
+        print("{} already processed".format(species_name))
+        return
     # only processing B. vulgatus as two clades
     if 'vulgatus' in species_name:
         clade_cutoff_bin = config.empirical_histogram_bins
@@ -120,7 +124,7 @@ def generate_fake_transfer_dist(species_name, total_reps=5):
         if (num_processed % 100) == 0:
             print("Finished {} pairs at {}".format(num_processed, datetime.now()))
     all_sim_divs = np.concatenate(all_sim_divs)
-    np.savetxt(os.path.join(config.analysis_directory, 'closely_related', 'simulated_transfers_cphmm', '{}.csv'.format(species_name)), all_sim_divs)
+    np.savetxt(dist_save_path, all_sim_divs)
 
 
 if __name__ == "__main__":
@@ -131,6 +135,8 @@ if __name__ == "__main__":
         species_name = filename.split('.')[0]
         if 'Lachnospiraceae' in species_name:
             continue
+        if 'putredinis' in species_name:
+            # too slow, come back later; Need 30 hrs
+            continue
         print("Processing {}".format(species_name))
         generate_fake_transfer_dist(species_name)
-        break
