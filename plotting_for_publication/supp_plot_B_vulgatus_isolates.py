@@ -96,9 +96,9 @@ def plot_between_within_clade(ax, est_Ts, within_counts, between_counts, plot_tr
 
     ax.set_xlim([0, 2e-4])
     # ax.set_ylim([-40, 40])
-    ax.set_ylim([-17.5, 17.5])
-    ax.set_yticks([-15, -10, -5, 0, 5, 10, 15])
-    ax.set_yticklabels(['15', '10', '5', '0', '5', '10', '15'])
+    ax.set_ylim([-22.5, 22.5])
+    ax.set_yticks([-20, -10, 0, 10, 20])
+    ax.set_yticklabels(['20', '10', '0', '10', '20'])
     ax.set_xticks([0, 1e-4, 2e-4])
     ax.set_xticklabels([0, 1, 2])
     # ax.set_yticks([-40, -20, 0, 20, 40])
