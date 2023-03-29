@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
         save_path = os.path.join(config.analysis_directory, 'clonal_frac_pairwise_div_joint',
                                  'isolates', '{}.pdf'.format(species_name))
-        f, axes = plot_one_species(x, y, asexual_line=True, fit_line=True, same_ylim=None, semilogy=False)
+        f, axes = plot_one_species(x, y, asexual_line=True, fit_line=False, same_ylim=None, semilogy=False)
 
         f.savefig(save_path, dpi=600)
         plt.close()
