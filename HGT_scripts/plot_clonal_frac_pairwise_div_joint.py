@@ -3,13 +3,13 @@ import os
 import sys
 import matplotlib.pyplot as plt
 
-from utils.typical_pair_utils import get_joint_plot_x_y, fit_quadratic_curve
+from utils.typical_pair_utils import get_joint_plot_x_y, fit_quadratic_curve, partial_recombination_curve, load_precomputed_theta
 
 sys.path.append("..")
 import config
 
 
-def plot_one_species(x, y, asexual_line=True, fit_line=True, same_ylim=None, logscale=True, semilogy=False):
+def plot_one_species(x, y, species_name, asexual_line=True, fit_line=True, theory_line=True, same_ylim=None, logscale=True, semilogy=False):
     height = 6
     ratio = 5
 
@@ -28,13 +28,21 @@ def plot_one_species(x, y, asexual_line=True, fit_line=True, same_ylim=None, log
     if asexual_line:
         xs = np.linspace(0.05, 1, 100)
         ys = -np.log(xs) / config.first_pass_block_size
-        ax_joint.plot(xs, ys, '--r', zorder=1, label='random mutations')
+        ax_joint.plot(xs, ys, '--r', zorder=2, label='random mutations')
 
     if fit_line:
         F = fit_quadratic_curve(x, y)
         xs = np.linspace(0., 1, 100)
         ys = F(xs)
-        ax_joint.plot(xs, ys, '--', color='orange', zorder=1, label='fit')
+        ax_joint.plot(xs, ys, '--', color='orange', zorder=2, label='fit')
+
+    if theory_line:
+        theta = load_precomputed_theta(species_name)
+        F = partial_recombination_curve(x, y, theta=theta)
+        xs = np.linspace(0., 1, 100)
+        ys = F(xs)
+        ax_joint.plot(xs, ys, '--', color='tab:orange', zorder=2, label='partial recombination')
+
 
     ax_joint.scatter(x, y, s=1, zorder=2, rasterized=True)
     ax_marg_x.hist(x, bins=100, alpha=0.6)
@@ -65,9 +73,8 @@ def plot_one_species(x, y, asexual_line=True, fit_line=True, same_ylim=None, log
 
 
 if __name__ == "__main__":
-    # base_dir = 'zarr_snps'
-    # for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
-    for species_name in ['MGYG-HGUT-02478']:
+    for species_name in os.listdir(os.path.join(config.data_directory, 'zarr_snps')):
+    # for species_name in ['MGYG-HGUT-02478']:
         if species_name.startswith('.'):
             continue
         # if 'vulgatus' not in species_name:
@@ -76,8 +83,8 @@ if __name__ == "__main__":
         x, y = get_joint_plot_x_y(species_name)
 
         save_path = os.path.join(config.analysis_directory, 'clonal_frac_pairwise_div_joint',
-                                 'default', '{}.pdf'.format(species_name))
-        f, axes = plot_one_species(x, y, asexual_line=True, fit_line=True, same_ylim=None, semilogy=False)
+                                 'theory_curve', '{}.pdf'.format(species_name))
+        f, axes = plot_one_species(x, y, species_name, asexual_line=True, fit_line=True, same_ylim=None, semilogy=False)
 
         f.savefig(save_path, dpi=600)
         plt.close()

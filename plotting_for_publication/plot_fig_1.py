@@ -5,7 +5,7 @@ import os
 import default_fig_styles
 import config
 from utils import parallel_utils, figure_utils
-from utils.typical_pair_utils import get_joint_plot_x_y
+from utils.typical_pair_utils import get_joint_plot_x_y, load_precomputed_theta, partial_recombination_curve
 from HGT_scripts.compute_variance_explained_joint_dist import plot_var_exaplained
 
 dh = None  # only useful when I accidentally deleted the cached snp vectors
@@ -55,6 +55,12 @@ def plot_cf_pd_joint(axes):
     xs = np.linspace(0.01, 1, 100)
     ys = -np.log(xs) / config.first_pass_block_size
     scatter_ax.plot(xs, ys, '--r', zorder=1, label='random mut\'s')
+
+    theta = load_precomputed_theta(species_name)
+    F = partial_recombination_curve(x, y, theta=theta)
+    xs = np.linspace(0., 1, 100)
+    ys = F(xs)
+    scatter_ax.plot(xs, ys, '-.', color='tab:orange', zorder=2, label='partial recomb.')
 
     scatter_ax.scatter(x, y, s=0.6, linewidth=0, zorder=2, rasterized=True)
     marg_ax.hist(y, orientation='horizontal', bins=100, alpha=0.6)

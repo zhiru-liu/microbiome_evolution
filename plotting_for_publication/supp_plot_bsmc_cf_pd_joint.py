@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import config
 from utils import figure_utils
-from utils.typical_pair_utils import get_joint_plot_x_y
+from utils.typical_pair_utils import get_joint_plot_x_y, partial_recombination_curve
 
 fontsize = 6
 mpl.rcParams['font.size'] = fontsize
@@ -44,7 +44,11 @@ for i in range(3):
 
         xs = np.linspace(0.01, 1, 100)
         ys = -np.log(xs) / config.first_pass_block_size
-        scatter_ax.plot(xs, ys, '--r', zorder=1, label='indep. SNPs')
+        scatter_ax.plot(xs, ys, '--r', zorder=1, label='random mut\'s')
+        F = partial_recombination_curve(x, y, theta=None)
+        xs = np.linspace(0., 1, 100)
+        ys = F(xs)
+        scatter_ax.plot(xs, ys, '-.', color='tab:orange', zorder=2, label='partial recomb.')
 
         scatter_ax.scatter(x, y, s=0.3, linewidth=0, zorder=2, rasterized=True)
         marg_ax.hist(y, orientation='horizontal', bins=100, alpha=0.6)

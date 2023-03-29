@@ -7,7 +7,7 @@ import config
 from utils import typical_pair_utils, figure_utils
 
 
-def prepare_var_explained_data():
+def prepare_var_explained_data(plot_only=False, quadratic_fit=False):
     # manually controlling species with apparent multi clade structure
     simple_pop_struct_dict = {'Bacteroides_vulgatus_57955': 0.03,
                               'Alistipes_shahii_62199': 0.03,
@@ -19,8 +19,6 @@ def prepare_var_explained_data():
                               'Bacteroides_ovatus_58035': 0.035}
 
     bin_num = 500
-    plot_only = True
-
     if not plot_only:
         # first fitting all species regularly
         all_species = []
@@ -36,7 +34,11 @@ def prepare_var_explained_data():
             if species_name.startswith('.'):
                 continue
             x, y = typical_pair_utils.get_joint_plot_x_y(species_name)
-            F = typical_pair_utils.fit_quadratic_curve(x, y)
+            theta = typical_pair_utils.load_precomputed_theta(species_name)
+            if quadratic_fit:
+                F = typical_pair_utils.fit_quadratic_curve(x, y)
+            else:
+                F = typical_pair_utils.partial_recombination_curve(x, y, theta)
             y_fit = y - F(x)
             y_asex = y - typical_pair_utils.asexual_curve(x, default=y[x == 0].mean())
 
@@ -68,7 +70,11 @@ def prepare_var_explained_data():
 
         for species_name in simple_pop_struct_dict:
             x, y = typical_pair_utils.get_joint_plot_x_y(species_name, clade_cutoff=simple_pop_struct_dict[species_name])
-            F = typical_pair_utils.fit_quadratic_curve(x, y)
+            theta = typical_pair_utils.load_precomputed_theta(species_name)
+            if quadratic_fit:
+                F = typical_pair_utils.fit_quadratic_curve(x, y)
+            else:
+                F = typical_pair_utils.partial_recombination_curve(x, y, theta)
             y_fit = y - F(x)
             y_asex = y - typical_pair_utils.asexual_curve(x, default=y[x == 0].mean())
 
@@ -109,7 +115,10 @@ def prepare_var_explained_data():
         var_df['Variance explained weighted control'] = (var_df['Variance weighted after control'] - var_df['Variance fit weighted after control']) / var_df['Variance weighted after control']
         var_df['Variance explained weighted control'] = var_df['Variance explained weighted control'].fillna(var_df['Variance explained weighted'])
         var_df = var_df.sort_values('Variance explained weighted control', ascending=False)
-        var_df.to_csv(os.path.join(config.plotting_intermediate_directory, 'variance_explained.csv'))
+        if quadratic_fit:
+            var_df.to_csv(os.path.join(config.plotting_intermediate_directory, 'variance_explained_quadratic.csv'))
+        else:
+            var_df.to_csv(os.path.join(config.plotting_intermediate_directory, 'variance_explained.csv'))
 
 
 ###################################
@@ -183,8 +192,8 @@ def plot_var_exaplained(axes, plot_only_y=True):
 
 
 if __name__ == "__main__":
-    # prepare_var_explained_data()
+    prepare_var_explained_data()
     fig, axes = plt.subplots(2, 1, figsize=(3, 2),dpi=300)
     plt.subplots_adjust(hspace=0)
     plot_var_exaplained(axes)
-    fig.savefig(os.path.join(config.figure_directory, 'variance_explained_v3.pdf'), bbox_inches='tight')
+    fig.savefig(os.path.join(config.figure_directory, 'variance_explained_theory_curve.pdf'), bbox_inches='tight')

@@ -135,8 +135,8 @@ if __name__ == "__main__":
         species_name = filename.split('.')[0]
         if 'Lachnospiraceae' in species_name:
             continue
-        if 'putredinis' in species_name:
-            # too slow, come back later; Need 30 hrs
-            continue
+        # if 'putredinis' in species_name:
+        #     # too slow, come back later; Need 30 hrs
+        #     continue
         print("Processing {}".format(species_name))
         generate_fake_transfer_dist(species_name)

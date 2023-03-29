@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import config
 from utils import figure_utils
-from utils.typical_pair_utils import get_joint_plot_x_y
+from utils.typical_pair_utils import get_joint_plot_x_y, load_precomputed_theta, partial_recombination_curve
 
 fontsize = 6
 mpl.rcParams['font.size'] = fontsize
@@ -40,6 +40,13 @@ for i in range(3):
 
         species_name = species[i*2+j]
         x,y = get_joint_plot_x_y(species_name)
+
+        theta = load_precomputed_theta(species_name)
+        F = partial_recombination_curve(x, y, theta=theta)
+        xs = np.linspace(0.01, 1, 100)
+        ys = F(xs)
+        scatter_ax.plot(xs, ys*100, '-.', color='tab:orange', zorder=2, label='partial recomb.')
+
         y = y * 100
 
         xs = np.linspace(0.01, 1, 100)

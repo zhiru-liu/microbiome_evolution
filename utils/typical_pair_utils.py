@@ -3,6 +3,7 @@ import itertools
 import random
 import os
 import collections
+import json
 from utils import close_pair_utils, parallel_utils
 from parsers import parse_HMP_data
 import config
@@ -64,6 +65,11 @@ def load_pairwise_div_mat(species_name, between_hosts=True):
     div_mat = np.loadtxt(div_dir, delimiter=',')
     return div_mat
 
+
+def load_precomputed_theta(species_name):
+    # needs to run compute_all_theta first
+    theta_dict = json.load(open(os.path.join(config.analysis_directory, 'misc', 'all_thetas.json'), 'r'))
+    return theta_dict[species_name]
 
 def compute_theta(species_name, clade_cutoff=[None, None], cf_cutoff=0.05, return_both=False):
     single_sub_idxs = load_single_subject_sample_idxs(species_name)
@@ -295,6 +301,26 @@ def fit_quadratic_curve(x, y, min_x=0.1):
     def F(xs):
         res = params[0]*xs**2 + params[1]*xs + params[2]
         res[xs < min_x] = np.mean(y[x < min_x])  # fit does not extend below min x
+        return res
+    return F
+
+
+def partial_recombination_curve(x, y, theta=None, min_x=0.2):
+    if theta is None:
+        if np.sum(x < min_x) > 0:
+            theta = y[x < min_x].mean()
+        else:
+            theta = 0.01  # should only matter for Lachnospiraceae
+    xfit = np.log(x)
+    yfit = np.log(1 - y / theta)
+    mask = (~np.isnan(xfit)) & (~np.isnan(yfit)) & ((~np.isinf(xfit))) & ((~np.isinf(yfit))) & (x >= min_x)
+    xfit_ = xfit[mask]
+    yfit_ = yfit[mask]
+    alpha = np.sum(yfit_) / np.sum(xfit_)
+
+    def F(xs):
+        res = theta * (1 - xs ** alpha)
+        res[xs == 0] = np.mean(y[x == 0])  # fit does not extend to the zero region
         return res
     return F
 

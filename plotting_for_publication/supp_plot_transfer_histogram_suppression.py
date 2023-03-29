@@ -2,10 +2,13 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import pandas as pd
+import scipy.stats
+from scipy.special import kl_div
 import random
 import config
-from utils import figure_utils, parallel_utils, typical_pair_utils
+from utils import figure_utils
 
 fontsize = 6
 mpl.rcParams['font.size'] = fontsize
@@ -40,6 +43,10 @@ for i in range(len(files_to_plot)):
         continue
     idx = np.unravel_index(count, axes.shape)
     ax = axes[idx]
+    inset_ax = inset_axes(ax,
+                            width="40%",  # width = 30% of parent_bbox
+                            height="40%",
+                            loc='upper right')
 
     # load simulated transfer distribution
     histo = np.loadtxt(os.path.join(config.hmm_data_directory, species_name + '.csv'))
@@ -56,9 +63,12 @@ for i in range(len(files_to_plot)):
     mask = run_df['pairs'].isin(good_pairs)
     full_df = run_df[mask]
 
+    # sim_transfers = np.loadtxt(os.path.join(
+    #     config.analysis_directory, 'closely_related', 'simulated_transfers', species_name+'.csv'))
     sim_transfers = np.loadtxt(os.path.join(
-        config.analysis_directory, 'closely_related', 'simulated_transfers', species_name+'.csv'))
+        config.analysis_directory, 'closely_related', 'simulated_transfers_cphmm', species_name+'.csv'))
     sim_transfers = sim_transfers[~np.isnan(sim_transfers)]
+    obs_transfers = full_df['synonymous divergences']
 
     if 'vulgatus' in species_name:
         # vulgatus has 80 bins because we separated between and within clade transfer
@@ -70,23 +80,36 @@ for i in range(len(files_to_plot)):
 
     # simulated
     # ax.bar(mids, density, width=mids[1] - mids[0], label='simulated', alpha=0.5)
-    bins = np.arange(0, sim_transfers.max() + mids[1]-mids[0], mids[1]-mids[0])
-    counts, bins = np.histogram(sim_transfers, bins=bins)
+    step = mids[1]-mids[0]
+    step *= 2
+
+    bins = np.arange(0, max(sim_transfers.max(), obs_transfers.max()) + step, step)
+    sim_hist = np.histogram(sim_transfers, bins=bins)
+    counts, bins = sim_hist
     new_mids = (bins[:-1] + bins[1:]) / 2
-    ax.bar(new_mids, counts / np.sum(counts).astype(float), width=mids[1] - mids[0], label='simulated', alpha=0.5)
-    # ax.hist(sim_transfers, cumulative=-1, density=True, bins=bins, alpha=0.5)
+    sim_density = counts / np.sum(counts).astype(float)
+    ax.bar(new_mids, sim_density, width=step, label='simulated', alpha=0.5)
+    inset_ax.hist(sim_transfers, cumulative=-1, density=True, bins=bins, alpha=0.5)
 
     # bins = invert_bins(histo[0, :])
-    bins = np.arange(0, full_df['synonymous divergences'].max() + mids[1]-mids[0], mids[1]-mids[0])
-    counts, bins = np.histogram(full_df['synonymous divergences'], bins=bins)
+    counts, bins = np.histogram(obs_transfers, bins=bins)
     new_mids = (bins[:-1] + bins[1:]) / 2
-    ax.bar(new_mids, counts / np.sum(counts).astype(float), width=mids[1] - mids[0], label='empirical', alpha=0.5)
-    # ax.hist(full_df['divergences'], cumulative=-1, density=True, bins=bins, alpha=0.5)
+    obs_density = counts / np.sum(counts).astype(float)
+    ax.bar(new_mids, obs_density, width=step, label='empirical', alpha=0.5)
+    inset_ax.hist(obs_transfers, cumulative=-1, density=True, bins=bins, alpha=0.5)
     # ax.legend()
     # ax.set_xlabel('transfer divergence')
     ax.set_title(figure_utils.get_pretty_species_name(species_name))
     ax.set_ylim(bottom=-bottom_offset)
+    inset_ax.set_xlim(xmax=inset_ax.get_xlim()[1] / 2)
     count += 1
+
+    # ks_dist, p_val = ks_2samp(obs_transfers, sim_transfers, alternative='greater')
+    # res = cramervonmises_2samp(obs_transfers, sim_transfers)
+    # hist_dist = scipy.stats.rv_histogram(sim_hist)
+    # res = scipy.stats.cramervonmises_2samp(obs_transfers, sim_transfers, method='exact')
+    # res = scipy.stats.ks_2samp(obs_transfers, sim_transfers, alternative='greater')
+    # print(species_name, res.statistic, res.pvalue)
 
 for i in range(axes.shape[0]):
     axes[i, 0].set_ylabel('probability density')
@@ -97,4 +120,4 @@ axes[-1, -2].legend(loc='center', bbox_to_anchor=(1.7, 0.45), fontsize=8)
 fig.delaxes(axes[-1, -1])
 
 # fig.savefig(os.path.join(config.figure_directory, 'supp_transfer_histo_suppresions_no_loc_control.pdf'), bbox_inches='tight')
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_transfer_histograms.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp_transfer_histograms_cphmm.pdf'), bbox_inches='tight')
