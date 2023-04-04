@@ -45,10 +45,11 @@ for i in range(3):
         xs = np.linspace(0.01, 1, 100)
         ys = -np.log(xs) / config.first_pass_block_size
         scatter_ax.plot(xs, ys, '--r', zorder=1, label='random mut\'s')
-        F = partial_recombination_curve(x, y, theta=None)
+        F, alpha = partial_recombination_curve(x, y, theta=None, return_alpha=True)
         xs = np.linspace(0., 1, 100)
         ys = F(xs)
         scatter_ax.plot(xs, ys, '-.', color='tab:orange', zorder=2, label='partial recomb.')
+        print(rbymus[i]*lambs[j], 1 / alpha - 1)
 
         scatter_ax.scatter(x, y, s=0.3, linewidth=0, zorder=2, rasterized=True)
         marg_ax.hist(y, orientation='horizontal', bins=100, alpha=0.6)

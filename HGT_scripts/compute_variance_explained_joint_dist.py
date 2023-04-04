@@ -1,3 +1,4 @@
+import json
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,6 +31,8 @@ def prepare_var_explained_data(plot_only=False, quadratic_fit=False):
         all_var_fit_wt = []
         all_var_asex_wt = []
 
+        if not quadratic_fit:
+            alpha_dict = {}
         for species_name in os.listdir(os.path.join(config.data_directory, 'zarr_snps')):
             if species_name.startswith('.'):
                 continue
@@ -38,7 +41,8 @@ def prepare_var_explained_data(plot_only=False, quadratic_fit=False):
             if quadratic_fit:
                 F = typical_pair_utils.fit_quadratic_curve(x, y)
             else:
-                F = typical_pair_utils.partial_recombination_curve(x, y, theta)
+                F, alpha = typical_pair_utils.partial_recombination_curve(x, y, theta, return_alpha=True)
+                alpha_dict[species_name] = alpha
             y_fit = y - F(x)
             y_asex = y - typical_pair_utils.asexual_curve(x, default=y[x == 0].mean())
 
@@ -74,7 +78,8 @@ def prepare_var_explained_data(plot_only=False, quadratic_fit=False):
             if quadratic_fit:
                 F = typical_pair_utils.fit_quadratic_curve(x, y)
             else:
-                F = typical_pair_utils.partial_recombination_curve(x, y, theta)
+                F, alpha = typical_pair_utils.partial_recombination_curve(x, y, theta, return_alpha=True)
+                alpha_dict[species_name] = alpha
             y_fit = y - F(x)
             y_asex = y - typical_pair_utils.asexual_curve(x, default=y[x == 0].mean())
 
@@ -119,6 +124,7 @@ def prepare_var_explained_data(plot_only=False, quadratic_fit=False):
             var_df.to_csv(os.path.join(config.plotting_intermediate_directory, 'variance_explained_quadratic.csv'))
         else:
             var_df.to_csv(os.path.join(config.plotting_intermediate_directory, 'variance_explained.csv'))
+            json.dump(alpha_dict, open(os.path.join(config.analysis_directory, 'misc', 'partial_recomb_alpha.json'), 'w'))
 
 
 ###################################

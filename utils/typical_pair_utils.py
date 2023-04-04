@@ -305,7 +305,7 @@ def fit_quadratic_curve(x, y, min_x=0.1):
     return F
 
 
-def partial_recombination_curve(x, y, theta=None, min_x=0.2):
+def partial_recombination_curve(x, y, theta=None, min_x=0.2, return_alpha=False):
     if theta is None:
         if np.sum(x < min_x) > 0:
             theta = y[x < min_x].mean()
@@ -322,7 +322,10 @@ def partial_recombination_curve(x, y, theta=None, min_x=0.2):
         res = theta * (1 - xs ** alpha)
         res[xs == 0] = np.mean(y[x == 0])  # fit does not extend to the zero region
         return res
-    return F
+    if return_alpha:
+        return F, alpha
+    else:
+        return F
 
 
 def asexual_curve(x, block_size=config.first_pass_block_size, default=0):
