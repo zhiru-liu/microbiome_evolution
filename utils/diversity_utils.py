@@ -1660,7 +1660,7 @@ def calculate_highcoverage_samples(species_name, min_coverage=config.min_median_
     
 
 
-def calculate_haploid_samples(species_name, min_coverage=config.min_median_coverage, threshold_pi=config.threshold_pi, threshold_within_between_fraction=config.threshold_within_between_fraction,debug=False):
+def calculate_haploid_samples(species_name, min_coverage=config.min_median_coverage, threshold_pi=config.threshold_pi, threshold_within_between_fraction=config.threshold_within_between_fraction,debug=False,lower_threshold=0.2,upper_threshold=0.8):
     
     desired_samples = calculate_highcoverage_samples(species_name, min_coverage)
     
@@ -1694,7 +1694,8 @@ def calculate_haploid_samples(species_name, min_coverage=config.min_median_cover
     
     haploid_samples = []
     for sample in desired_samples:
-        within_sites, between_sites, total_sites = sfs_utils.calculate_polymorphism_rates_from_sfs_map(sfs_map[sample])
+        within_sites, between_sites, total_sites = \
+            sfs_utils.calculate_polymorphism_rates_from_sfs_map(sfs_map[sample], lower_threshold=lower_threshold, upper_threshold=upper_threshold)
     
         if within_sites <= threshold_within_between_fraction*between_sites:
             haploid_samples.append(sample)    
