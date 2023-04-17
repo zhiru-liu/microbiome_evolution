@@ -73,7 +73,8 @@ def prepare_and_plot_haplotypes(highlight_pairs, allowed_variants=['1D', '2D', '
     cluster_order = np.array(clusters.keys())[np.argsort(cluster_means)]
     sample_order = np.concatenate([clusters[c] for c in cluster_order])
 
-    sample_mask = np.isin(sample_order, ph.good_samples)
+    good_samples = np.load(os.path.join(config.plotting_intermediate_directory, 'Bv_within_clade_samples.npy'))
+    sample_mask = np.isin(sample_order, good_samples)
     filtered_sample_order = sample_order[sample_mask]
 
     reordered_snps = only_snps[:, filtered_sample_order]
@@ -103,6 +104,7 @@ def prepare_and_plot_haplotypes(highlight_pairs, allowed_variants=['1D', '2D', '
 if __name__ == "__main__":
     highlight_samples = load_highlight_samples(0, 1)  # start end should use 4D region coordinates
     final_haplotype = prepare_and_plot_haplotypes(highlight_samples, allowed_variants=['4D'])
+    final_haplotype = np.swapaxes(final_haplotype, 0, 1)
     plt.figure(dpi=600)
     plt.imshow(final_haplotype)
     plt.xlabel('Samples')

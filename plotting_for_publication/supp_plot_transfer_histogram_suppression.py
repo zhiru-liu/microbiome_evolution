@@ -7,6 +7,7 @@ import pandas as pd
 import scipy.stats
 from scipy.special import kl_div
 import random
+from scipy.stats import ks_2samp
 import config
 from utils import figure_utils
 
@@ -37,6 +38,8 @@ def invert_bins(arr):
 
 bottom_offset = 1e-3  # some bars are thinner than the bottom axis
 count = 0
+ks_dat = []
+rescaled_ks_dat = []
 for i in range(len(files_to_plot)):
     species_name = files_to_plot[i].split('.')[0]
     if 'Lachnospiraceae' in species_name:
@@ -104,12 +107,17 @@ for i in range(len(files_to_plot)):
     inset_ax.set_xlim(xmax=inset_ax.get_xlim()[1] / 2)
     count += 1
 
-    # ks_dist, p_val = ks_2samp(obs_transfers, sim_transfers, alternative='greater')
+    divergence_ratio = np.mean(sim_transfers) / np.mean(obs_transfers)
+    ks_dist, p_val = ks_2samp(obs_transfers, sim_transfers, alternative='greater')
     # res = cramervonmises_2samp(obs_transfers, sim_transfers)
     # hist_dist = scipy.stats.rv_histogram(sim_hist)
     # res = scipy.stats.cramervonmises_2samp(obs_transfers, sim_transfers, method='exact')
     # res = scipy.stats.ks_2samp(obs_transfers, sim_transfers, alternative='greater')
-    # print(species_name, res.statistic, res.pvalue)
+    ks_dat.append((species_name, ks_dist, p_val))
+    print(ks_dat[-1])
+    ks_dist, p_val = ks_2samp(obs_transfers * divergence_ratio, sim_transfers)
+    rescaled_ks_dat.append((species_name, ks_dist, p_val))
+    print(species_name, ks_dist, p_val)
 
 for i in range(axes.shape[0]):
     axes[i, 0].set_ylabel('probability density')
@@ -120,4 +128,8 @@ axes[-1, -2].legend(loc='center', bbox_to_anchor=(1.7, 0.45), fontsize=8)
 fig.delaxes(axes[-1, -1])
 
 # fig.savefig(os.path.join(config.figure_directory, 'supp_transfer_histo_suppresions_no_loc_control.pdf'), bbox_inches='tight')
+ks_df = pd.DataFrame(ks_dat)
+ks_df.to_csv(os.path.join(config.plotting_intermediate_directory, 'transfer_distribution_ks_test.csv'))
+ks_df = pd.DataFrame(rescaled_ks_dat)
+ks_df.to_csv(os.path.join(config.plotting_intermediate_directory, 'transfer_distribution_ks_test_rescaled.csv'))
 fig.savefig(os.path.join(config.figure_directory, 'supp_transfer_histograms_cphmm.pdf'), bbox_inches='tight')
