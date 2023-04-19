@@ -254,6 +254,7 @@ for species_full_name in species_order:
     plot_loc.append(2 * idx)
     good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, clonal_div_cutoff=clonal_div_cutoff)
     transfer_length_data.append(good_runs)
+    # print("{} has {} pairs".format(species_name, num_pairs))
     all_num_pairs.append(num_pairs)
     xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
 

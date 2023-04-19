@@ -87,14 +87,22 @@ for i in range(sim_cvs.shape[0]):
 print("worst t test pval: {}".format(max(ps)))
 
 # plot comparison
-cvs_ax.scatter(real_cvs[:, 0], np.ones(real_cvs.shape[0]) + np.random.uniform(-0.2, 0.2, size=real_cvs.shape[0]), marker='o', alpha=0.5)
-cvs_ax.scatter(Bv_cv[0], 1 + 0.15, marker='^', color='tab:pink', label='B. vulgatus', alpha=0.5)
-cvs_ax.scatter(Er_cv[0], 1 - 0.1, marker='v', color='tab:pink', label='E. rectale', alpha=0.5)
-cvs_ax.errorbar(mean_sim_cvs, np.zeros(mean_sim_cvs.shape) + np.random.uniform(-0.2, 0.2, size=mean_sim_cvs.shape), xerr=sigma_sim_cvs, fmt='o', color='grey', alpha=0.3)
-cvs_ax.set_yticks([0, 1])
-cvs_ax.set_ylim([-0.3, 1.5])
-cvs_ax.set_yticklabels(['Neutral\nsimulation', 'Observed'])
-cvs_ax.set_xlabel('Sharing frequency CV')
+# cvs_ax.scatter(real_cvs[:, 0], np.ones(real_cvs.shape[0]) + np.random.uniform(-0.2, 0.2, size=real_cvs.shape[0]), marker='o', alpha=0.5)
+# cvs_ax.scatter(Bv_cv[0], 1 + 0.15, marker='^', color='tab:pink', label='B. vulgatus', alpha=0.5)
+# cvs_ax.scatter(Er_cv[0], 1 - 0.1, marker='v', color='tab:pink', label='E. rectale', alpha=0.5)
+# cvs_ax.errorbar(mean_sim_cvs, np.zeros(mean_sim_cvs.shape) + np.random.uniform(-0.2, 0.2, size=mean_sim_cvs.shape), xerr=sigma_sim_cvs, fmt='o', color='grey', alpha=0.3)
+# cvs_ax.set_yticks([0, 1])
+# cvs_ax.set_ylim([-0.3, 1.5])
+# cvs_ax.set_yticklabels(['Neutral\nsimulation', 'Observed'])
+# cvs_ax.set_xlabel('Sharing frequency CV')
+cvs_ax.scatter(np.ones(real_cvs.shape[0]) + np.random.uniform(-0.2, 0.2, size=real_cvs.shape[0]), real_cvs[:, 0], marker='o', alpha=0.5)
+cvs_ax.scatter(0 + 0.15, Bv_cv[0], marker='^', color='tab:pink', label='B. vulgatus', alpha=0.5)
+cvs_ax.scatter(0 - 0.1, Er_cv[0], marker='v', color='tab:pink', label='E. rectale', alpha=0.5)
+cvs_ax.errorbar(np.ones(mean_sim_cvs.shape) + np.random.uniform(-0.2, 0.2, size=mean_sim_cvs.shape), mean_sim_cvs, yerr=sigma_sim_cvs, fmt='o', color='grey', alpha=0.3)
+cvs_ax.set_xticks([0, 1])
+cvs_ax.set_xlim([-0.3, 1.5])
+cvs_ax.set_xticklabels(['Observed', 'Neutral\nsimulation'])
+cvs_ax.set_ylabel('Sharing frequency CV')
 cvs_ax.legend()
 
 
@@ -191,7 +199,7 @@ pi_ax.text(-0.03, 1.24, "B", transform=pi_ax.transAxes,
 #          fontsize=9, fontweight='bold', va='top', ha='left')
 Er_ax.text(-0.03, 1.12, "C", transform=Er_ax.transAxes,
          fontsize=9, fontweight='bold', va='top', ha='left')
-cvs_ax.text(-0.22, 1.12, "D", transform=cvs_ax.transAxes,
+cvs_ax.text(-0.03, 1.12, "D", transform=cvs_ax.transAxes,
          fontsize=9, fontweight='bold', va='top', ha='left')
 
 Bv_ax.set_ylabel('Sharing\nfrequency')
@@ -214,4 +222,4 @@ within_thresholds = np.loadtxt(os.path.join(base_path, 'within_host_thresholds.t
 between_cumu_runs, within_cumu_runs = plot_pileup_mirror.load_data_and_plot_mirror(
     between_host_path, within_host_path, Er_ax, ind_to_plot=0, ylim=0.5, colors=[config.between_host_color, config.within_host_color])
 
-fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig5.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig5_flipped.pdf'), bbox_inches='tight')

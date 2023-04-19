@@ -67,7 +67,7 @@ def plot_local_polymorphism(axes, sample_pair):
     axes[1].set_ylabel("Intermediate frequency \nSNV density")
 
 
-def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, plot_locations=True):
+def plot_allele_freq_zoomin(axes, histo_axes, sample_pair, plot_locations=True):
     idx1 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
     idx2 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[1])
 
@@ -108,7 +108,7 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
     histo_axes[0].spines['right'].set_visible(False)
     histo_axes[1].spines['top'].set_visible(False)
     histo_axes[1].spines['right'].set_visible(False)
-    histo_axes[1].set_xlabel('Site counts\n(all sites)')
+    histo_axes[1].set_xlabel('Site counts')
 
     # good_sites_before = good_sites_before[start:end]
     # good_sites_after = good_sites_after[start:end]
@@ -131,6 +131,7 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
     print("maximal spanning region is %d to %d" % (region_start, region_end))
     maximal_genes = np.unique(snp_info[2][start:end][good_sites][region_start:region_end])[1:-1]
 
+
     # xs_before = snp_info[1][start:end][good_sites_before]  # locations
     # xs_after = snp_info[1][start:end][good_sites_after]  # locations
     if plot_locations:
@@ -139,11 +140,11 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
     else:
         xs = np.arange(len(freq_before))
     axes[0].plot(xs[freq_before < 0.1], freq_before[freq_before < 0.1], '.', markersize=2,
-                 label='SNVs', rasterized=True, color=mpl_colors[0])
+                 label='Allele frequency', rasterized=True, color=mpl_colors[0])
     axes[0].plot(xs[freq_before > 0.1], freq_before[freq_before > 0.1], '.', markersize=2, color=mpl_colors[0])
 
     axes[1].plot(xs[freq_after < 0.1], freq_after[freq_after < 0.1], '.', markersize=2,
-                 label='SNV frequency', rasterized=True, color=mpl_colors[0])
+                 label='Alt allele frequency', rasterized=True, color=mpl_colors[0])
     axes[1].plot(xs[freq_after > 0.1], freq_after[freq_after > 0.1], '.', markersize=2, color=mpl_colors[0])
 
     non_core = np.invert(np.isin(snp_info[2][start:end][good_sites], core_genes)).astype(int)
@@ -155,94 +156,32 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
         # start_idx = snp_info[1][start:end][non_core_starts[i]]
         # end_idx = snp_info[1][start:end][non_core_ends[i]]
         axes[0].axvspan(non_core_starts[i], non_core_ends[i], alpha=0.1,
-                        color='tab:grey', label='_' * i + 'Non-core genes', linewidth=0)
+                        color='b', label='_' * i + 'Non-core sites', linewidth=0)
         axes[1].axvspan(non_core_starts[i], non_core_ends[i], alpha=0.1,
-                        color='tab:grey', label='_' * i + 'Non-core genes', linewidth=0)
+                        color='b', label='_' * i + 'Non-core sites', linewidth=0)
 
-    N = 1000
+    N = 100
     copy_num = d_before[start:end][good_sites] / mean_depth_before
     local_copy_before = np.convolve(copy_num, np.ones((N,)) / N, mode='same')
     copy_num = d_after[start:end][good_sites] / mean_depth_after
     local_copy_after = np.convolve(copy_num, np.ones((N,)) / N, mode='same')
 
-    #     copy_axes[0].plot(xs, local_copy_before, 'grey', label='Local rel copynumber')
-    zeros = np.zeros(xs.shape[0])
-    copy_axes[0].fill_between(xs, zeros, local_copy_before, alpha=0.2, rasterized=True, color='tab:blue')
-    #     copy_axes[1].plot(xs, local_copy_after, 'grey')
-    copy_axes[1].fill_between(xs, zeros, local_copy_after, alpha=0.2, rasterized=True, color='tab:blue')
-    copy_axes[0].axhline(1, color='grey', linestyle='--', linewidth=0.5, alpha=0.5)
-    copy_axes[1].axhline(1, color='grey', linestyle='--', linewidth=0.5, alpha=0.5)
-
-    copy_axes[0].set_xticklabels([])
-    copy_axes[1].set_xticklabels([])
-    copy_axes[0].set_xlim([0., xs.shape[0]])
-    copy_axes[1].set_xlim([0., xs.shape[0]])
-    copy_axes[0].set_ylim([0, 1.6])
-    copy_axes[1].set_ylim([0, 1.6])
-    copy_axes[0].set_yticklabels(['0', '1.0'])
-    copy_axes[1].set_yticklabels(['0', '1.0'])
+    axes[0].plot(xs, local_copy_before, 'grey', label='Local rel copynumber')
+    axes[1].plot(xs, local_copy_after, 'grey')
 
     axes[0].set_xticklabels([])
-    axes[1].set_xlabel('Location along genome \n(Arrow region only)')
-
-    axes[0].set_ylim([0, 1.])
-    axes[1].set_ylim([0, 1.])
-    axes[0].set_xlim([0., xs.shape[0]])
-    axes[1].set_xlim([0., xs.shape[0]])
+    axes[1].set_xlabel('Location along genome')
+    axes[0].legend(loc='lower center', bbox_to_anchor=(0.58, 1.0), ncol=3,)
+    axes[0].set_ylim([0, 1.5])
+    axes[1].set_ylim([0, 1.5])
 
     histo_axes[0].set_ylim([0, axes[0].get_ylim()[1]])
     histo_axes[0].set_yticks([0, 0.5, 1])
     histo_axes[1].set_ylim([0, axes[1].get_ylim()[1]])
     histo_axes[1].set_yticks([0, 0.5, 1])
-
-    sample1_freq = 1 - 0.7109375  # hard coded; freq from parallel_utils.get_single_peak_sample_mask
-    sample2_freq = 0.67283951
-    dic = {'linewidth': 1, 'color': 'grey', 'linestyle': '--', 'alpha': 1}
-    #     axes[0].axhline(sample1_freq, label='Strain frequency', **dic)
-    #     axes[1].axhline(sample2_freq, **dic)
-    #     histo_axes[0].axhline(sample1_freq,**dic)
-    #     histo_axes[1].axhline(sample2_freq,**dic)
-
-    #     print(minimal_genes[np.isin(minimal_genes, core_genes)])
-
-    strain1_color = '#A9D0F7'
-    strain2_color = '#EBD0F7'
-    alpha = 1
-    bar_axes[0].bar(1.5, sample1_freq, width=1, align='edge', color=strain2_color, alpha=alpha, linewidth=0.5,
-                    edgecolor='grey')
-    bar_axes[0].bar(1.5, 1 - sample1_freq, align='edge', bottom=sample1_freq, width=1, color=strain1_color, alpha=alpha,
-                    linewidth=0.5, edgecolor='grey')
-    bar_axes[1].bar(1.5, sample2_freq, width=1, align='edge', color=strain2_color, alpha=alpha, linewidth=0.5,
-                    edgecolor='grey')
-    bar_axes[1].bar(1.5, 1 - sample2_freq, align='edge', bottom=sample2_freq, width=1, color=strain1_color, alpha=alpha,
-                    linewidth=0.5, edgecolor='grey')
-    #     xs = np.linspace(0, 0.5)
-    #     bar_axes[0].plot(xs, np.ones(xs.shape)*sample1_freq, color='k')
-    #     bar_axes[1].plot(xs, np.ones(xs.shape)*sample2_freq, color='k')
-
-    bar_axes[0].set_xlim([0, 3])
-    bar_axes[1].set_xlim([0, 3])
-    bar_axes[0].set_ylim([-0.01, 1])
-    bar_axes[1].set_ylim([-0.01, 1])
-    #     bar_axes[0].set_xticks([])
-    bar_axes[1].set_yticks([])
-    bar_axes[1].set_xticks([])
-    bar_axes[1].set_yticks([])
-    bar_axes[1].set_xlabel('Inferred \nstrain \nfrequency')
-    bar_axes[1].xaxis.set_label_coords(0.77, -0.15)
-    bar_axes[0].axis('off')
-    bar_axes[1].spines['top'].set_visible(False)
-    bar_axes[1].spines['right'].set_visible(False)
-    bar_axes[1].spines['bottom'].set_visible(False)
-    bar_axes[1].spines['left'].set_visible(False)
-    #     bar_axes[0].text(0, 0.5, "Inferred strain freq.", rotation='vertical')
-
-    axes[0].legend(loc='lower left', bbox_to_anchor=(1.02, 1.1), ncol=1, fontsize=6)
-    axes[0].set_ylabel("Allele\nfreq.")
-    axes[1].set_ylabel("Allele\nfreq.")
-    copy_axes[0].set_ylabel("Rel.\ncoverage")
-    copy_axes[1].set_ylabel("Rel.\ncoverage")
+    print(minimal_genes[np.isin(minimal_genes, core_genes)])
     return minimal_genes, maximal_genes
+
 
 def plot_max_run_histo(ax, species_name):
     max_run_dir = os.path.join(config.analysis_directory, 'typical_pairs', 'max_runs')
@@ -339,7 +278,7 @@ mpl.rcParams['legend.frameon'] = False
 
 fig = plt.figure(figsize=(7, 4.5))
 
-outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[2, 3.25], hspace=0.45, figure=fig)
+outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[2, 3.0], hspace=0.45, figure=fig)
 
 top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1.8,1],wspace=0,subplot_spec=outer_grid[0])
 
@@ -349,32 +288,13 @@ snp_grid_2 = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace
 
 bottom_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[3., 1], wspace=0.3, subplot_spec=outer_grid[1])
 
-# bottom_left_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[6, 1], wspace=0.05, subplot_spec=bottom_grid[0])
-bottom_left_grid = gridspec.GridSpecFromSubplotSpec(1, 3, width_ratios=[4, 1, 1], wspace=0.05, subplot_spec=bottom_grid[0])
+bottom_left_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[6, 1], wspace=0.05, subplot_spec=bottom_grid[0])
 
 bottom_right_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=bottom_grid[1])
 
 zoomin_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.15, subplot_spec=bottom_left_grid[0])
-zoomin1_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=zoomin_grid[0])
-zoomin2_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=zoomin_grid[1])
 
 histo_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.15, subplot_spec=bottom_left_grid[1])
-histo1_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=histo_grid[0])
-histo2_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=histo_grid[1])
-
-bar_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.15, subplot_spec=bottom_left_grid[2])
-bar1_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=bar_grid[0])
-bar2_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=bar_grid[1])
-
-zoomin_ax1 = fig.add_subplot(zoomin1_grid[1])
-zoomin_ax2 = fig.add_subplot(zoomin2_grid[1])
-copy_ax1 = fig.add_subplot(zoomin1_grid[0])
-copy_ax2 = fig.add_subplot(zoomin2_grid[0])
-
-histo_ax1 = fig.add_subplot(histo1_grid[1])
-histo_ax2= fig.add_subplot(histo2_grid[1])
-bar_ax1 = fig.add_subplot(bar1_grid[1])
-bar_ax2= fig.add_subplot(bar2_grid[1])
 
 # adding axes
 snp_ax1 = fig.add_subplot(snp_grid_1[0])
@@ -382,11 +302,16 @@ snp_ax2 = fig.add_subplot(snp_grid_1[1])
 snp_ax3 = fig.add_subplot(snp_grid_2[0])
 snp_ax4 = fig.add_subplot(snp_grid_2[1])
 
+zoomin_ax1 = fig.add_subplot(zoomin_grid[0])
+zoomin_ax2 = fig.add_subplot(zoomin_grid[1])
+histo_ax1 = fig.add_subplot(histo_grid[0])
+histo_ax2= fig.add_subplot(histo_grid[1])
+
 max_run_ax1 = fig.add_subplot(bottom_right_grid[0])
 max_run_ax2 = fig.add_subplot(bottom_right_grid[1])
 
 # plotting
-minimal_genes, maximal_genes = plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], [histo_ax1, histo_ax2], [copy_ax1, copy_ax2], [bar_ax1, bar_ax2], ['700114218', '700171115'], plot_locations=False)
+minimal_genes, maximal_genes = plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], [histo_ax1, histo_ax2], ['700114218', '700171115'], plot_locations=False)
 save_interesting_genes(minimal_genes, os.path.join(config.figure_directory, 'supp_table', "temporal_sweep_genes.csv"))
 
 plot_max_run_histo(max_run_ax1, 'Bacteroides_vulgatus_57955_same_clade')
@@ -423,13 +348,13 @@ max_run_ax2.axvline(x=Er_mean, linestyle='--', linewidth=0.5, color='grey')
 # save_interesting_genes(minimal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "minimal.csv"))
 # save_interesting_genes(maximal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "maximal.csv"))
 
-# zoomin_ax1.text(-0.06, 1.24, "C", transform=zoomin_ax1.transAxes,
-#            fontsize=9, fontweight='bold', va='top', ha='left')
+zoomin_ax1.text(-0.06, 1.24, "C", transform=zoomin_ax1.transAxes,
+           fontsize=9, fontweight='bold', va='top', ha='left')
 max_run_ax1.text(-0.45, 1.24, "D", transform=max_run_ax1.transAxes,
                 fontsize=9, fontweight='bold', va='top', ha='left')
-histo_ax1.text(0.86, 0.97, "$T_0$", transform=histo_ax1.transAxes,
+histo_ax1.text(0.16, 0.97, "$T_0$", transform=histo_ax1.transAxes,
                  fontsize=7, va='top', ha='left')
-histo_ax2.text(0.86, 0.97, "$T_1$", transform=histo_ax2.transAxes,
+histo_ax2.text(0.16, 0.97, "$T_1$", transform=histo_ax2.transAxes,
                fontsize=7, va='top', ha='left')
 
 fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig4.pdf'), bbox_inches="tight", dpi=600)

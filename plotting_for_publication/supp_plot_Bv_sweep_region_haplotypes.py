@@ -94,6 +94,7 @@ def prepare_and_plot_haplotypes(highlight_pairs, allowed_variants=['1D', '2D', '
                 haplotype[i, j, 2] = 1
 
     for i in highlight_pairs:
+        i = int(i)
         mask = haplotype[:, i, 1] != 1
         haplotype[mask, i, 1] = 0.3
 
@@ -107,17 +108,18 @@ if __name__ == "__main__":
     final_haplotype = np.swapaxes(final_haplotype, 0, 1)
     plt.figure(dpi=600)
     plt.imshow(final_haplotype)
-    plt.xlabel('Samples')
-    plt.ylabel('SNVs')
+    plt.ylabel('Samples')
+    plt.xlabel('SNVs')
     plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_within_sweep_haplotype.pdf'),
                 bbox_inches='tight')
     plt.close()
 
     final_haplotype = prepare_and_plot_haplotypes(highlight_samples)
+    final_haplotype = np.swapaxes(final_haplotype, 0, 1)
     plt.figure(dpi=600)
     plt.imshow(final_haplotype)
-    plt.xlabel('Samples')
-    plt.ylabel('SNVs')
+    plt.ylabel('Samples')
+    plt.xlabel('SNVs')
     plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_within_sweep_haplotype_all_sites.pdf'),
                 bbox_inches='tight')
     plt.close()
