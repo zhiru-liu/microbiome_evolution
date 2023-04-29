@@ -155,9 +155,9 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
         # start_idx = snp_info[1][start:end][non_core_starts[i]]
         # end_idx = snp_info[1][start:end][non_core_ends[i]]
         axes[0].axvspan(non_core_starts[i], non_core_ends[i], alpha=0.1,
-                        color='tab:grey', label='_' * i + 'Non-core genes', linewidth=0)
+                        color='tab:grey', label='_' * i + 'Non-core\ngenes', linewidth=0)
         axes[1].axvspan(non_core_starts[i], non_core_ends[i], alpha=0.1,
-                        color='tab:grey', label='_' * i + 'Non-core genes', linewidth=0)
+                        color='tab:grey', label='_' * i + 'Non-core\ngenes', linewidth=0)
 
     N = 1000
     copy_num = d_before[start:end][good_sites] / mean_depth_before
@@ -237,7 +237,7 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
     bar_axes[1].spines['left'].set_visible(False)
     #     bar_axes[0].text(0, 0.5, "Inferred strain freq.", rotation='vertical')
 
-    axes[0].legend(loc='lower left', bbox_to_anchor=(1.02, 1.1), ncol=1, fontsize=6)
+    axes[0].legend(loc='lower left', bbox_to_anchor=(1.02, 1.05), ncol=1, fontsize=6)
     axes[0].set_ylabel("Allele\nfreq.")
     axes[1].set_ylabel("Allele\nfreq.")
     copy_axes[0].set_ylabel("Rel.\ncoverage")
@@ -427,9 +427,9 @@ max_run_ax2.axvline(x=Er_mean, linestyle='--', linewidth=0.5, color='grey')
 #            fontsize=9, fontweight='bold', va='top', ha='left')
 max_run_ax1.text(-0.45, 1.24, "D", transform=max_run_ax1.transAxes,
                 fontsize=9, fontweight='bold', va='top', ha='left')
-histo_ax1.text(0.86, 0.97, "$T_0$", transform=histo_ax1.transAxes,
-                 fontsize=7, va='top', ha='left')
-histo_ax2.text(0.86, 0.97, "$T_1$", transform=histo_ax2.transAxes,
-               fontsize=7, va='top', ha='left')
+# histo_ax1.text(0.86, 0.97, "$T_0$", transform=histo_ax1.transAxes,
+#                  fontsize=7, va='top', ha='left')
+# histo_ax2.text(0.86, 0.97, "$T_1$", transform=histo_ax2.transAxes,
+#                fontsize=7, va='top', ha='left')
 
 fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig4.pdf'), bbox_inches="tight", dpi=600)
