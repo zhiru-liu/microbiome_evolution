@@ -241,9 +241,10 @@ if __name__ == "__main__":
     ######################################################################
     fig.text(0.155, 0.55, "Divergence (%)", size=7, rotation=90.,verticalalignment ='center'
              )
-    # plot_typical_pair(ex0_ax, dh, (0, 128))
+    # plot_typical_pair(ex1_ax, dh, (0, 128))
+    plot_example_pair(ex1_ax, dh, (0, 128), transfer_df, if_legend=False, patch_ymin=-1.2e-2)
     # plot_example_pair(ex1_ax, dh, (128, 170), full_df, if_legend=False)
-    plot_example_pair(ex1_ax, dh, (54, 238), transfer_df, if_legend=False, patch_ymin=-1.2e-2)
+    # plot_example_pair(ex1_ax, dh, (54, 238), transfer_df, if_legend=False, patch_ymin=-1.2e-2)
     plot_example_pair(ex2_ax, dh, (39, 74), transfer_df, if_legend=False, patch_ymin=8.e-2)
     # ex0_ax.set_xticklabels([])
     ex1_ax.set_xticklabels([])
@@ -284,4 +285,4 @@ if __name__ == "__main__":
                 fontsize=6, backgroundcolor='white', va='top', ha='right',
                 bbox=dict(fc='w',boxstyle='square,pad=0.15', ec='white'))
 
-    fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig2.pdf'))
+    fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig2_poster.pdf'))

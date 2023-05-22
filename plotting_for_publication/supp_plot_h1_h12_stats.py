@@ -58,7 +58,7 @@ for i in range(2):
     axes[i].set_xticklabels([])
 axes[1].legend()
 # axes[2].legend()
-axes[0].set_ylabel('Sharing frequency')
+axes[0].set_ylabel('Sharing probability')
 axes[2].set_ylabel('H2 / H1')
 axes[2].set_xlabel('Location along core genome')
 

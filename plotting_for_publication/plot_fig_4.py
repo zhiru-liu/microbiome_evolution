@@ -1,435 +1,201 @@
 import os
 import numpy as np
-import sys
-import pandas as pd
-import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import matplotlib.gridspec as gridspec
-import pickle
-import dask.array as da
-sys.path.append("..")
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+import pandas as pd
+from scipy import stats
+from scipy.special import kl_div
+import random
 import config
-from utils import parallel_utils, core_gene_utils, close_pair_utils
+from utils import figure_utils
+
+fontsize = 6
+mpl.rcParams['font.size'] = fontsize
+mpl.rcParams['lines.linewidth'] = 1.0
+mpl.rcParams['legend.frameon']  = False
+mpl.rcParams['legend.fontsize']  = 'small'
+
+files_to_plot = os.listdir(os.path.join(config.analysis_directory, 'closely_related', 'simulated_transfers'))
+files_to_plot = list(filter(lambda x: not x.startswith('.'), files_to_plot))
+
+# species_to_plot = ['Bacteroides_vulgatus_57955', 'Bacteroides_finegoldii_57739', 'Bacteroides_cellulosilyticus_58046']
+# ref_species_to_plot = ['Bacteroides_thetaiotaomicron_56941', 'Barnesiella_intestinihominis_62208', 'Alistipes_putredinis_61533']
+# species = [ref_species_to_plot, species_to_plot]
+# species_to_plot = ['Bacteroides_thetaiotaomicron_56941', 'Bacteroides_vulgatus_57955', 'Bacteroides_finegoldii_57739', 'Bacteroides_cellulosilyticus_58046']
+species_to_plot = ['Bacteroides_thetaiotaomicron_56941', 'Eubacterium_rectale_56927', 'Bacteroides_finegoldii_57739', 'Bacteroides_vulgatus_57955',]
+# species_to_plot = ['Bacteroides_thetaiotaomicron_56941', 'Bacteroides_caccae_53434', 'Bacteroides_finegoldii_57739', 'Bacteroides_vulgatus_57955',]
+
+plot_inset = True
+plot_kde = True
+cols = 4
+rows = 2
+# fig, axes = plt.subplots(rows, cols, figsize=(2*cols, 1.5*rows))
+# plt.subplots_adjust(wspace=0.3, hspace=0.5)
+fig = plt.figure(figsize=(2*cols, 1.7*rows), dpi=600)
+outer_grid = gridspec.GridSpec(ncols=1, nrows=2, hspace=0.8, figure=fig)
+
+top_grid = gridspec.GridSpecFromSubplotSpec(ncols=cols, nrows=1, wspace=0.3,subplot_spec=outer_grid[0])
+bottom_grid = gridspec.GridSpecFromSubplotSpec(1,2, width_ratios=[1.5, 2.5],wspace=0.0,subplot_spec=outer_grid[1])
+axes = []
+for i in range(cols):
+    axes.append(fig.add_subplot(top_grid[i]))
+axbottom = fig.add_subplot(bottom_grid[1])
+
+# species = ['Bacteroides_vulgatus_57955', 'Alistipes_shahii_62199', 'Eubacterium_rectale_56927', 'Bacteroides_fragilis_54507']
+# species = ['Alistipes_shahii_62199']
 
 
-mpl_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-# loading necessary data
-species_name = "Bacteroides_vulgatus_57955"
-# dh = parallel_utils.DataHoarder(species_name, mode="within")
+def invert_bins(arr):
+    # handy function to take the mid points of bins and return edges of bins
+    dx = arr[1] - arr[0]
+    start = arr[0] - dx / 2
+    end = arr[-1] + dx
+    return np.arange(start, end, dx)
 
-general_mask = parallel_utils.get_general_site_mask(species_name)
-snp_info = parallel_utils.get_snp_info(species_name)
-core_genes = core_gene_utils.get_sorted_core_genes(species_name)
-base_dir = os.path.join(config.data_directory, 'zarr_snps', species_name)
-alt_arr = da.from_zarr('{}/full_alt.zarr'.format(base_dir))
-depth_arr = da.from_zarr('{}/full_depth.zarr'.format(base_dir))
-rechunked_alt_arr = alt_arr.rechunk((1000000, 10))
-rechunked_depth_arr = depth_arr.rechunk((1000000, 10))
+bottom_offset = 1e-3  # some bars are thinner than the bottom axis
+count = 0
+for i in range(cols):
+    # for j in range(3):
+    species_name = species_to_plot[i]
+    ax = axes[i]
+    # load simulated transfer distribution
+    histo = np.loadtxt(os.path.join(config.hmm_data_directory, species_name + '.csv'))
 
+    # load HMM inferred transfer distribution
+    save_path = os.path.join(config.analysis_directory,
+                             "closely_related", "third_pass", "{}_all_transfers.pickle".format(species_name))
+    run_df = pd.read_pickle(save_path)
+    data_dir = os.path.join(config.analysis_directory, "closely_related")
+    raw_df = pd.read_pickle(os.path.join(data_dir, 'third_pass', species_name + '.pickle'))
 
-def compute_mean_depth(sample_idx):
-    depths = rechunked_depth_arr[:, sample_idx]
-    depths = depths.compute()
-    mean_depth = np.mean(depths[depths > 0])
-    return mean_depth
+    cf_cutoff = config.clonal_fraction_cutoff
+    good_pairs = raw_df[raw_df['clonal fractions'] > cf_cutoff]['pairs']
+    mask = run_df['pairs'].isin(good_pairs)
+    full_df = run_df[mask]
 
+    # sim_transfers = np.loadtxt(os.path.join(
+    #     config.analysis_directory, 'closely_related', 'simulated_transfers', species_name+'.csv'))
+    sim_transfers = np.loadtxt(os.path.join(
+        config.analysis_directory, 'closely_related', 'simulated_transfers_cphmm', species_name+'.csv'))
+    sim_transfers = sim_transfers[~np.isnan(sim_transfers)]
+    obs_transfers = full_df['synonymous divergences']
 
-def filter_raw_data(sample_idx):
-    alts = rechunked_alt_arr[:, sample_idx]
-    depths = rechunked_depth_arr[:, sample_idx]
-    alts = alts.compute()
-    depths = depths.compute()
-    return alts, depths
-
-
-def plot_local_polymorphism(axes, sample_pair):
-    idx1 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
-    idx2 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[1])
-
-    a_before, d_before = filter_raw_data(idx1)
-    freq_before = np.nan_to_num(a_before / d_before.astype(float))
-    a_after, d_after = filter_raw_data(idx2)
-    freq_after = np.nan_to_num(a_after / d_after.astype(float))
-
-    intermediate_snvs_before = (freq_before > 0.1) & (freq_before < 0.9)
-    intermediate_snvs_after = (freq_after > 0.1) & (freq_after < 0.9)
-
-    intermediate_snvs_before = intermediate_snvs_before[general_mask]
-    intermediate_snvs_after = intermediate_snvs_after[general_mask]
-
-    axes[0].plot(np.convolve(intermediate_snvs_before, np.ones(1000)/1000.))
-    axes[1].plot(np.convolve(intermediate_snvs_after, np.ones(1000)/1000.))
-    axes[0].set_xlabel('')
-    axes[0].set_xticklabels([])
-    axes[0].set_ylim([-0.002, 0.06])
-    axes[1].set_ylim([-0.002, 0.06])
-    axes[1].set_xlabel("Core genome synonymous site location")
-    axes[1].set_ylabel("Intermediate frequency \nSNV density")
-
-
-def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, plot_locations=True):
-    idx1 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
-    idx2 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[1])
-
-    # core site idx to all site idx
-    core_to_all = np.where(general_mask)[0]
-    # hard coded plotting range
-    start = core_to_all[117500]
-    end = core_to_all[121800]
-    print(start, end)
-
-    # get mean depth for copy number
-    mean_depth_before = compute_mean_depth(idx1)
-    mean_depth_after = compute_mean_depth(idx2)
-
-    # get raw allele frequencies polarized by first time pt
-    a_before, d_before = filter_raw_data(idx1)
-    a_after, d_after = filter_raw_data(idx2)
-    # good_sites_before = (d_before > 0)
-    # good_sites_after = (d_after > 0)
-    good_sites = (d_before > 0) & (d_after > 0)
-    freq_before = np.nan_to_num(a_before / d_before.astype(float))
-    freq_after = np.nan_to_num(a_after / d_after.astype(float))
-    to_flip = freq_before > 0.5
-    freq_before[to_flip] = 1 - freq_before[to_flip]
-    freq_after[to_flip] = 1 - freq_after[to_flip]
-
-    # plot the full site frequency spectrum
-    histo_axes[0].hist(freq_before[good_sites], orientation='horizontal', bins=100)
-    histo_axes[1].hist(freq_after[good_sites], orientation='horizontal', bins=100)
-    histo_axes[0].set_xlim([0, 1000])
-    histo_axes[1].set_xlim([0, 1000])
-    histo_axes[0].set_xticklabels([])
-    histo_axes[1].set_xticks([0, 500, 1000])
-    histo_axes[1].set_xticklabels(['0', '500', '1k'])
-    histo_axes[0].set_yticklabels([])
-    histo_axes[1].set_yticklabels([])
-    histo_axes[0].spines['top'].set_visible(False)
-    histo_axes[0].spines['right'].set_visible(False)
-    histo_axes[1].spines['top'].set_visible(False)
-    histo_axes[1].spines['right'].set_visible(False)
-    histo_axes[1].set_xlabel('Site counts\n(all sites)')
-
-    # good_sites_before = good_sites_before[start:end]
-    # good_sites_after = good_sites_after[start:end]
-    good_sites = good_sites[start:end]
-    freq_before = freq_before[start:end]
-    freq_after = freq_after[start:end]
-    freq_before = freq_before[good_sites]
-    freq_after = freq_after[good_sites]
-
-    # finding the minimal and maximal region that engaged in recombination
-    freq_change_sites = np.where((freq_before > 0.2) & (freq_after < 0.2))[0]
-    region_start = freq_change_sites[0]
-    region_end = freq_change_sites[-1]
-    print("minimal spanning region is %d to %d" % (region_start, region_end))
-    minimal_genes = np.unique(snp_info[2][start:end][good_sites][region_start:region_end])
-
-    remained_snps = np.where(freq_after > 0.5)[0]
-    region_start = max(remained_snps[remained_snps < 10000])
-    region_end = min(remained_snps[remained_snps > 30000])
-    print("maximal spanning region is %d to %d" % (region_start, region_end))
-    maximal_genes = np.unique(snp_info[2][start:end][good_sites][region_start:region_end])[1:-1]
-
-    # xs_before = snp_info[1][start:end][good_sites_before]  # locations
-    # xs_after = snp_info[1][start:end][good_sites_after]  # locations
-    if plot_locations:
-        xs = snp_info[1][start:end][good_sites]
-        print("ref genome region: {} - {}".format(xs[0], xs[-1]))
-    else:
-        xs = np.arange(len(freq_before))
-    axes[0].plot(xs[freq_before < 0.1], freq_before[freq_before < 0.1], '.', markersize=2,
-                 label='SNVs', rasterized=True, color=mpl_colors[0])
-    axes[0].plot(xs[freq_before > 0.1], freq_before[freq_before > 0.1], '.', markersize=2, color=mpl_colors[0])
-
-    axes[1].plot(xs[freq_after < 0.1], freq_after[freq_after < 0.1], '.', markersize=2,
-                 label='SNV frequency', rasterized=True, color=mpl_colors[0])
-    axes[1].plot(xs[freq_after > 0.1], freq_after[freq_after > 0.1], '.', markersize=2, color=mpl_colors[0])
-
-    non_core = np.invert(np.isin(snp_info[2][start:end][good_sites], core_genes)).astype(int)
-    non_core_starts = np.nonzero((non_core[1:] - non_core[:-1]) > 0)[0]
-    non_core_starts = xs[non_core_starts]
-    non_core_ends = np.nonzero((non_core[1:] - non_core[:-1]) < 0)[0]
-    non_core_ends = xs[non_core_ends]
-    for i in range(len(non_core_starts)):
-        # start_idx = snp_info[1][start:end][non_core_starts[i]]
-        # end_idx = snp_info[1][start:end][non_core_ends[i]]
-        axes[0].axvspan(non_core_starts[i], non_core_ends[i], alpha=0.1,
-                        color='tab:grey', label='_' * i + 'Non-core\ngenes', linewidth=0)
-        axes[1].axvspan(non_core_starts[i], non_core_ends[i], alpha=0.1,
-                        color='tab:grey', label='_' * i + 'Non-core\ngenes', linewidth=0)
-
-    N = 1000
-    copy_num = d_before[start:end][good_sites] / mean_depth_before
-    local_copy_before = np.convolve(copy_num, np.ones((N,)) / N, mode='same')
-    copy_num = d_after[start:end][good_sites] / mean_depth_after
-    local_copy_after = np.convolve(copy_num, np.ones((N,)) / N, mode='same')
-
-    #     copy_axes[0].plot(xs, local_copy_before, 'grey', label='Local rel copynumber')
-    zeros = np.zeros(xs.shape[0])
-    copy_axes[0].fill_between(xs, zeros, local_copy_before, alpha=0.2, rasterized=True, color='tab:blue')
-    #     copy_axes[1].plot(xs, local_copy_after, 'grey')
-    copy_axes[1].fill_between(xs, zeros, local_copy_after, alpha=0.2, rasterized=True, color='tab:blue')
-    copy_axes[0].axhline(1, color='grey', linestyle='--', linewidth=0.5, alpha=0.5)
-    copy_axes[1].axhline(1, color='grey', linestyle='--', linewidth=0.5, alpha=0.5)
-
-    copy_axes[0].set_xticklabels([])
-    copy_axes[1].set_xticklabels([])
-    copy_axes[0].set_xlim([0., xs.shape[0]])
-    copy_axes[1].set_xlim([0., xs.shape[0]])
-    copy_axes[0].set_ylim([0, 1.6])
-    copy_axes[1].set_ylim([0, 1.6])
-    copy_axes[0].set_yticklabels(['0', '1.0'])
-    copy_axes[1].set_yticklabels(['0', '1.0'])
-
-    axes[0].set_xticklabels([])
-    axes[1].set_xlabel('Location along genome \n(Arrow region only)')
-
-    axes[0].set_ylim([0, 1.])
-    axes[1].set_ylim([0, 1.])
-    axes[0].set_xlim([0., xs.shape[0]])
-    axes[1].set_xlim([0., xs.shape[0]])
-
-    histo_axes[0].set_ylim([0, axes[0].get_ylim()[1]])
-    histo_axes[0].set_yticks([0, 0.5, 1])
-    histo_axes[1].set_ylim([0, axes[1].get_ylim()[1]])
-    histo_axes[1].set_yticks([0, 0.5, 1])
-
-    sample1_freq = 1 - 0.7109375  # hard coded; freq from parallel_utils.get_single_peak_sample_mask
-    sample2_freq = 0.67283951
-    dic = {'linewidth': 1, 'color': 'grey', 'linestyle': '--', 'alpha': 1}
-    #     axes[0].axhline(sample1_freq, label='Strain frequency', **dic)
-    #     axes[1].axhline(sample2_freq, **dic)
-    #     histo_axes[0].axhline(sample1_freq,**dic)
-    #     histo_axes[1].axhline(sample2_freq,**dic)
-
-    #     print(minimal_genes[np.isin(minimal_genes, core_genes)])
-
-    strain1_color = '#A9D0F7'
-    strain2_color = '#EBD0F7'
-    alpha = 1
-    bar_axes[0].bar(1.5, sample1_freq, width=1, align='edge', color=strain2_color, alpha=alpha, linewidth=0.5,
-                    edgecolor='grey')
-    bar_axes[0].bar(1.5, 1 - sample1_freq, align='edge', bottom=sample1_freq, width=1, color=strain1_color, alpha=alpha,
-                    linewidth=0.5, edgecolor='grey')
-    bar_axes[1].bar(1.5, sample2_freq, width=1, align='edge', color=strain2_color, alpha=alpha, linewidth=0.5,
-                    edgecolor='grey')
-    bar_axes[1].bar(1.5, 1 - sample2_freq, align='edge', bottom=sample2_freq, width=1, color=strain1_color, alpha=alpha,
-                    linewidth=0.5, edgecolor='grey')
-    #     xs = np.linspace(0, 0.5)
-    #     bar_axes[0].plot(xs, np.ones(xs.shape)*sample1_freq, color='k')
-    #     bar_axes[1].plot(xs, np.ones(xs.shape)*sample2_freq, color='k')
-
-    bar_axes[0].set_xlim([0, 3])
-    bar_axes[1].set_xlim([0, 3])
-    bar_axes[0].set_ylim([-0.01, 1])
-    bar_axes[1].set_ylim([-0.01, 1])
-    #     bar_axes[0].set_xticks([])
-    bar_axes[1].set_yticks([])
-    bar_axes[1].set_xticks([])
-    bar_axes[1].set_yticks([])
-    bar_axes[1].set_xlabel('Inferred \nstrain \nfrequency')
-    bar_axes[1].xaxis.set_label_coords(0.77, -0.15)
-    bar_axes[0].axis('off')
-    bar_axes[1].spines['top'].set_visible(False)
-    bar_axes[1].spines['right'].set_visible(False)
-    bar_axes[1].spines['bottom'].set_visible(False)
-    bar_axes[1].spines['left'].set_visible(False)
-    #     bar_axes[0].text(0, 0.5, "Inferred strain freq.", rotation='vertical')
-
-    axes[0].legend(loc='lower left', bbox_to_anchor=(1.02, 1.05), ncol=1, fontsize=6)
-    axes[0].set_ylabel("Allele\nfreq.")
-    axes[1].set_ylabel("Allele\nfreq.")
-    copy_axes[0].set_ylabel("Rel.\ncoverage")
-    copy_axes[1].set_ylabel("Rel.\ncoverage")
-    return minimal_genes, maximal_genes
-
-def plot_max_run_histo(ax, species_name):
-    max_run_dir = os.path.join(config.analysis_directory, 'typical_pairs', 'max_runs')
-    within_host_max_runs = np.loadtxt(os.path.join(max_run_dir, species_name + '_within.txt'), ndmin=1)
-    between_host_max_runs = np.loadtxt(os.path.join(max_run_dir, species_name + '_between.txt'))
-    ax.hist([between_host_max_runs, within_host_max_runs], bins=100, density=True,
-            cumulative=-1, histtype='step', color=[config.between_host_color, config.within_host_color])
-    # ax.set_xlabel('Max homozygous run length\n(4D syn sites), $x$')
-    ax.set_xlabel(r'Max sharing length, $\ell$')
-    ax.set_ylabel(r'Fraction pairs$\geq\ell$')
-    items = species_name.split('_')
-    name = ' '.join([items[0][0]+'.', items[1]])
     if 'vulgatus' in species_name:
-        p_val = '9.1\\times 10^{-1}'  # copied from supp_plot_within_host_run_length_enrichment.py
+        # vulgatus has 80 bins because we separated between and within clade transfer
+        mids = histo[0, :40]
+        density = (histo[1, :40] + histo[1, 40:]) / np.sum(histo[1, :])
     else:
-        # E rectale
-        p_val = '4.9\\times 10^{-3}'  # copied from supp_plot_within_host_run_length_enrichment.py
-    ax.text(0.95, 0.85, name, transform=ax.transAxes, va='bottom', ha='right', fontsize=6)
-    ax.text(0.95, 0.8, "$n_w={}$\n$P={}$".format(len(within_host_max_runs), p_val),
-            transform=ax.transAxes, va='top', ha='right', fontsize=6)
+        mids = histo[0, :]
+        density = histo[1, :] / histo[1, :].sum()
 
+    # simulated
+    # ax.bar(mids, density, width=mids[1] - mids[0], label='simulated', alpha=0.5)
+    step = mids[1]-mids[0]
+    step *= 2
 
-def plot_example_snps(axes):
-    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_within_snp1.csv")
-    within_snp_vec1 = np.loadtxt(cache_file).astype(bool)
-    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_within_snp2.csv")
-    within_snp_vec2 = np.loadtxt(cache_file).astype(bool)
-    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_between_snp1.csv")
-    between_snp_vec1 = np.loadtxt(cache_file).astype(bool)
-    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_between_snp2.csv")
-    between_snp_vec2 = np.loadtxt(cache_file).astype(bool)
+    if 'cellulosilyticus' in species_name:
+        max_bin = 0.2
+    else:
+        max_bin = max(sim_transfers.max(), obs_transfers.max())
+    bins = np.arange(0,  max_bin + step, step)
+    sim_hist = np.histogram(sim_transfers, bins=bins)
+    counts, bins = sim_hist
+    new_mids = (bins[:-1] + bins[1:]) / 2
+    sim_density = counts / np.sum(counts).astype(float)
+    # ax.bar(new_mids, sim_density, width=step, label='simulated', alpha=0.5)
+    _ = ax.hist(sim_transfers, density=True, bins=bins, alpha=0.3, color='tab:blue', label=None)
 
-    blk_size = 1000
-    snp_blk = close_pair_utils.to_block(within_snp_vec1, blk_size)
-    barcode1 = np.concatenate([snp_blk > 0, [0]])
-    snp_blk = close_pair_utils.to_block(within_snp_vec2, blk_size)
-    barcode2 = np.concatenate([snp_blk > 0, [0]])
-    snp_blk = close_pair_utils.to_block(between_snp_vec1, blk_size)
-    barcode3 = np.concatenate([snp_blk > 0, [0]])
-    snp_blk = close_pair_utils.to_block(between_snp_vec2, blk_size)
-    barcode4 = np.concatenate([snp_blk > 0, [0]])
+    # bins = invert_bins(histo[0, :])
+    counts, bins = np.histogram(obs_transfers, bins=bins)
+    new_mids = (bins[:-1] + bins[1:]) / 2
+    obs_density = counts / np.sum(counts).astype(float)
+    # ax.bar(new_mids, obs_density, width=step, label='observed', alpha=0.5)
+    _ = ax.hist(obs_transfers, density=True, bins=bins, alpha=0.3, color='tab:orange', label=None)
 
-    # xlim = min(xlim, len(snp_blk) - 1)
-    axes[0].imshow(np.expand_dims(barcode1, axis=0), aspect='auto',
-                   cmap=mpl.colors.ListedColormap(['white', config.within_host_color]), interpolation='nearest')
-    axes[1].imshow(np.expand_dims(barcode2, axis=0), aspect='auto',
-                   cmap=mpl.colors.ListedColormap(['white', config.within_host_color]), interpolation='nearest')
-    axes[2].imshow(np.expand_dims(barcode3, axis=0), aspect='auto',
-                   cmap=mpl.colors.ListedColormap(['white', config.between_host_color]), interpolation='nearest')
-    axes[3].imshow(np.expand_dims(barcode4, axis=0), aspect='auto',
-                   cmap=mpl.colors.ListedColormap(['white', config.between_host_color]), interpolation='nearest')
+    if plot_kde:
+        kde_bw = 0.3
+        kde = stats.gaussian_kde(sim_transfers, bw_method=kde_bw)
+        xs = np.linspace(0, bins.max(), 80)
+        ax.plot(xs, kde(xs), label='simulated')
 
-    # axes[0].plot(within_snp_vec1, linewidth=0.3)
-    # axes[1].plot(within_snp_vec2, linewidth=0.3)
-    # axes[2].plot(between_snp_vec1, linewidth=0.3)
-    # axes[3].plot(between_snp_vec2, linewidth=0.3)
-    axes[0].set_xticklabels([])
-    axes[1].set_xticklabels([])
-    axes[2].set_xticklabels([])
-    axes[3].set_xticklabels([])
-    axes[0].set_xticks([])
-    axes[1].set_xticks([])
-    axes[2].set_xticks([])
-    axes[3].set_xticks([])
+        kde = stats.gaussian_kde(obs_transfers, bw_method=kde_bw)
+        xs = np.linspace(0, bins.max(), 80)
+        ax.plot(xs, kde(xs), label='observed')
+    # ax.legend()
+    # ax.set_xlabel('transfer divergence')
+    ax.set_title(figure_utils.get_pretty_species_name(species_name))
+    ax.set_ylim(bottom=-bottom_offset)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.set_xlim(xmin=0)
 
-    ymin = axes[1].get_ylim()[0]
+    if 'vulgatus' in species_name:
+        ax.axvline(0.065, linestyle='--', color='k', linewidth=0.5, label='between-clade\ndivergence')
+    if 'cell' in species_name:
+        line = ax.axvline(0.065, linestyle='--', color='k', linewidth=0.5)
+    if 'fine' in species_name:
+        ax.axvline(0.04, linestyle='--', color='k', linewidth=0.5)
 
-    # axes[2].arrow(x=110, y=-2, dx=0, dy=10, width=2, facecolor='red', edgecolor='none', clip_on = False)
-    xloc = 116.5
-    axes[1].annotate('',
-                xy=(xloc, ymin),
-                xytext=(xloc, ymin + 0.45),
-                arrowprops=dict(facecolor='tab:orange', shrink=0.0, width=2, headwidth=4, headlength=4))
+    if plot_inset:
+        inset_ax = inset_axes(ax,width="40%",  # width = 30% of parent_bbox
+                              height="40%",
+                              loc='upper right')
 
-    xmax = min(len(within_snp_vec1), len(within_snp_vec2), len(between_snp_vec1), len(between_snp_vec2))
-    for ax in axes:
-        ax.set_xlim([0, xmax / blk_size])
-        ax.set_yticklabels([])
-        ax.set_yticks([])
+        # inset_ax.hist(sim_transfers, cumulative=-1, density=True, bins=bins, alpha=0.5)
+        X, Y = figure_utils.plot_ecdf(inset_ax, sim_transfers, return_xy=True)
+        inset_ax.fill_between(X, Y, 0, color='tab:blue', alpha=.3, rasterized=True)
+        # inset_ax.hist(obs_transfers, cumulative=-1, density=True, bins=bins, alpha=0.5)
+        X, Y = figure_utils.plot_ecdf(inset_ax, obs_transfers, return_xy=True)
+        inset_ax.fill_between(X, Y, 0, color='tab:orange', alpha=.3, rasterized=True)
+        inset_ax.set_xlim(xmin=0, xmax=inset_ax.get_xlim()[1] / 2)
+        if 'rectale' in species_name:
+            inset_ax.set_xlim(xmin=0, xmax=0.1)
+        inset_ax.set_ylim(ymin=0, ymax=1.1)
+        inset_ax.set_yticks([0, 0.5, 1])
+        inset_ax.set_yticklabels(['0', '0.5', '1'])
 
+ks_df = pd.read_csv(os.path.join(config.plotting_intermediate_directory, 'transfer_distribution_ks_test.csv'), index_col=0)
+ks_df.columns = ['Species name', 'ks stat', 'p val']
+ks_df.set_index('Species name', inplace=True)
+ks_df = ks_df.sort_values(by='ks stat', ascending=True)
+significant_mask = ks_df['p val'] < 0.001
+xs = np.arange(ks_df.shape[0])
+axbottom.bar(xs[significant_mask], ks_df['ks stat'][significant_mask], linewidth=0.7, facecolor='grey', edgecolor='k', fill=True, label=None)
+axbottom.bar(xs[~significant_mask], ks_df['ks stat'][~significant_mask], linewidth=0.7, color='black', fill=False, label=None)
+axbottom.set_xticks(xs)
+axbottom.set_xlim([-1, xs.max()+1])
+axbottom.set_ylabel('K-S distance ($D$)')
+axbottom.spines['top'].set_visible(False)
+axbottom.spines['right'].set_visible(False)
+species_names = map(lambda x: figure_utils.get_pretty_species_name(x, manual=True), ks_df.index.to_numpy())
+for i in range(len(species_names)):
+    if ks_df.index.to_numpy()[i] in species_to_plot:
+        yloc = ks_df['ks stat'].iloc[i]
+        axbottom.annotate('',
+                         xy=(i, yloc+0.002),
+                         xytext=(i, yloc + 0.03),
+                         arrowprops=dict(facecolor='tab:blue', shrink=0.0, width=2.5, headwidth=5, headlength=4))
+        # species_names[i] = u'\u21E8%s' % species_names[i]
+axbottom.set_xticklabels(species_names,fontsize=5, rotation = 90)
+axbottom.set_xlim(xmin=xs[0]-1, xmax=xs[-1]+1)
+l1, = axbottom.plot(-1, 0.1, color='tab:blue', label='simulated')
+l2, = axbottom.plot(-1, 0.1, color='tab:orange', label='observed')
+l3, = axbottom.plot(-1, 0.1, linestyle='--', color='k', linewidth=0.5, label='between-clade\ndivergence')
+legend1 = axbottom.legend([l1, l2], ['simulated', 'observed'], loc='center left', bbox_to_anchor=(0.45, 1))
+legend2 = axbottom.legend([l3], ['between-clade\ndivergence'], loc='center left', bbox_to_anchor=(0.65, 1))
+axbottom.add_artist(legend1)
+# axbottom.legend(ncol=2, loc='center left', bbox_to_anchor=(0.4, 0.9))
+axes[0].set_ylabel('probability density')
+# axes[-1].legend(loc=(1.1, 0.25))
 
-def save_interesting_genes(genes, path):
-    gene_ids = np.array(['fig|'+gene for gene in genes])
-    all_genes = pd.read_csv(os.path.join(config.data_directory, 'genome_features', '%s.csv' % species_name))
-    gene_data = all_genes[all_genes['PATRIC ID'].isin(gene_ids)]
-    gene_data.to_csv(path)
+for j in range(cols):
+    axes[j].set_xlabel('transfer divergence (syn)')
+# axes[-2, -1].set_xlabel('transfer divergence (syn)')
+# axes[0, -1].legend(loc='upper right', bbox_to_anchor=(1.2, 0.9), fontsize=6)
+# axes[1, -1].legend(handles=[line], loc='upper right', bbox_to_anchor=(1.2, 0.9), fontsize=6)
+# fig.delaxes(axes[-1, -1])
 
-
-# setting up figures
-mpl.rcParams['font.size'] = 7
-mpl.rcParams['lines.linewidth'] = 1
-mpl.rcParams['legend.fontsize'] = 'small'
-mpl.rcParams['legend.frameon'] = False
-
-fig = plt.figure(figsize=(7, 4.5))
-
-outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[2, 3.25], hspace=0.45, figure=fig)
-
-top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1.8,1],wspace=0,subplot_spec=outer_grid[0])
-
-local_div_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.5, subplot_spec=top_grid[1])
-snp_grid_1 = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=local_div_grid[0])
-snp_grid_2 = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=local_div_grid[1])
-
-bottom_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[3., 1], wspace=0.3, subplot_spec=outer_grid[1])
-
-# bottom_left_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[6, 1], wspace=0.05, subplot_spec=bottom_grid[0])
-bottom_left_grid = gridspec.GridSpecFromSubplotSpec(1, 3, width_ratios=[4, 1, 1], wspace=0.05, subplot_spec=bottom_grid[0])
-
-bottom_right_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=bottom_grid[1])
-
-zoomin_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.15, subplot_spec=bottom_left_grid[0])
-zoomin1_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=zoomin_grid[0])
-zoomin2_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=zoomin_grid[1])
-
-histo_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.15, subplot_spec=bottom_left_grid[1])
-histo1_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=histo_grid[0])
-histo2_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=histo_grid[1])
-
-bar_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.15, subplot_spec=bottom_left_grid[2])
-bar1_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=bar_grid[0])
-bar2_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=bar_grid[1])
-
-zoomin_ax1 = fig.add_subplot(zoomin1_grid[1])
-zoomin_ax2 = fig.add_subplot(zoomin2_grid[1])
-copy_ax1 = fig.add_subplot(zoomin1_grid[0])
-copy_ax2 = fig.add_subplot(zoomin2_grid[0])
-
-histo_ax1 = fig.add_subplot(histo1_grid[1])
-histo_ax2= fig.add_subplot(histo2_grid[1])
-bar_ax1 = fig.add_subplot(bar1_grid[1])
-bar_ax2= fig.add_subplot(bar2_grid[1])
-
-# adding axes
-snp_ax1 = fig.add_subplot(snp_grid_1[0])
-snp_ax2 = fig.add_subplot(snp_grid_1[1])
-snp_ax3 = fig.add_subplot(snp_grid_2[0])
-snp_ax4 = fig.add_subplot(snp_grid_2[1])
-
-max_run_ax1 = fig.add_subplot(bottom_right_grid[0])
-max_run_ax2 = fig.add_subplot(bottom_right_grid[1])
-
-# plotting
-minimal_genes, maximal_genes = plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], [histo_ax1, histo_ax2], [copy_ax1, copy_ax2], [bar_ax1, bar_ax2], ['700114218', '700171115'], plot_locations=False)
-save_interesting_genes(minimal_genes, os.path.join(config.figure_directory, 'supp_table', "temporal_sweep_genes.csv"))
-
-plot_max_run_histo(max_run_ax1, 'Bacteroides_vulgatus_57955_same_clade')
-plot_max_run_histo(max_run_ax2, 'Eubacterium_rectale_56927')
-max_run_ax1.set_xlabel('')
-max_run_ax1.set_xlim([0, 10000])
-max_run_ax1.set_xticks([0, 5000, 10000])
-max_run_ax2.set_xlim([0, 5000])
-
-plot_example_snps([snp_ax1, snp_ax2, snp_ax3, snp_ax4])
-# snp_ax1.set_ylabel("$T_0$")
-# snp_ax2.set_ylabel("$T_1$")
-snp_ax4.set_xlabel("SNVs along core genome")
-
-# also plot the mean transfer length
-transfer_df_path = os.path.join(config.analysis_directory, 'closely_related/third_pass',
-                                'Eubacterium_rectale_56927_all_transfers.pickle')
-transfer_df = pd.read_pickle(transfer_df_path)
-Er_mean = transfer_df['lengths'][(transfer_df['clonal divergence']<1e-4) & (transfer_df['clonal fraction'] > 0.75) & (transfer_df['types']==0)].mean() * config.second_pass_block_size
-
-transfer_df_path = os.path.join(config.analysis_directory, 'closely_related/third_pass',
-                                'Bacteroides_vulgatus_57955_all_transfers.pickle')
-transfer_df = pd.read_pickle(transfer_df_path)
-Bv_mean = transfer_df['lengths'][(transfer_df['clonal divergence']<1e-4) & (transfer_df['clonal fraction'] > 0.75) & (transfer_df['types']==0)].mean() * config.second_pass_block_size
-max_run_ax1.plot([], [], color=config.between_host_color, label='Between hosts')
-max_run_ax1.plot([], [], color=config.within_host_color, label='Within hosts')
-max_run_ax1.legend(loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=2,)
-l = max_run_ax1.axvline(x=Bv_mean, linestyle='--', linewidth=0.5, color='grey', label='mean transfer length')
-max_run_ax2.axvline(x=Er_mean, linestyle='--', linewidth=0.5, color='grey')
-
-
-# unused
-# plot_local_polymorphism([local_ax1, local_ax2], ['700114218', '700171115'])
-# save_interesting_genes(minimal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "minimal.csv"))
-# save_interesting_genes(maximal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "maximal.csv"))
-
-# zoomin_ax1.text(-0.06, 1.24, "C", transform=zoomin_ax1.transAxes,
-#            fontsize=9, fontweight='bold', va='top', ha='left')
-max_run_ax1.text(-0.45, 1.24, "D", transform=max_run_ax1.transAxes,
-                fontsize=9, fontweight='bold', va='top', ha='left')
-# histo_ax1.text(0.86, 0.97, "$T_0$", transform=histo_ax1.transAxes,
-#                  fontsize=7, va='top', ha='left')
-# histo_ax2.text(0.86, 0.97, "$T_1$", transform=histo_ax2.transAxes,
-#                fontsize=7, va='top', ha='left')
-
-fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig4.pdf'), bbox_inches="tight", dpi=600)
+# fig.savefig(os.path.join(config.figure_directory, 'supp_transfer_histo_suppresions_no_loc_control.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig4.pdf'), bbox_inches='tight')

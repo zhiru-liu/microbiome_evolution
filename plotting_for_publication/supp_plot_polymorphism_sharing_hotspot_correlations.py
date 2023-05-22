@@ -55,6 +55,6 @@ axes.plot(smooth_pi[~mask], between_data[~mask, 1], '.', markersize=1, color='ta
 mpl.rcParams['legend.frameon']  = True
 axes.legend()
 axes.set_xlabel('Within-clade divergence')
-axes.set_ylabel('Sharing frequency')
+axes.set_ylabel('Sharing probability')
 
 plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_pi_pileup_correlation.pdf'), bbox_inches='tight')

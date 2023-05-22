@@ -44,19 +44,16 @@ for i in range(3):
 
         xs = np.linspace(0.01, 1, 100)
         ys = -np.log(xs) / config.first_pass_block_size
-        scatter_ax.plot(xs, ys, '--r', zorder=1, label='random mut\'s')
+        scatter_ax.plot(xs, ys, '--', color='grey',zorder=1, label='random mut\'s')
         F, alpha = partial_recombination_curve(x, y, theta=None, return_alpha=True)
         xs = np.linspace(0., 1, 100)
         ys = F(xs)
-        scatter_ax.plot(xs, ys, '-.', color='tab:orange', zorder=2, label='partial recomb.')
+        scatter_ax.plot(xs, ys, '--', color='tab:red', zorder=2, label='partial recomb.')
         print(rbymus[i]*lambs[j], 1 / alpha - 1)
 
         scatter_ax.scatter(x, y, s=0.3, linewidth=0, zorder=2, rasterized=True)
         marg_ax.hist(y, orientation='horizontal', bins=100, alpha=0.6)
 
-        marg_ax.set_xscale('log')
-        # if 'Barnesiella' in species_name:
-        marg_ax.set_xticks([10, 1000])
         # else:
         #     marg_ax.set_xticks([1, 10, 100])
 

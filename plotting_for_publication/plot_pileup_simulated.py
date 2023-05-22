@@ -78,7 +78,7 @@ axes[1, 1].errorbar(rbymu, mean_sim_cvs, yerr=sigma_sim_csv, fmt='o', markersize
 axes[1, 1].set_ylim([0, 1])
 axes[0, 1].set_xlabel(r'$\rho/\theta$')
 axes[1, 1].set_xlabel(r'$\rho/\theta$')
-axes[0, 1].set_ylabel('Median sharing frequency')
+axes[0, 1].set_ylabel('Median sharing probability')
 axes[1, 1].set_ylabel('CV')
 
 # plot threshold length scan
@@ -87,7 +87,7 @@ axes[1, 0].errorbar(thresholds, np.mean(length_scan_cvs, axis=0), yerr=np.std(le
 axes[1, 0].set_ylim([0, 1])
 axes[0, 0].set_xlabel('threshold / bps')
 axes[1, 0].set_xlabel('threshold / bps')
-axes[0, 0].set_ylabel('Median sharing frequency')
+axes[0, 0].set_ylabel('Median sharing probability')
 axes[1, 0].set_ylabel('CV')
 
 # Hard coded B. vulgatus median sharing fraction...
