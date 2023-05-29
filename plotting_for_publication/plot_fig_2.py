@@ -205,20 +205,30 @@ if __name__ == "__main__":
                  'Bacteroides_vulgatus_57955' + '_all_transfers.pickle')
     if not os.path.exists(transfer_df_path):
         raise RuntimeError("Please run stage 3a scripts to obtain full genome length and divergences")
+
+    # use only the SI table of transfers; use this for transfer lengths
+    full_transfer_df = pd.read_csv(os.path.join(config.figure_directory, 'supp_table', 'all_transfers.csv'), index_col=0)
+    good_transfer_mask = full_transfer_df['Species name'] == species_name
+    transfer_df = full_transfer_df[good_transfer_mask]
+    transfer_df = transfer_df[transfer_df['Clonal fraction']>=config.clonal_fraction_cutoff]
+    transfer_df = transfer_df[transfer_df['Clonal divergence']<=config.Bv_clonal_div_cutoff]
+    dedup_mask = ~transfer_df['Potential duplicate of other events?']
+    transfer_df = transfer_df[dedup_mask]
+    within_lens = transfer_df[transfer_df['between clade?']=='N']['Transfer length (# covered sites on core genome)'].to_numpy()
+    between_lens = transfer_df[transfer_df['between clade?']=='Y']['Transfer length (# covered sites on core genome)'].to_numpy()
+
+    # older version
     transfer_df = pd.read_pickle(transfer_df_path)
     transfer_df = transfer_df[transfer_df['clonal fraction']>=config.clonal_fraction_cutoff]  # TODO!
     transfer_df = transfer_df[transfer_df['clonal divergence']<=config.Bv_clonal_div_cutoff]  # TODO!
-
-    # within_lens = full_df[full_df['types']==0]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
-    within_lens = transfer_df[transfer_df['types']==0]['transfer lengths (core genome)'].to_numpy()
-    # between_lens = full_df[full_df['types']==1]['lengths'].to_numpy().astype(int) * BLOCK_SIZE
-    between_lens = transfer_df[transfer_df['types']==1]['transfer lengths (core genome)'].to_numpy()
+    # within_lens = transfer_df[transfer_df['types']==0]['transfer lengths (core genome)'].to_numpy()
+    # between_lens = transfer_df[transfer_df['types']==1]['transfer lengths (core genome)'].to_numpy()
 
     print("Median within transfer length: {}; mean within transfer length: {}".format(np.median(within_lens), np.mean(within_lens)))
     print("Median between transfer length: {}; mean between transfer length: {}".format(np.median(between_lens), np.mean(between_lens)))
-    print("Total number of close pairs: %d, detected transfers: %d, within transfers: %d, between transfers: %d, mean length: %f" % (
+    print("Total number of close pairs: %d, detected transfers: %d, within transfers: %d, between transfers: %d" % (
         len(clonal_divs[cf_mask & cd_mask]), transfer_df.shape[0],
-        np.sum(transfer_df['types'] == 0), np.sum(transfer_df['types'] == 1), np.mean(np.concatenate([within_lens, between_lens]))))
+        np.sum(transfer_df['types'] == 0), np.sum(transfer_df['types'] == 1)))
 
     # mapping out grid
     fig = plt.figure(figsize=(7, 1.5))
@@ -242,9 +252,9 @@ if __name__ == "__main__":
     fig.text(0.155, 0.55, "Divergence (%)", size=7, rotation=90.,verticalalignment ='center'
              )
     # plot_typical_pair(ex1_ax, dh, (0, 128))
-    plot_example_pair(ex1_ax, dh, (0, 128), transfer_df, if_legend=False, patch_ymin=-1.2e-2)
+    # plot_example_pair(ex1_ax, dh, (0, 128), transfer_df, if_legend=False, patch_ymin=-1.2e-2)
     # plot_example_pair(ex1_ax, dh, (128, 170), full_df, if_legend=False)
-    # plot_example_pair(ex1_ax, dh, (54, 238), transfer_df, if_legend=False, patch_ymin=-1.2e-2)
+    plot_example_pair(ex1_ax, dh, (54, 238), transfer_df, if_legend=False, patch_ymin=-1.2e-2)
     plot_example_pair(ex2_ax, dh, (39, 74), transfer_df, if_legend=False, patch_ymin=8.e-2)
     # ex0_ax.set_xticklabels([])
     ex1_ax.set_xticklabels([])
@@ -285,4 +295,4 @@ if __name__ == "__main__":
                 fontsize=6, backgroundcolor='white', va='top', ha='right',
                 bbox=dict(fc='w',boxstyle='square,pad=0.15', ec='white'))
 
-    fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig2_poster.pdf'))
+    fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig2_dedup.pdf'))

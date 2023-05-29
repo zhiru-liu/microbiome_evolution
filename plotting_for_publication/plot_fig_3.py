@@ -144,12 +144,14 @@ def plot_jitters(ax, X, ys, width, if_box=True, colorVal='tab:blue', alpha=0.1, 
         ax.scatter(X+xs,ys,marker=marker,color=colorVal,alpha=alpha,s=2, rasterized=True)
 
 other_species_to_plot = []
+
+full_transfer_df = pd.read_csv(os.path.join(config.figure_directory, 'supp_table', 'all_transfers.csv'), index_col=0)
 for species_full_name in species_order:
     species_name = ' '.join(species_full_name.split('_')[:2])
     try:
         raw_data = pd.read_pickle(os.path.join(data_dir, 'third_pass', species_full_name + '.pickle'))
     except IOError:
-        print(species_name + " does not have data")
+        # print(species_name + " does not have data")
         continue
     filename = species_full_name + '.csv'
 
@@ -165,7 +167,7 @@ for species_full_name in species_order:
     n_filtered = np.sum(raw_data['clonal fractions'] > config.clonal_fraction_cutoff)
     if n_filtered < 3:
         continue
-    print(filename, n, n_filtered, raw_data['clonal divs'].max())
+    # print(filename, n, n_filtered, raw_data['clonal divs'].max())
     plot_jitter = False
 
     clonal_div_cutoff = species_cutoff_dict.get(species_full_name, 1)
@@ -197,7 +199,12 @@ for species_full_name in species_order:
         axm.plot(xloc, mid / 1e6, linestyle=':', linewidth=1)
         # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
-        good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=0, clonal_div_cutoff=clonal_div_cutoff)
+        # good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=0, clonal_div_cutoff=clonal_div_cutoff)
+        good_runs_mask = (full_transfer_df['Species name']==species_full_name) & (full_transfer_df['Shown in Fig3?']) & (full_transfer_df['between clade?']=='N')
+        good_runs_mask = good_runs_mask & ~full_transfer_df['Potential duplicate of other events?']
+        good_runs = full_transfer_df[good_runs_mask]['Transfer length (# covered sites on core genome)']
+        num_pairs = len(pd.unique(zip(full_transfer_df[good_runs_mask]['Sample 1'], full_transfer_df[good_runs_mask]['Sample 1'])))
+
         transfer_length_data.append(good_runs)
         all_num_pairs.append(num_pairs)
 
@@ -220,7 +227,12 @@ for species_full_name in species_order:
         axm.plot(xloc, mid / 1e6, linestyle=':', linewidth=1)
         # axm.vlines(xloc, mid - w, mid + w, alpha=0.2)
 
-        good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=1, clonal_div_cutoff=clonal_div_cutoff)
+        # good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=1, clonal_div_cutoff=clonal_div_cutoff)
+        good_runs_mask = (full_transfer_df['Species name']==species_full_name) & (full_transfer_df['Shown in Fig3?']) & (full_transfer_df['between clade?']=='Y')
+        good_runs_mask = good_runs_mask & (~full_transfer_df['Potential duplicate of other events?'])
+        good_runs = full_transfer_df[good_runs_mask]['Transfer length (# covered sites on core genome)']
+        num_pairs = len(pd.unique(zip(full_transfer_df[good_runs_mask]['Sample 1'], full_transfer_df[good_runs_mask]['Sample 2'])))
+
         transfer_length_data.append(good_runs)
         all_num_pairs.append(num_pairs)
 
@@ -252,10 +264,17 @@ for species_full_name in species_order:
 
     # plotting species summary
     plot_loc.append(2 * idx)
-    good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, clonal_div_cutoff=clonal_div_cutoff)
+    # older version
+    # good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, clonal_div_cutoff=clonal_div_cutoff)
+
+    good_runs_mask = (full_transfer_df['Species name']==species_full_name) & (full_transfer_df['Shown in Fig3?'])
+    good_runs_mask = good_runs_mask & (~full_transfer_df['Potential duplicate of other events?'])
+    good_runs = full_transfer_df[good_runs_mask]['Transfer length (# covered sites on core genome)']
+    num_pairs = len(pd.unique(zip(full_transfer_df[good_runs_mask]['Sample 1'], full_transfer_df[good_runs_mask]['Sample 1'])))
+
     transfer_length_data.append(good_runs)
-    # print("{} has {} pairs".format(species_name, num_pairs))
     all_num_pairs.append(num_pairs)
+    print("{} has {} pairs".format(species_name, num_pairs))
     xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
 
     color = plot_colors[(idx-1) % len(plot_colors)]
@@ -345,10 +364,10 @@ for species_full_name in species_order:
         # select three examples pairs
         # example_mask = raw_data['pairs'].isin([(282, 387), (297, 331), (269, 313)])
         # ax3.scatter(x[example_mask], y[example_mask], s=1, color='r')
-        print('\n')
-        print("A putredinis average rate:{:e}".format(np.mean(y[x>0]/x[x>0])))
-        print("A putredinis intermediate count:{}".format(y_highlight))
-        print('\n')
+        # print('\n')
+        # print("A putredinis average rate:{:e}".format(np.mean(y[x>0]/x[x>0])))
+        # print("A putredinis intermediate count:{}".format(y_highlight))
+        # print('\n')
         ax3.plot(fitted_data['x'], fitted_data['y'], linestyle='--', color=color)
         # ax3.set_xlim([0, 50])
         ax3.set_xlim([0, 2e-4])
@@ -373,7 +392,7 @@ for species_full_name in species_order:
 # plotting all other violin plots
 # violins = axd.violinplot(transfer_length_data[:], positions=plot_loc[:], vert=True, showmedians=True, showextrema=False,
 #                          widths=0.8)
-print("\nSpecies name, median transfer, mean transfer")
+# print("\nSpecies name, median transfer, mean transfer")
 for i, loc in enumerate(plot_loc):
     points_to_plot = 1000
     ys = transfer_length_data[i]
@@ -381,7 +400,7 @@ for i, loc in enumerate(plot_loc):
         ys = np.array(random.sample(ys, points_to_plot))
     # xs = np.ones(ys.shape) * loc + np.random.normal(scale=0.05, size=ys.shape)
     # axd.scatter(xs, ys, color=plot_colors[(i) % len(plot_colors)], s=0.2, rasterized=True, alpha=0.1)
-    print(xticklabels[i], np.median(ys), np.mean(ys))
+    # print(xticklabels[i], np.median(ys), np.mean(ys))
     plot_jitters(axd, loc, ys, width=0.4, colorVal=plot_colors[i % len(plot_colors)])
 
 # for i, pc in enumerate(violins['bodies']):
@@ -459,11 +478,12 @@ axd.text(0.03, 0.9, "E", transform=axd.transAxes,
          fontsize=9, fontweight='bold', va='top', ha='left')
 
 fig.tight_layout()
-fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig3.pdf'), dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig3_dedup.pdf'), dpi=600)
 
 
 total_events = 0
-for lengths in transfer_length_data:
+for i, lengths in enumerate(transfer_length_data):
+    print(xticklabels[i], len(lengths))
     total_events += len(lengths)
 print("Total {} species; total {} pairs;  total {} detected events".format(len(transfer_length_data)-1, np.sum(all_num_pairs), total_events))
 

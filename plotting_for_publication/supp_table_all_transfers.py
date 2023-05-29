@@ -46,4 +46,26 @@ for species_name in fig3_species:
     dfs.append(df_to_save)
 
 big_df = pd.concat(dfs)
+# make sure there is no mixture of str and numbers for sample names
+big_df['Sample 1'] = big_df['Sample 1'].astype(str)
+big_df['Sample 2'] = big_df['Sample 2'].astype(str)
+
+# now adding dedup information
+dfs = []
+for species in fig3_species:
+    save_path = os.path.join(config.analysis_directory, "misc", "dedup", species, "unique_events.csv")
+    dedup_events = pd.read_csv(save_path)
+    dfs.append(dedup_events)
+big_unique_df = pd.concat(dfs)
+big_unique_df['Sample 1'] = big_unique_df['Sample 1'].astype(str)
+big_unique_df['Sample 2'] = big_unique_df['Sample 2'].astype(str)
+unique_events = zip(big_unique_df['Species name'], big_unique_df['Sample 1'], big_unique_df['Sample 2'], big_unique_df['Core genome start loc'], big_unique_df['Core genome end loc'])
+event_keys = zip(big_df['Species name'], big_df['Sample 1'], big_df['Sample 2'], big_df['Core genome start loc'], big_df['Core genome end loc'])
+unique_set = set(unique_events)
+if_unique = []
+for tup in event_keys:
+    if_unique.append(tup in unique_set)
+
+big_df['Potential duplicate of other events?'] = ~np.array(if_unique)
+
 big_df.to_csv(os.path.join(config.figure_directory, 'supp_table', 'all_transfers.csv'))
