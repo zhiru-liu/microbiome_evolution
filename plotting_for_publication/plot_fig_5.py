@@ -183,7 +183,7 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
     copy_axes[1].set_yticklabels(['0', '1.0'])
 
     axes[0].set_xticklabels([])
-    axes[1].set_xlabel('Location along genome \n(Arrow region only)')
+    axes[1].set_xlabel('Location along genome \n(highlighted region only)')
 
     axes[0].set_ylim([0, 1.])
     axes[1].set_ylim([0, 1.])
@@ -208,13 +208,13 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
     strain1_color = '#A9D0F7'
     strain2_color = '#EBD0F7'
     alpha = 1
-    bar_axes[0].bar(1.5, sample1_freq, width=1, align='edge', color=strain2_color, alpha=alpha, linewidth=0.5,
+    bar_axes[0].bar(1.8, sample1_freq, width=1, align='edge', color=strain2_color, alpha=alpha, linewidth=0.5,
                     edgecolor='grey')
-    bar_axes[0].bar(1.5, 1 - sample1_freq, align='edge', bottom=sample1_freq, width=1, color=strain1_color, alpha=alpha,
+    bar_axes[0].bar(1.8, 1 - sample1_freq, align='edge', bottom=sample1_freq, width=1, color=strain1_color, alpha=alpha,
                     linewidth=0.5, edgecolor='grey')
-    bar_axes[1].bar(1.5, sample2_freq, width=1, align='edge', color=strain2_color, alpha=alpha, linewidth=0.5,
+    bar_axes[1].bar(1.8, sample2_freq, width=1, align='edge', color=strain2_color, alpha=alpha, linewidth=0.5,
                     edgecolor='grey')
-    bar_axes[1].bar(1.5, 1 - sample2_freq, align='edge', bottom=sample2_freq, width=1, color=strain1_color, alpha=alpha,
+    bar_axes[1].bar(1.8, 1 - sample2_freq, align='edge', bottom=sample2_freq, width=1, color=strain1_color, alpha=alpha,
                     linewidth=0.5, edgecolor='grey')
     #     xs = np.linspace(0, 0.5)
     #     bar_axes[0].plot(xs, np.ones(xs.shape)*sample1_freq, color='k')
@@ -228,7 +228,7 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
     bar_axes[1].set_yticks([])
     bar_axes[1].set_xticks([])
     bar_axes[1].set_yticks([])
-    bar_axes[1].set_xlabel('Inferred \nstrain \nfrequency')
+    bar_axes[1].set_xlabel('Inferred \nstrain \ncomposition')
     bar_axes[1].xaxis.set_label_coords(0.77, -0.15)
     bar_axes[0].axis('off')
     bar_axes[1].spines['top'].set_visible(False)
@@ -314,8 +314,8 @@ def plot_example_snps(axes):
     xloc = 116.5
     axes[1].annotate('',
                 xy=(xloc, ymin),
-                xytext=(xloc, ymin + 0.45),
-                arrowprops=dict(facecolor='tab:orange', shrink=0.0, width=2, headwidth=4, headlength=4))
+                xytext=(xloc, ymin + 0.55),
+                arrowprops=dict(facecolor='tab:orange', shrink=0.0, width=3, headwidth=6, headlength=5))
 
     xmax = min(len(within_snp_vec1), len(within_snp_vec2), len(between_snp_vec1), len(between_snp_vec2))
     for ax in axes:
@@ -423,8 +423,8 @@ max_run_ax2.axvline(x=Er_mean, linestyle='--', linewidth=0.5, color='grey')
 # save_interesting_genes(minimal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "minimal.csv"))
 # save_interesting_genes(maximal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "maximal.csv"))
 
-# zoomin_ax1.text(-0.06, 1.24, "C", transform=zoomin_ax1.transAxes,
-#            fontsize=9, fontweight='bold', va='top', ha='left')
+copy_ax1.text(-0.06, 1.65, "C", transform=copy_ax1.transAxes,
+           fontsize=9, fontweight='bold', va='top', ha='left')
 max_run_ax1.text(-0.45, 1.24, "D", transform=max_run_ax1.transAxes,
                 fontsize=9, fontweight='bold', va='top', ha='left')
 # histo_ax1.text(0.86, 0.97, "$T_0$", transform=histo_ax1.transAxes,

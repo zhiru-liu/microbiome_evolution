@@ -15,7 +15,7 @@ fontsize = 6
 mpl.rcParams['font.size'] = fontsize
 mpl.rcParams['lines.linewidth'] = 1.0
 mpl.rcParams['legend.frameon']  = False
-mpl.rcParams['legend.fontsize']  = 'small'
+mpl.rcParams['legend.fontsize']  = 6.5  # change font to make legend big enough TODO
 
 files_to_plot = os.listdir(os.path.join(config.analysis_directory, 'closely_related', 'simulated_transfers'))
 files_to_plot = list(filter(lambda x: not x.startswith('.'), files_to_plot))
