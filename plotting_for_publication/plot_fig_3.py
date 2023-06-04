@@ -146,6 +146,8 @@ def plot_jitters(ax, X, ys, width, if_box=True, colorVal='tab:blue', alpha=0.1, 
 other_species_to_plot = []
 
 full_transfer_df = pd.read_csv(os.path.join(config.figure_directory, 'supp_table', 'all_transfers.csv'), index_col=0)
+full_transfer_df['Sample 1'] = full_transfer_df['Sample 1'].astype(str)
+full_transfer_df['Sample 2'] = full_transfer_df['Sample 2'].astype(str)
 for species_full_name in species_order:
     species_name = ' '.join(species_full_name.split('_')[:2])
     try:
@@ -203,10 +205,8 @@ for species_full_name in species_order:
         good_runs_mask = (full_transfer_df['Species name']==species_full_name) & (full_transfer_df['Shown in Fig3?']) & (full_transfer_df['between clade?']=='N')
         good_runs_mask = good_runs_mask & ~full_transfer_df['Potential duplicate of other events?']
         good_runs = full_transfer_df[good_runs_mask]['Transfer length (# covered sites on core genome)']
-        num_pairs = len(pd.unique(zip(full_transfer_df[good_runs_mask]['Sample 1'], full_transfer_df[good_runs_mask]['Sample 1'])))
 
         transfer_length_data.append(good_runs)
-        all_num_pairs.append(num_pairs)
 
         # plot fraction recombined
         # rates = y1_ / x_
@@ -229,12 +229,11 @@ for species_full_name in species_order:
 
         # good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, desired_type=1, clonal_div_cutoff=clonal_div_cutoff)
         good_runs_mask = (full_transfer_df['Species name']==species_full_name) & (full_transfer_df['Shown in Fig3?']) & (full_transfer_df['between clade?']=='Y')
+        num_pairs = len(pd.unique(zip(full_transfer_df[good_runs_mask]['Sample 1'], full_transfer_df[good_runs_mask]['Sample 2'])))
         good_runs_mask = good_runs_mask & (~full_transfer_df['Potential duplicate of other events?'])
         good_runs = full_transfer_df[good_runs_mask]['Transfer length (# covered sites on core genome)']
-        num_pairs = len(pd.unique(zip(full_transfer_df[good_runs_mask]['Sample 1'], full_transfer_df[good_runs_mask]['Sample 2'])))
 
         transfer_length_data.append(good_runs)
-        all_num_pairs.append(num_pairs)
 
         # rates = y2_ / x_
         # frac_recombined = rates * 1e-4
@@ -268,12 +267,11 @@ for species_full_name in species_order:
     # good_runs, num_pairs = close_pair_utils.prepare_run_lengths(raw_data, transfer_data, clonal_div_cutoff=clonal_div_cutoff)
 
     good_runs_mask = (full_transfer_df['Species name']==species_full_name) & (full_transfer_df['Shown in Fig3?'])
+    num_pairs = len(pd.unique(zip(full_transfer_df[good_runs_mask]['Sample 1'], full_transfer_df[good_runs_mask]['Sample 2'])))
     good_runs_mask = good_runs_mask & (~full_transfer_df['Potential duplicate of other events?'])
     good_runs = full_transfer_df[good_runs_mask]['Transfer length (# covered sites on core genome)']
-    num_pairs = len(pd.unique(zip(full_transfer_df[good_runs_mask]['Sample 1'], full_transfer_df[good_runs_mask]['Sample 1'])))
 
     transfer_length_data.append(good_runs)
-    all_num_pairs.append(num_pairs)
     print("{} has {} pairs".format(species_name, num_pairs))
     xloc = np.linspace(2 * idx - 0.3, 2 * idx + 0.3, 4, endpoint=True)
 
@@ -483,8 +481,7 @@ fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig3_dedup.pdf')
 
 total_events = 0
 for i, lengths in enumerate(transfer_length_data):
-    print(xticklabels[i], len(lengths))
     total_events += len(lengths)
-print("Total {} species; total {} pairs;  total {} detected events".format(len(transfer_length_data)-1, np.sum(all_num_pairs), total_events))
-
-print(scatter_species)
+full_df_filtered = full_transfer_df[full_transfer_df['Shown in Fig3?']]
+total_pairs = len(pd.unique(zip(full_df_filtered['Species name'], full_df_filtered['Sample 1'], full_df_filtered['Sample 2'])))
+print("Total {} species; total {} pairs;  total {} detected events".format(len(transfer_length_data)-1, total_pairs, total_events))

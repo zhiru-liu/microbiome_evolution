@@ -155,9 +155,15 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
         # start_idx = snp_info[1][start:end][non_core_starts[i]]
         # end_idx = snp_info[1][start:end][non_core_ends[i]]
         axes[0].axvspan(non_core_starts[i], non_core_ends[i], alpha=0.1,
-                        color='tab:grey', label='_' * i + 'Non-core\ngenes', linewidth=0)
+                        color='tab:grey', label='_' * i + 'Non-core genes', linewidth=0)
         axes[1].axvspan(non_core_starts[i], non_core_ends[i], alpha=0.1,
-                        color='tab:grey', label='_' * i + 'Non-core\ngenes', linewidth=0)
+                        color='tab:grey', label='_' * i + 'Non-core genes', linewidth=0)
+
+
+    copy_axes[0].axvspan(-10, -9, alpha=0.1,
+                    color='tab:grey', label='Non-core genes', linewidth=0)
+    copy_axes[0].plot(-10, 1, '.', markersize=2,
+                 label='SNVs', color=mpl_colors[0])
 
     N = 1000
     copy_num = d_before[start:end][good_sites] / mean_depth_before
@@ -237,11 +243,12 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
     bar_axes[1].spines['left'].set_visible(False)
     #     bar_axes[0].text(0, 0.5, "Inferred strain freq.", rotation='vertical')
 
-    axes[0].legend(loc='lower left', bbox_to_anchor=(1.02, 1.05), ncol=1, fontsize=6)
-    axes[0].set_ylabel("Allele\nfreq.")
-    axes[1].set_ylabel("Allele\nfreq.")
-    copy_axes[0].set_ylabel("Rel.\ncoverage")
-    copy_axes[1].set_ylabel("Rel.\ncoverage")
+    # axes[0].legend(loc='lower left', bbox_to_anchor=(1.02, 1.05), ncol=1, fontsize=6)
+    axes[0].set_ylabel("Allele\nfreq")
+    axes[1].set_ylabel("Allele\nfreq")
+    copy_axes[0].set_ylabel("Rel\ncov")
+    copy_axes[0].legend(loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=2,)
+    copy_axes[1].set_ylabel("Rel\ncov")
     return minimal_genes, maximal_genes
 
 def plot_max_run_histo(ax, species_name):
@@ -339,7 +346,7 @@ mpl.rcParams['legend.frameon'] = False
 
 fig = plt.figure(figsize=(7, 4.5))
 
-outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[2, 3.25], hspace=0.45, figure=fig)
+outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[2, 3.25], hspace=0.35, figure=fig)
 
 top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1.8,1],wspace=0,subplot_spec=outer_grid[0])
 
@@ -423,7 +430,7 @@ max_run_ax2.axvline(x=Er_mean, linestyle='--', linewidth=0.5, color='grey')
 # save_interesting_genes(minimal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "minimal.csv"))
 # save_interesting_genes(maximal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "maximal.csv"))
 
-copy_ax1.text(-0.06, 1.65, "C", transform=copy_ax1.transAxes,
+copy_ax1.text(-0.06, 1.75, "C", transform=copy_ax1.transAxes,
            fontsize=9, fontweight='bold', va='top', ha='left')
 max_run_ax1.text(-0.45, 1.24, "D", transform=max_run_ax1.transAxes,
                 fontsize=9, fontweight='bold', va='top', ha='left')
