@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.stats import gaussian_kde
+import matplotlib.gridspec as gridspec
 
 def get_pretty_species_name(species_name, include_number=False, manual=False):
     
@@ -53,3 +54,13 @@ def plot_jitters(ax, X, ys, width, colorVal='tab:blue', alpha=0.5):
     ax.plot([X-other_width,X+other_width],[q75,q75],'-',color=colorVal,linewidth=1)
     ax.plot([X-other_width,X-other_width],[q25,q75],'-',color=colorVal,linewidth=1)
     ax.plot([X+other_width,X+other_width],[q25,q75],'-',color=colorVal,linewidth=1)
+
+
+def plot_cf_pd_joint(axes, x, y, block_size):
+    scatter_ax, marg_ax = axes
+    xs = np.linspace(0.01, 1, 100)
+    ys = -np.log(xs) / block_size
+    scatter_ax.plot(xs, ys, '--r', zorder=1, label='indep. SNPs')
+
+    scatter_ax.scatter(x, y, s=1, linewidth=0, zorder=2, rasterized=True)
+    marg_ax.hist(y, orientation='horizontal', bins=100, alpha=0.6)
