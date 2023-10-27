@@ -8,7 +8,7 @@ import default_fig_styles
 import config
 from utils import parallel_utils, figure_utils
 from utils.typical_pair_utils import get_joint_plot_x_y, load_precomputed_theta, partial_recombination_curve
-from HGT_scripts.compute_variance_explained_joint_dist import plot_var_exaplained
+from HGT_scripts.compute_variance_explained_joint_dist import plot_var_exaplained, plot_effective_rbym_from_alpha
 
 dh = None  # only useful when I accidentally deleted the cached snp vectors
 species_name = 'Alistipes_putredinis_61533'
@@ -94,8 +94,11 @@ def plot_cf_pd_joint(axes):
     marg_ax.hist(y, orientation='horizontal', bins=100, alpha=0.6)
 
     # marg_ax.set_xscale('log')
-    marg_ax.set_xticks([1, 500, 1000])
-    marg_ax.set_xticklabels(['1', '500', '1k'])
+    marg_ax.set_xticks([0, 500, 1000])
+    marg_ax.minorticks_on()
+    marg_ax.yaxis.set_tick_params(which='minor', bottom=False)
+    scatter_ax.yaxis.set_tick_params(which='minor', bottom=False)
+    marg_ax.set_xticklabels(['0', '500', '1k'])
 
     scatter_ax.set_xlabel('Fraction of identical blocks')
     scatter_ax.set_ylabel('Pairwise syn divergence (%)')
@@ -136,8 +139,9 @@ def plot_neutral_joint(scatter_ax, marg_ax):
 
     scatter_ax.set_yticks([0, 0.5e-2, 1e-2])
     scatter_ax.set_yticklabels(['0', '0.5', '1'])
-    marg_ax.set_xticks([1, 1000])
-    marg_ax.set_xticklabels(['1', '1k'])
+    marg_ax.set_xticks([0, 1000])
+    marg_ax.set_xticklabels(['0', '1k'])
+    marg_ax.minorticks_on()
 
     scatter_ax.set_title("Neutral simulation")
     scatter_ax.set_ylabel('Pairwise divergence (%)')
@@ -183,7 +187,10 @@ var_exp_ax2 = fig.add_subplot(bottom_grid[1])
 
 plot_cf_pd_joint([scatter_ax, marg_ax])
 plot_example_genomes([example_ax1, example_ax2, example_ax3])
-plot_var_exaplained([var_exp_ax1, var_exp_ax2], plot_only_y=True)
+# bottom panel
+# plot_var_exaplained([var_exp_ax1, var_exp_ax2], plot_only_y=True)
+plot_effective_rbym_from_alpha(var_exp_ax1)
+
 plot_neutral_joint(neutral_scatter_ax, neutral_marg_ax)
 fig.delaxes(var_exp_ax2)
 

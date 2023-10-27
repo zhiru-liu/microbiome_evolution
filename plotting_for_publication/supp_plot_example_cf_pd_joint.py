@@ -55,6 +55,9 @@ for i in range(3):
 
         scatter_ax.scatter(x, y, s=0.6, linewidth=0, zorder=2, rasterized=True)
         marg_ax.hist(y, orientation='horizontal', bins=100, alpha=0.6)
+        marg_ax.minorticks_on()
+        marg_ax.yaxis.set_tick_params(which='minor', bottom=False)
+        scatter_ax.yaxis.set_tick_params(which='minor', bottom=False)
 
         # marg_ax.set_xscale('log')
         # if ('copri' in species_name) or ('Roseburia' in species_name) or ('Lachnospiraceae' in species_name):
@@ -106,6 +109,10 @@ for i in range(6):
 
         scatter_ax.scatter(x, y, s=0.6, linewidth=0, zorder=2, rasterized=True)
         marg_ax.hist(y, orientation='horizontal', bins=100, alpha=0.6)
+
+        marg_ax.minorticks_on()
+        marg_ax.yaxis.set_tick_params(which='minor', bottom=False)
+        scatter_ax.yaxis.set_tick_params(which='minor', bottom=False)
 
         # marg_ax.set_xscale('log')
         # if ('copri' in species_name) or ('Roseburia' in species_name) or ('Lachnospiraceae' in species_name):

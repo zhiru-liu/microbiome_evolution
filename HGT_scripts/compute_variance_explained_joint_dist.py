@@ -196,10 +196,78 @@ def plot_var_exaplained(axes, plot_only_y=True):
         axes[0].set_xlim([-1*num_species+0.5,1.5])
         axes[0].legend(loc='upper right',frameon=False)
 
+def plot_effective_rbym_from_alpha(ax):
+    # prepare data
+    alpha_dict = json.load(open(os.path.join(config.analysis_directory, 'misc', 'partial_recomb_alpha.json'), 'r'))
+    var_df = pd.read_csv(os.path.join(config.plotting_intermediate_directory, 'variance_explained.csv'))
+    var_df = var_df.set_index('Species')
+    alpha_df = pd.DataFrame(alpha_dict.items(), columns=["Species", "alpha"])
+    alpha_df['theta'] = alpha_df['Species'].apply(typical_pair_utils.load_precomputed_theta)
+    alpha_df = alpha_df.set_index('Species')
+    alpha_df.loc['Lachnospiraceae_bacterium_51870']['theta'] = typical_pair_utils.compute_theta(
+        'Lachnospiraceae_bacterium_51870',
+        cf_cutoff=1)
+
+    alpha_df['Weighted R2'] = var_df['Variance explained weighted control']
+    alpha_df['Effective r/m'] = 1000 * alpha_df['theta'] / (1 / alpha_df['alpha'] - 1)
+    alpha_df = alpha_df.sort_values('Effective r/m', ascending=False)
+
+    species_filter = (alpha_df['Weighted R2'] > 0.5) & (~np.isnan(alpha_df['Effective r/m']))
+    alpha_df = alpha_df[species_filter]
+
+    fontsize = 6
+    mpl.rcParams['font.size'] = fontsize
+    mpl.rcParams['lines.linewidth'] = 1.0
+    mpl.rcParams['legend.frameon'] = False
+    mpl.rcParams['legend.fontsize'] = 'small'
+
+    haploid_color = '#08519c'
+    light_haploid_color = '#6699CC'
+    good_witin_color = '#ef8a62'
+
+    num_species = alpha_df.shape[0]
+    total_num_species = num_species + 2
+    xs = np.arange(0, num_species)
+    all_xs = np.arange(0, total_num_species).astype(float)
+    all_xs[-2:] += 0.5
+
+    ax.bar(xs + 0.5, alpha_df['Effective r/m'], color=light_haploid_color, linewidth=0, zorder=1)
+
+    # now plot the two pathogen reference species
+    # copied from jupyter analysis
+    Hp_rm = 64
+    Tb_rm = 0.7
+    #     ax.bar(max(xs)+2, Hp_rm, zorder=1,color='black', fill=False,)
+    #     ax.bar(max(xs)+3, Tb_rm, zorder=1,color='black', fill=False,)
+    ax.bar(max(xs) + 2, Hp_rm, zorder=1, color=haploid_color)
+    ax.bar(max(xs) + 3, Tb_rm, zorder=1, color=haploid_color)
+    ax.axhline(1, color='k', linestyle='--')
+
+    ax.set_ylim([1e-1, 1e2])
+    #     axes[0].set_yticks([0,0.5,1])
+    ax.set_yscale('log')
+    # ax.set_ylabel(r"Effective $r/m$")
+    ax.set_ylabel("Estimated\n"+r"$T_{mrca} / T_{mosaic}$")
+    ax.set_xticks(all_xs + 0.5)
+    species_names = map(lambda x: figure_utils.get_pretty_species_name(x, manual=True), alpha_df.index.to_numpy())
+    species_names.append("Helicobacter pylori")
+    species_names.append("Mycobacterium tuberculosis")
+
+    ax.set_xticklabels(species_names, fontsize=5, rotation=90)
+    ax.set_xlim([-0.5, total_num_species + 1])
+    ax.legend(loc='upper right', frameon=False)
+
 
 if __name__ == "__main__":
-    prepare_var_explained_data()
-    fig, axes = plt.subplots(2, 1, figsize=(3, 2),dpi=300)
-    plt.subplots_adjust(hspace=0)
-    plot_var_exaplained(axes)
-    fig.savefig(os.path.join(config.figure_directory, 'variance_explained_theory_curve.pdf'), bbox_inches='tight')
+    # run the first function first to compute var explained and save it to intermediate directory
+    # prepare_var_explained_data()
+    import matplotlib.gridspec as gridspec
+
+    fig = plt.figure(figsize=(6, 2), dpi=300)
+    grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[1., 0.4], hspace=0.0, figure=fig)
+    var_exp_ax1 = fig.add_subplot(grid[0])
+    var_exp_ax2 = fig.add_subplot(grid[1])
+    fig.delaxes(var_exp_ax2)
+
+    plot_var_exaplained([var_exp_ax1, var_exp_ax2])
+    fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_variance_explained_partial_recomb.pdf'), bbox_inches='tight')

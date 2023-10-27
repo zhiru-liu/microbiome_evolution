@@ -184,8 +184,8 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
     copy_axes[0].fill_between(xs, zeros, local_copy_before, alpha=0.2, rasterized=True, color='tab:blue')
     #     copy_axes[1].plot(xs, local_copy_after, 'grey')
     copy_axes[1].fill_between(xs, zeros, local_copy_after, alpha=0.2, rasterized=True, color='tab:blue')
-    copy_axes[0].axhline(mean_depth_before, color='grey', linestyle='--', linewidth=0.5, alpha=0.5)
-    copy_axes[1].axhline(mean_depth_after, color='grey', linestyle='--', linewidth=0.5, alpha=0.5)
+    copy_axes[0].axhline(mean_depth_before, color='grey', linestyle='--', linewidth=0.5, alpha=0.8)
+    copy_axes[1].axhline(mean_depth_after, color='grey', linestyle='--', linewidth=0.5, alpha=0.8)
 
     copy_axes[0].set_xticklabels([])
     copy_axes[1].set_xticklabels([])
@@ -256,11 +256,14 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
     #     bar_axes[0].text(0, 0.5, "Inferred strain freq.", rotation='vertical')
 
     # axes[0].legend(loc='lower left', bbox_to_anchor=(1.02, 1.05), ncol=1, fontsize=6)
-    axes[0].set_ylabel("Allele\nfreq")
-    axes[1].set_ylabel("Allele\nfreq")
-    copy_axes[0].set_ylabel("Rel\ncov")
+    axes[0].set_ylabel("SNV\nfrequency", rotation='horizontal', verticalalignment='center', horizontalalignment='center', labelpad=25)
+    axes[1].set_ylabel("SNV\nfrequency", rotation='horizontal', verticalalignment='center', horizontalalignment='center', labelpad=25)
+    copy_axes[0].set_ylabel("Coverage", rotation='horizontal', verticalalignment='center', horizontalalignment='center', labelpad=25)
     copy_axes[0].legend(loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=2,)
-    copy_axes[1].set_ylabel("Rel\ncov")
+    copy_axes[1].set_ylabel("Coverage", rotation='horizontal', verticalalignment='center', horizontalalignment='center', labelpad=25)
+
+    axes[0].set_xticks([0, 10000, 20000, 30000, 40000])
+    axes[1].set_xticks([0, 10000, 20000, 30000, 40000])
     return minimal_genes, maximal_genes
 
 def plot_max_run_histo(ax, species_name):
@@ -270,7 +273,9 @@ def plot_max_run_histo(ax, species_name):
     ax.hist([between_host_max_runs, within_host_max_runs], bins=100, density=True,
             cumulative=-1, histtype='step', color=[config.between_host_color, config.within_host_color])
     # ax.set_xlabel('Max homozygous run length\n(4D syn sites), $x$')
-    ax.set_xlabel(r'Max sharing length, $\ell$')
+    # ax.set_xlabel(r'Max sharing length, $\ell$')
+    ax.set_xlabel('Length of longest \n'
+                  r'sharing tract, $\ell$')
     ax.set_ylabel(r'Fraction pairs$\geq\ell$')
     items = species_name.split('_')
     name = ' '.join([items[0][0]+'.', items[1]])
@@ -356,22 +361,29 @@ mpl.rcParams['lines.linewidth'] = 1
 mpl.rcParams['legend.fontsize'] = 'small'
 mpl.rcParams['legend.frameon'] = False
 
-fig = plt.figure(figsize=(7, 4.5))
+# fig = plt.figure(figsize=(7, 4.5))
+#
+# outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[2, 3.25], hspace=0.35, figure=fig)
+#
+# top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1.8,1],wspace=0,subplot_spec=outer_grid[0])
+#
+# local_div_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.5, subplot_spec=top_grid[1])
+# snp_grid_1 = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=local_div_grid[0])
+# snp_grid_2 = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=local_div_grid[1])
+#
+# bottom_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[3., 1], wspace=0.3, subplot_spec=outer_grid[1])
+#
+# bottom_right_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=bottom_grid[1])
 
-outer_grid = gridspec.GridSpec(ncols=1, nrows=2, height_ratios=[2, 3.25], hspace=0.35, figure=fig)
+# zoomin panel
+fig_zoom = plt.figure(figsize=(5.25, 2.7))
+bottom_left_grid = gridspec.GridSpec(1, 3, width_ratios=[4, 1, 1], wspace=0.05, figure=fig_zoom)
 
-top_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[1.8,1],wspace=0,subplot_spec=outer_grid[0])
+fig_snps = plt.figure(figsize=(2.5, 1.8))
+snp_grid = gridspec.GridSpec(6, 1, height_ratios=[1, 1, 1, 1, 1, 1], hspace=0.3, figure=fig_snps)
 
-local_div_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.5, subplot_spec=top_grid[1])
-snp_grid_1 = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=local_div_grid[0])
-snp_grid_2 = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=local_div_grid[1])
-
-bottom_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[3., 1], wspace=0.3, subplot_spec=outer_grid[1])
-
-# bottom_left_grid = gridspec.GridSpecFromSubplotSpec(1, 2, width_ratios=[6, 1], wspace=0.05, subplot_spec=bottom_grid[0])
-bottom_left_grid = gridspec.GridSpecFromSubplotSpec(1, 3, width_ratios=[4, 1, 1], wspace=0.05, subplot_spec=bottom_grid[0])
-
-bottom_right_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.3, subplot_spec=bottom_grid[1])
+fig_max = plt.figure(figsize=(4, 1.2))
+max_grid = gridspec.GridSpec(1, 2, width_ratios=[1, 1], wspace=0.3, figure=fig_max)
 
 zoomin_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0.15, subplot_spec=bottom_left_grid[0])
 zoomin1_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=zoomin_grid[0])
@@ -385,40 +397,38 @@ bar_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[1, 1], hspace=0
 bar1_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=bar_grid[0])
 bar2_grid = gridspec.GridSpecFromSubplotSpec(2, 1, height_ratios=[0.3, 1], hspace=0.25, subplot_spec=bar_grid[1])
 
-zoomin_ax1 = fig.add_subplot(zoomin1_grid[1])
-zoomin_ax2 = fig.add_subplot(zoomin2_grid[1])
-copy_ax1 = fig.add_subplot(zoomin1_grid[0])
-copy_ax2 = fig.add_subplot(zoomin2_grid[0])
+zoomin_ax1 = fig_zoom.add_subplot(zoomin1_grid[1])
+zoomin_ax2 = fig_zoom.add_subplot(zoomin2_grid[1])
+copy_ax1 = fig_zoom.add_subplot(zoomin1_grid[0])
+copy_ax2 = fig_zoom.add_subplot(zoomin2_grid[0])
 
-histo_ax1 = fig.add_subplot(histo1_grid[1])
-histo_ax2= fig.add_subplot(histo2_grid[1])
-bar_ax1 = fig.add_subplot(bar1_grid[1])
-bar_ax2= fig.add_subplot(bar2_grid[1])
-
-# adding axes
-snp_ax1 = fig.add_subplot(snp_grid_1[0])
-snp_ax2 = fig.add_subplot(snp_grid_1[1])
-snp_ax3 = fig.add_subplot(snp_grid_2[0])
-snp_ax4 = fig.add_subplot(snp_grid_2[1])
-
-max_run_ax1 = fig.add_subplot(bottom_right_grid[0])
-max_run_ax2 = fig.add_subplot(bottom_right_grid[1])
-
+histo_ax1 = fig_zoom.add_subplot(histo1_grid[1])
+histo_ax2= fig_zoom.add_subplot(histo2_grid[1])
+bar_ax1 = fig_zoom.add_subplot(bar1_grid[1])
+bar_ax2= fig_zoom.add_subplot(bar2_grid[1])
 # plotting
 minimal_genes, maximal_genes = plot_allele_freq_zoomin([zoomin_ax1, zoomin_ax2], [histo_ax1, histo_ax2], [copy_ax1, copy_ax2], [bar_ax1, bar_ax2], ['700114218', '700171115'], plot_locations=False)
-# save_interesting_genes(minimal_genes, os.path.join(config.figure_directory, 'supp_table', "temporal_sweep_genes.csv"))
+
+# snp panel
+# adding axes
+snp_ax1 = fig_snps.add_subplot(snp_grid[0])
+snp_ax2 = fig_snps.add_subplot(snp_grid[1])
+snp_ax3 = fig_snps.add_subplot(snp_grid[-2])
+snp_ax4 = fig_snps.add_subplot(snp_grid[-1])
+
+plot_example_snps([snp_ax1, snp_ax2, snp_ax3, snp_ax4])
+snp_ax4.set_xlabel("SNVs along core genome")
+
+# max run panels
+max_run_ax1 = fig_max.add_subplot(max_grid[0])
+max_run_ax2 = fig_max.add_subplot(max_grid[1])
 
 plot_max_run_histo(max_run_ax1, 'Bacteroides_vulgatus_57955_same_clade')
 plot_max_run_histo(max_run_ax2, 'Eubacterium_rectale_56927')
-max_run_ax1.set_xlabel('')
 max_run_ax1.set_xlim([0, 10000])
 max_run_ax1.set_xticks([0, 5000, 10000])
 max_run_ax2.set_xlim([0, 5000])
-
-plot_example_snps([snp_ax1, snp_ax2, snp_ax3, snp_ax4])
-# snp_ax1.set_ylabel("$T_0$")
-# snp_ax2.set_ylabel("$T_1$")
-snp_ax4.set_xlabel("SNVs along core genome")
+max_run_ax2.set_ylabel('')
 
 # also plot the mean transfer length
 transfer_df_path = os.path.join(config.analysis_directory, 'closely_related/third_pass',
@@ -432,23 +442,11 @@ transfer_df = pd.read_pickle(transfer_df_path)
 Bv_mean = transfer_df['lengths'][(transfer_df['clonal divergence']<1e-4) & (transfer_df['clonal fraction'] > 0.75) & (transfer_df['types']==0)].mean() * config.second_pass_block_size
 max_run_ax1.plot([], [], color=config.between_host_color, label='Between hosts')
 max_run_ax1.plot([], [], color=config.within_host_color, label='Within hosts')
-max_run_ax1.legend(loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=2,)
+max_run_ax1.legend(loc='lower center', bbox_to_anchor=(1.1, 1.0), ncol=2,)
 l = max_run_ax1.axvline(x=Bv_mean, linestyle='--', linewidth=0.5, color='grey', label='mean transfer length')
 max_run_ax2.axvline(x=Er_mean, linestyle='--', linewidth=0.5, color='grey')
 
 
-# unused
-# plot_local_polymorphism([local_ax1, local_ax2], ['700114218', '700171115'])
-# save_interesting_genes(minimal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "minimal.csv"))
-# save_interesting_genes(maximal_genes, os.path.join(config.analysis_directory, 'misc', 'B_vulgatus_de_novo', "maximal.csv"))
-
-copy_ax1.text(-0.06, 1.75, "C", transform=copy_ax1.transAxes,
-           fontsize=9, fontweight='bold', va='top', ha='left')
-max_run_ax1.text(-0.45, 1.24, "D", transform=max_run_ax1.transAxes,
-                fontsize=9, fontweight='bold', va='top', ha='left')
-# histo_ax1.text(0.86, 0.97, "$T_0$", transform=histo_ax1.transAxes,
-#                  fontsize=7, va='top', ha='left')
-# histo_ax2.text(0.86, 0.97, "$T_1$", transform=histo_ax2.transAxes,
-#                fontsize=7, va='top', ha='left')
-
-fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig5.pdf'), bbox_inches="tight", dpi=600)
+fig_zoom.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig5_zoom.pdf'), bbox_inches="tight", dpi=600)
+fig_snps.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig5_snps.pdf'), bbox_inches="tight", dpi=600)
+fig_max.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig5_max_run.pdf'), bbox_inches="tight", dpi=600)

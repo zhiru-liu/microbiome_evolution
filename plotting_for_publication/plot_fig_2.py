@@ -236,7 +236,7 @@ if __name__ == "__main__":
     gs_len = gridspec.GridSpec(1, 1)
     gs_example = gridspec.GridSpec(2,1)
 
-    gs_example.update(left=0.2, right=0.48, top=0.95, bottom=0.24, hspace=0.4)
+    gs_example.update(left=0.2, right=0.48, top=0.95, bottom=0.24, hspace=0.7)
     gs_scatter.update(left=0.56, right=0.78, top=0.95, bottom=0.24)
     gs_len.update(left=0.83, right=0.98, top=0.95, bottom=0.24)
 
