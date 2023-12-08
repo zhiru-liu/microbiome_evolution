@@ -118,4 +118,4 @@ for i in range(1, 4):
     axes[0, i].set_ylim(axes[0, 0].get_ylim())
     axes[1, i].set_ylim(axes[1, 0].get_ylim())
 
-fig.savefig(os.path.join(config.figure_directory, "supp", "supp_simulated_Ap.pdf"), bbox_inches="tight")
+fig.savefig(os.path.join(config.figure_directory, "supp", "S11_supp_simulated_Ap.pdf"), bbox_inches="tight")

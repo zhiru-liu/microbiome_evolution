@@ -117,4 +117,4 @@ plot_between_within_clade(between_within_count_ax, est_Ts, within_counts, betwee
 # plot_between_within_clade(between_within_count_ax, true_divs, true_within_counts, true_between_counts)
 plot_between_within_length_distributions(between_within_len_ax, full_df)
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', "supp_simulated_Bv.pdf"), bbox_inches="tight")
+fig.savefig(os.path.join(config.figure_directory, 'supp', "S10_supp_simulated_Bv.pdf"), bbox_inches="tight")
