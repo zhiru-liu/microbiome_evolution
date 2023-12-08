@@ -4,7 +4,7 @@ import numpy as np
 import config
 from utils import snp_data_utils, core_gene_utils
 import matplotlib.pyplot as plt
-from plotting_for_publication import plot_pileup_mirror
+from plotting_for_publication.other_plots import plot_pileup_mirror
 
 species_name = 'Bacteroides_vulgatus_57955'
 

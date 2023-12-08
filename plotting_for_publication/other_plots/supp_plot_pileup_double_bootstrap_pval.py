@@ -1,14 +1,10 @@
 import os
-import json
-import itertools
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import matplotlib as mpl
 import config
 from utils import snp_data_utils
-from plotting_for_publication import plot_pileup_mirror
+from plotting_for_publication.other_plots import plot_pileup_mirror
 
 fig, axes = plt.subplots(2, 1, figsize=(6.5, 3), dpi=600)
 fontsize = 6

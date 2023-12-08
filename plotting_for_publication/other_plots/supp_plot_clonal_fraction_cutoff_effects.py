@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from utils import close_pair_utils
-from plotting_for_publication import plot_B_vulgatus_close_pair
+from plotting_for_publication.other_plots import plot_B_vulgatus_close_pair
 import config
 
 fontsize = 6

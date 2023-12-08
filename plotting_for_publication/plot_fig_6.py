@@ -8,8 +8,8 @@ import pandas as pd
 from scipy.stats import ttest_ind
 sys.path.append("..")
 import config
-from utils import close_pair_utils, snp_data_utils, core_gene_utils, typical_pair_utils
-from plotting_for_publication import plot_pileup_mirror
+from utils import snp_data_utils, core_gene_utils, typical_pair_utils
+from plotting_for_publication.other_plots import plot_pileup_mirror
 
 mpl.rcParams['font.size'] = 7
 mpl.rcParams['lines.linewidth'] = 0.5

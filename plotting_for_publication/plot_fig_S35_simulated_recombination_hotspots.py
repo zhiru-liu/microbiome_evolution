@@ -5,7 +5,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 sys.path.append("..")
 import config
-from plotting_for_publication.plot_pileup import plot_single_side
 
 fontsize = 6
 mpl.rcParams['font.size'] = fontsize
