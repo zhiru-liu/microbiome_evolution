@@ -16,7 +16,7 @@ for species_name in os.listdir(os.path.join(config.analysis_directory, 'sharing_
     if 'between' in species_name:
         species_name = "Bacteroides_vulgatus_57955"
     print("processing %s" % species_name)
-    contig_lengths = parallel_utils.get_core_genome_contig_lengths(species_name)
+    contig_lengths = snp_data_utils.get_core_genome_contig_lengths(species_name)
     contig_ends = np.cumsum(contig_lengths)
 
     real_cv = np.std(cumu_runs, axis=0) / np.mean(cumu_runs, axis=0)

@@ -32,7 +32,7 @@ for filename in os.listdir(second_pass_dir):
 
     df = pd.read_pickle(transfer_df_path)
     third_df = pd.read_pickle(third_pass_df_path)
-    dh = parallel_utils.DataHoarder(species_name, mode='QP', allowed_variants=['1D', '2D', '3D', '4D'])
+    dh = snp_data_utils.DataHoarder(species_name, mode='QP', allowed_variants=['1D', '2D', '3D', '4D'])
 
     good_idxs = dh.get_single_subject_idxs()
     recomb_pairs = list(df.pairs.unique())

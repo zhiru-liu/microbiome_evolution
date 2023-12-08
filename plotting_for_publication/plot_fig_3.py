@@ -5,7 +5,6 @@ import os
 import random
 import json
 import pandas as pd
-import seaborn as sns
 from scipy import interpolate
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -476,7 +475,7 @@ axd.text(0.03, 0.9, "E", transform=axd.transAxes,
          fontsize=9, fontweight='bold', va='top', ha='left')
 
 fig.tight_layout()
-fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig3_dedup.pdf'), dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig3.pdf'), dpi=600)
 
 
 total_events = 0

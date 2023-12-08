@@ -9,7 +9,7 @@ pd_mat = typical_pair_utils.load_pairwise_div_mat(species_name)
 major, minor = typical_pair_utils.compute_B_vulgatus_clades()
 order = np.concatenate([major, minor])
 
-sample_mask, sample_names = parallel_utils.get_QP_sample_mask(species_name)
+sample_mask, sample_names = snp_data_utils.get_QP_sample_mask(species_name)
 good_samples = sample_names[sample_mask]
 print(len(good_samples), len(major) + len(minor))
 

@@ -11,12 +11,12 @@ def ref_location_to_contig_location(ref_location, contig, contig_list, contig_cu
 
 def compute_div_in_transfers(dh, transfer_df):
     # lots of indices acrobatics in this function...
-    syn_core_mask = parallel_utils.get_general_site_mask(species_name, allowed_variants=['4D'])  # ref -> 4D core
+    syn_core_mask = snp_data_utils.get_general_site_mask(species_name, allowed_variants=['4D'])  # ref -> 4D core
     core_mask = dh.general_mask  # ref -> core
     core_to_ref_coords = np.where(core_mask)[0]  # shape=length of core genome
     full_to_syn_mask = syn_core_mask[core_mask]  # core -> 4D core
     contig_list = pd.unique(dh.chromosomes)
-    core_contig_lengths = parallel_utils.get_contig_lengths(dh.chromosomes)
+    core_contig_lengths = snp_data_utils.get_contig_lengths(dh.chromosomes)
     contig_cum_lens = np.insert(np.cumsum(core_contig_lengths), 0, 0)
 
     divs = []
@@ -39,7 +39,7 @@ def compute_div_in_transfers(dh, transfer_df):
         full_coord_to_snp_loc = {y: x for x, y in enumerate(np.where(full_coverage_vec)[0])}
 
         good_chromo = dh.chromosomes[syn_core_mask][coverage_vec]
-        contig_lengths = parallel_utils.get_contig_lengths(good_chromo)
+        contig_lengths = snp_data_utils.get_contig_lengths(good_chromo)
         block_size = config.second_pass_block_size
         for _, row in transfer_df[transfer_df['pairs'] == pair].iterrows():
             # translating HMM coordinates (because of contig+block) to snp_vec coordinates
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     # species_name = 'Alistipes_shahii_62199'
     # filepath = os.path.join(config.analysis_directory, "closely_related", 'third_pass',
     #                         'Alistipes_shahii_62199' + '_all_transfers_two_clades.pickle')
-    # dh = parallel_utils.DataHoarder(species_name=species_name, mode='QP', allowed_variants=['1D', '2D', '3D', '4D'])
+    # dh = snp_data_utils.DataHoarder(species_name=species_name, mode='QP', allowed_variants=['1D', '2D', '3D', '4D'])
     # transfer_df = pd.read_pickle(filepath)
     # transfer_df = compute_div_in_transfers(dh, transfer_df)
     # transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass',
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     # species_name = 'Bacteroides_vulgatus_57955'
     # filepath = os.path.join(config.analysis_directory, "closely_related", 'third_pass',
     #              'Bacteroides_vulgatus_57955' + '_all_transfers_two_clades.pickle')
-    # dh = parallel_utils.DataHoarder(species_name=species_name, mode='QP', allowed_variants=['1D', '2D', '3D', '4D'])
+    # dh = snp_data_utils.DataHoarder(species_name=species_name, mode='QP', allowed_variants=['1D', '2D', '3D', '4D'])
     # transfer_df = pd.read_pickle(filepath)
     # transfer_df = compute_div_in_transfers(dh, transfer_df)
     # transfer_df.to_pickle(os.path.join(config.analysis_directory, "closely_related", 'third_pass',

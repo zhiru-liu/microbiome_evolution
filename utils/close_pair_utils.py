@@ -74,7 +74,7 @@ def block_loc_to_genome_loc(block_loc, contig_lengths, block_size, left=True):
     """
     Hacky function to translate a location coordinate in blocks to the correct genome location
     :param block_loc: location in block coordinate
-    :param contig_lengths: a list of contig lengths, can be computed by relevant function in parallel_utils
+    :param contig_lengths: a list of contig lengths, can be computed by relevant function in snp_data_utils
     :param block_size:
     :param left: Whether returning the location of the left end of the block or the right end
     :return:

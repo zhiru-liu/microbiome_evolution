@@ -7,15 +7,15 @@ import os.path
 from math import log10
 
 data_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/")
-#data_directory = os.path.expanduser("~/ben_nandita_hmp_data_071518/")
-#data_directory = os.path.expanduser("~/ben_nandita_hmp_data/")
 analysis_directory = os.path.expanduser("/Volumes/Botein/zhiru_analysis/")
 plotting_intermediate_directory = os.path.expanduser("/Volumes/Botein/plotting_intermediate_files/")
 figure_directory = os.path.expanduser("/Volumes/Botein/figs/")
-scripts_directory = os.path.expanduser("/Users/Device6/Documents/Research/bgoodlab/microbiome_evolution/")
+figure_data_directory = os.path.join(figure_directory, 'fig_data')
 patric_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/patric_db/")
 midas_directory = os.path.expanduser("/Volumes/Botein/microbiome_data/midas_db/")
-hmm_data_directory = os.path.expanduser("~/Documents/Research/bgoodlab/microbiome_evolution/cphmm/dat/")
+hmm_data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'cphmm', 'dat')
+metadata_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'metadata/')
+
 uhgg_directory = "/Volumes/Botein/uhgg/"
 uhgg_core_gene_directory = os.path.join(uhgg_directory, 'core_genes')
 isolate_directory = os.path.join(uhgg_directory, 'dh_format')
@@ -75,8 +75,7 @@ clonal_fraction_cutoff = 0.75
 first_pass_block_size = 1000
 second_pass_block_size = 10
 empirical_histogram_bins = 40
-# B_vulgatus_data_path = os.path.join(analysis_directory,
-#                          "closely_related", "two_clades", "{}_two_clades.pickle".format('Bacteroides_vulgatus_57955'))
+
 Bv_clonal_div_cutoff = 1.1e-4
 B_vulgatus_data_path = os.path.join(analysis_directory,
                                     "closely_related", "iter_second_third_passes", 'converged_pass',
@@ -92,9 +91,3 @@ sample_zscore_cutoff = 2
 # color convention
 within_host_color = '#57C398'
 between_host_color = '#2c7fb8'
-
-# Comment this out
-#from parsers.parse_HMP_data import *
-# and uncomment this
-#from parse_simulated_data import *
-# for isolate data

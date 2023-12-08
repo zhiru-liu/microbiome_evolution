@@ -51,7 +51,7 @@ def compute_E_rectale_between_host(thresholds):
     species_name = 'Eubacterium_rectale_56927'
     ckpt_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', '%s'%species_name)
     ph = pileup_utils.Pileup_Helper(species_name)
-    within_dh = parallel_utils.DataHoarder(species_name, mode='within')
+    within_dh = snp_data_utils.DataHoarder(species_name, mode='within')
 
     # prepare pairs
     country_counts_dict = typical_pair_utils.get_E_rectale_within_host_countries(within_dh)
@@ -73,7 +73,7 @@ def compute_E_rectale_between_host(thresholds):
 
 
 def compute_within_host(species_name, thresholds, b_vulgatus_between_clade=False):
-    dh = parallel_utils.DataHoarder(species_name, mode='within')
+    dh = snp_data_utils.DataHoarder(species_name, mode='within')
     ckpt_path = os.path.join(config.analysis_directory, 'sharing_pileup', 'empirical', species_name)
     if 'vulgatus' in species_name and b_vulgatus_between_clade:
         # ugly but whatever

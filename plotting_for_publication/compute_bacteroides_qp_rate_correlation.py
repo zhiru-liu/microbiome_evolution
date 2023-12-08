@@ -44,7 +44,7 @@ for species_full_name in bacteroides:
     all_rates.append(rates)
 bacteroides_df = pd.DataFrame({"species": bacteroides, 'mean rates': means, 'variance rates': var})
 
-sample_stats_df = parallel_utils.compute_good_sample_stats()
+sample_stats_df = snp_data_utils.compute_good_sample_stats()
 qp_fracs = sample_stats_df['num_qp_samples'] / sample_stats_df['num_high_coverage_samples'].astype(float)
 qp_dict = dict(zip(sample_stats_df['species_name'], qp_fracs))
 bacteroides_df['QP frac'] = bacteroides_df['species'].apply(qp_dict.get)

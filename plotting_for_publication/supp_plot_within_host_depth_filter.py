@@ -7,7 +7,7 @@ import config
 from utils import snp_data_utils
 
 species_name = 'Bacteroides_vulgatus_57955'
-dh = parallel_utils.DataHoarder(species_name, mode='within', allowed_variants=['4D'])
+dh = snp_data_utils.DataHoarder(species_name, mode='within', allowed_variants=['4D'])
 
 # set up figure
 mpl.rcParams['font.size'] = 7

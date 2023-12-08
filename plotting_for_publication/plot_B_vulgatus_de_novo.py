@@ -15,7 +15,7 @@ from utils import snp_data_utils, core_gene_utils
 mpl_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 # loading necessary data
 species_name = "Bacteroides_vulgatus_57955"
-# dh = parallel_utils.DataHoarder(species_name, mode="within")
+# dh = snp_data_utils.DataHoarder(species_name, mode="within")
 general_mask = snp_data_utils.get_general_site_mask(species_name)
 snp_info = snp_data_utils.get_snp_info(species_name)
 core_genes = core_gene_utils.get_sorted_core_genes(species_name)
@@ -43,7 +43,7 @@ def filter_raw_data(sample_idx):
 
 def plot_local_polymorphism(axes, sample_pair):
     idx1 = snp_data_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
-    idx2 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[1])
+    idx2 = snp_data_utils.get_raw_data_idx_for_sample(species_name, sample_pair[1])
 
     a_before, d_before = filter_raw_data(idx1)
     freq_before = np.nan_to_num(a_before / d_before.astype(float))
@@ -67,7 +67,7 @@ def plot_local_polymorphism(axes, sample_pair):
 
 
 def plot_allele_freq_zoomin(axes, histo_axes, sample_pair):
-    idx1 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
+    idx1 = snp_data_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
     idx2 = snp_data_utils.get_raw_data_idx_for_sample(species_name, sample_pair[1])
 
     # core site idx to all site idx

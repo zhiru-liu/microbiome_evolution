@@ -74,10 +74,10 @@ def compute_event_similarity(row1, row2):
 
 
 species_name = 'Bacteroides_vulgatus_57955'
-dh = parallel_utils.DataHoarder(species_name, mode='QP', allowed_variants=['4D'])
+dh = snp_data_utils.DataHoarder(species_name, mode='QP', allowed_variants=['4D'])
 
 syn_core_mask = dh.general_mask
-core_mask = parallel_utils.get_general_site_mask(species_name, allowed_variants=['1D', '2D', '3D', '4D'])
+core_mask = snp_data_utils.get_general_site_mask(species_name, allowed_variants=['1D', '2D', '3D', '4D'])
 full_to_syn_mask = syn_core_mask[core_mask]  # core -> 4D core
 
 syn_core_length = syn_core_mask.sum()

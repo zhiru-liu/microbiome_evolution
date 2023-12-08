@@ -29,8 +29,8 @@ def plot_example_run_length_dist(dist_ax, snp_vec_axes, between_pair1, between_p
     else:
         # loading neccessary data
         species_name = 'Bacteroides_vulgatus_57955'
-        within_dh = parallel_utils.DataHoarder(species_name, mode='within')
-        between_dh = parallel_utils.DataHoarder(species_name, mode='QP')
+        within_dh = snp_data_utils.DataHoarder(species_name, mode='within')
+        between_dh = snp_data_utils.DataHoarder(species_name, mode='QP')
 
         within_idx1 = np.where(within_dh.good_samples=='700114218')[0]
         within_idx2 = np.where(within_dh.good_samples=='700171115')[0]
@@ -49,9 +49,9 @@ def plot_example_run_length_dist(dist_ax, snp_vec_axes, between_pair1, between_p
         np.savetxt(cache_file_bt2, between_snp_vec2)
 
     within_example_runs = snp_data_utils._compute_runs_single_chromosome(within_snp_vec2)
-    within_example_runs0 = parallel_utils._compute_runs_single_chromosome(within_snp_vec1)
-    between_example_runs1 = parallel_utils._compute_runs_single_chromosome(between_snp_vec1)
-    between_example_runs2 = parallel_utils._compute_runs_single_chromosome(between_snp_vec2)
+    within_example_runs0 = snp_data_utils._compute_runs_single_chromosome(within_snp_vec1)
+    between_example_runs1 = snp_data_utils._compute_runs_single_chromosome(between_snp_vec1)
+    between_example_runs2 = snp_data_utils._compute_runs_single_chromosome(between_snp_vec2)
 
     within_div = (np.sum(within_snp_vec2) / float(len(within_snp_vec2)))
     between_div1 = (np.sum(between_snp_vec1) / float(len(between_snp_vec1)))

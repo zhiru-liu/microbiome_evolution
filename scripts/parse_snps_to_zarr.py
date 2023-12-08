@@ -81,7 +81,7 @@ def main():
         else:
             print('{} already processed'.format(species_name))
             continue
-        parallel_utils.parse_annotated_snps_to_zarr(snp_file_path, zarr_path, site_counts)
+        snp_data_utils.parse_annotated_snps_to_zarr(snp_file_path, zarr_path, site_counts)
 
 
 if __name__ == "__main__":

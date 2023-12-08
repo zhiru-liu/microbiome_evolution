@@ -10,7 +10,7 @@ import config
 from utils import snp_data_utils, close_pair_utils
 
 species_name = 'Alistipes_putredinis_61533'
-dh = parallel_utils.DataHoarder(species_name, mode="QP", allowed_variants=['4D'])
+dh = snp_data_utils.DataHoarder(species_name, mode="QP", allowed_variants=['4D'])
 chromosomes = dh.chromosomes[dh.general_mask]
 
 # loading close pair analysis data
@@ -46,7 +46,7 @@ for i, pair in enumerate([(297, 331), (282, 387), (269, 313)]):
     sub_df = full_df[full_df['pairs'] == pair]
 
     good_chromo = chromosomes[covered_mask]
-    contig_lengths = parallel_utils.get_contig_lengths(good_chromo)
+    contig_lengths = snp_data_utils.get_contig_lengths(good_chromo)
 
     xs = np.arange(len(snp_vec))
     ys = np.zeros(xs.shape)
@@ -62,7 +62,7 @@ for i, pair in enumerate([(297, 331), (282, 387), (269, 313)]):
     clonal_snp_locs = np.nonzero(snp_vec & (~ys.astype(bool)))
     ax.plot(clonal_snp_locs, np.zeros(len(clonal_snp_locs)), '|', color='r')
 
-    for loc in parallel_utils.get_contig_boundary(good_chromo):
+    for loc in snp_data_utils.get_contig_boundary(good_chromo):
         ax.axvline(loc, linestyle='--', linewidth=1, color='grey')
 
     ax.set_xlim([0, len(snp_vec)])

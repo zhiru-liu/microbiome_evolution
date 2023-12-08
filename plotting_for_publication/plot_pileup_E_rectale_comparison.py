@@ -11,7 +11,7 @@ species_name = 'Eubacterium_rectale_56927'
 
 # loading the gene name array
 data_dir = os.path.join(config.data_directory, 'zarr_snps', species_name, 'site_info.txt')
-res = parallel_utils.parse_snp_info(data_dir)
+res = snp_data_utils.parse_snp_info(data_dir)
 chromosomes = res[0]
 gene_names = res[2]
 variants = res[3]

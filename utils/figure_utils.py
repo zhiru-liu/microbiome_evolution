@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import os
 import numpy as np
 def get_pretty_species_name(species_name, include_number=False, manual=False):
     
@@ -46,3 +47,7 @@ def plot_ecdf(ax, x, complementary=True, return_xy=False):
         return X, Y
     else:
         return line
+
+def save_figure_data(data, data_names, path, filename):
+    for i in range(len(data)):
+        np.savetxt(os.path.join(path, filename + '_' + data_names[i] + '.csv'), data[i], delimiter=',')

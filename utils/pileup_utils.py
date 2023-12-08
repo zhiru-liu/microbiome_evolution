@@ -233,7 +233,7 @@ def compute_passed_starts_ends(snp_vec, chromosomes, locations, thresholds):
     for chromo in pd.unique(chromosomes):
         # loop over contigs
         subvec = snp_vec[chromosomes==chromo]
-        runs, starts, ends = parallel_utils._compute_runs_single_chromosome(subvec, return_locs=True)
+        runs, starts, ends = snp_data_utils._compute_runs_single_chromosome(subvec, return_locs=True)
 
         all_dat = []
         for i in range(len(thresholds)):

@@ -6,7 +6,7 @@ def parse_isolate_metadata_map():
     isolate_metadata_map = {}
     
     # load simulations
-    file = open(parse_midas_data.scripts_directory + "isolates_genome_list.txt", "r")
+    file = open(parse_midas_data.metadata_directory + "isolates_genome_list.txt", "r")
     file.readline() # 
     for line in file:
         items = line.strip().split("\t")
@@ -19,7 +19,7 @@ def parse_isolate_metadata_map():
         
         isolate_metadata_map[sample_id] = (subject_id, sample_id, accession_id, country, continent, order)
         
-    file = open(parse_midas_data.scripts_directory + "mixture_labels.txt", "r")
+    file = open(parse_midas_data.metadata_directory + "mixture_labels.txt", "r")
     file.readline() # header
     for line in file:
         items = line.strip().split("\t")
@@ -45,8 +45,8 @@ def parse_sample_metadata_map():
     sample_metadata_map = {}
     
     # First load HMP metadata
-    #file = open(config.scripts_directory+"HMP_ids_order.txt","r")
-    file = open(config.scripts_directory+"HMP1-2_ids_order.txt","r")
+    #file = open(config.metadata_directory+"HMP_ids_order.txt","r")
+    file = open(config.metadata_directory+"HMP1-2_ids_order.txt","r")
     file.readline() # header
     for line in file:
         items = line.split("\t")
@@ -63,7 +63,7 @@ def parse_sample_metadata_map():
 
     
     # Then load Qin data
-    file = open(config.scripts_directory+"qin_ids.txt","r")
+    file = open(config.metadata_directory+"qin_ids.txt","r")
     file.readline() # header
     for line in file:
         items = line.split("\t")
@@ -78,7 +78,7 @@ def parse_sample_metadata_map():
     file.close()
     
     # Then load kuleshov data
-    file = open(config.scripts_directory+"kuleshov_ids.txt","r")
+    file = open(config.metadata_directory+"kuleshov_ids.txt","r")
     file.readline() # header
     for line in file:
         items = line.split("\t")
@@ -93,7 +93,7 @@ def parse_sample_metadata_map():
     file.close()
     
     # Then load Twin data
-    file = open(config.scripts_directory+"twin_ids_order.txt","r")
+    file = open(config.metadata_directory+"twin_ids_order.txt","r")
     file.readline() # header
     for line in file:
         items = line.split("\t")
@@ -109,7 +109,7 @@ def parse_sample_metadata_map():
     file.close()
     
     # now load Korpela data
-    file = open(config.scripts_directory+"korpela_twin_ids.txt","r")
+    file = open(config.metadata_directory+"korpela_twin_ids.txt","r")
     file.readline() # header
     for line in file:
         items = line.split("\t")

@@ -16,9 +16,9 @@ def load_single_subject_sample_idxs(species_name):
     :param species_name:
     :return: a list of indices
     """
-    sample_mask, sample_names = parallel_utils.get_QP_sample_mask(species_name)
+    sample_mask, sample_names = snp_data_utils.get_QP_sample_mask(species_name)
     good_samples = sample_names[sample_mask]
-    return parallel_utils.get_single_subject_idxs_from_list(good_samples)
+    return snp_data_utils.get_single_subject_idxs_from_list(good_samples)
 
 
 def load_clonal_frac_mat(species_name, desired_samples=None, between_hosts=True):
@@ -43,7 +43,7 @@ def load_clonal_frac_mat(species_name, desired_samples=None, between_hosts=True)
     if desired_samples is None:
         return clonal_frac_mat
     else:
-        QP_samples = parallel_utils.get_QP_samples(species_name)
+        QP_samples = snp_data_utils.get_QP_samples(species_name)
         name_to_idx = {x:i for i, x in enumerate(QP_samples)}
         desired_idxs = np.array([name_to_idx[x] for x in desired_samples])
         if between_hosts:

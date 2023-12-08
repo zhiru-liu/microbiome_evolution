@@ -10,7 +10,7 @@ import config
 # parsing HMP metadata
 sample_metadata_map = {}
 # First load HMP metadata
-file = open(config.scripts_directory+"HMP1-2_ids_order.txt","r")
+file = open(config.metadata_directory+"HMP1-2_ids_order.txt","r")
 file.readline() # header
 for line in file:
     items = line.split("\t")
@@ -45,7 +45,7 @@ def process_sample(dh, sample):
     idx = np.nonzero(dh.good_samples == sample)[0][0]
     snp_vec, coverage_arr = dh.get_snp_vector(idx)
     locations = np.where(coverage_arr)[0]
-    runs, starts, ends = parallel_utils.compute_runs_all_chromosomes(snp_vec, good_chromo[coverage_arr],
+    runs, starts, ends = snp_data_utils.compute_runs_all_chromosomes(snp_vec, good_chromo[coverage_arr],
                                                                      locations=locations, return_locs=True)
     order = np.argsort(runs)
     sorted_runs = runs[order]
@@ -81,10 +81,10 @@ def process_sample_pair(dh, samples):
     plt.close()
 
 
-sample_df = parallel_utils.compute_good_sample_stats()
+sample_df = snp_data_utils.compute_good_sample_stats()
 sample_df = sample_df[sample_df['num_good_within_samples'] > 5]
 for species in sample_df['species_name']:
-    dh = parallel_utils.DataHoarder(species, mode="within")
+    dh = snp_data_utils.DataHoarder(species, mode="within")
     good_subs = find_good_subjects(dh.good_samples)
     if len(good_subs)==0:
         print("%s has no two time point subjects" % species)

@@ -270,4 +270,4 @@ if __name__ == "__main__":
     fig.delaxes(var_exp_ax2)
 
     plot_var_exaplained([var_exp_ax1, var_exp_ax2])
-    fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_variance_explained_partial_recomb.pdf'), bbox_inches='tight')
+    fig.savefig(os.path.join(config.figure_directory, 'supp', 'S6_supp_variance_explained_partial_recomb.pdf'), bbox_inches='tight')

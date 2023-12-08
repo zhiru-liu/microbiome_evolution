@@ -184,4 +184,4 @@ cf_ax.text(-0.08, 1.12, "C", transform=cf_ax.transAxes,
 true_len_ax.text(-0.08, 1.12, "D", transform=true_len_ax.transAxes,
         fontsize=7, fontweight='bold', va='top', ha='left')
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', "supp_HMM_validation.pdf"), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', "S9_supp_HMM_validation.pdf"), bbox_inches='tight')

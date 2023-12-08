@@ -33,7 +33,7 @@ haploid_color = '#08519c'
 light_haploid_color = '#6699CC'
 good_witin_color = '#ef8a62'
 
-sample_df = parallel_utils.compute_good_sample_stats()
+sample_df = snp_data_utils.compute_good_sample_stats()
 sample_df = sample_df.sort_values('num_high_coverage_samples', ascending=False)
 num_qp_samples = sample_df['num_qp_samples']
 num_samples = sample_df['num_high_coverage_samples']
@@ -115,4 +115,4 @@ ex_axes[0][0].set_ylabel('Quasi-\nphasable', labelpad=7)
 ex_axes[1][0].set_ylabel('Simple\nco-colonization', labelpad=7)
 ex_axes[2][0].set_ylabel('Complex\nco-colonization', labelpad=7)
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_sample_stats.pdf'))
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S1_supp_sample_stats.pdf'))

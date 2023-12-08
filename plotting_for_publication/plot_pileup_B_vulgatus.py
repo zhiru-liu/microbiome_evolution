@@ -13,14 +13,14 @@ plot_within_host = False
 
 # loading the gene name array
 data_dir = os.path.join(config.data_directory, 'zarr_snps', species_name, 'site_info.txt')
-res = parallel_utils.parse_snp_info(data_dir)
+res = snp_data_utils.parse_snp_info(data_dir)
 chromosomes = res[0]
 gene_names = res[2]
 variants = res[3]
 pvalues = res[4]
 
 core_genes = core_gene_utils.get_sorted_core_genes(species_name)
-general_mask = parallel_utils._get_general_site_mask(
+general_mask = snp_data_utils._get_general_site_mask(
     gene_names, variants, pvalues, core_genes, allowed_variants=['4D'])
 
 good_genes = gene_names[general_mask]
@@ -39,7 +39,7 @@ def highlight_sweep_region(ax, genes):
     sweep_genes = [x.split('|')[-1] for x in sweep_df['PATRIC ID']]
     mask = np.isin(genes, sweep_genes)
     # using the run finding function to find the stretch
-    runs, starts, ends= parallel_utils._compute_runs_single_chromosome(~mask, return_locs=True)
+    runs, starts, ends= snp_data_utils._compute_runs_single_chromosome(~mask, return_locs=True)
     for start, end in zip(starts, ends):
         ax.axvspan(start, end, color='red', alpha=0.2, linewidth=1, zorder=3)
 
@@ -159,7 +159,7 @@ if plot_polymorphism:
         pi = pis[:, 0]
         clade_pi = pis[:, 1]
     else:
-        dh = parallel_utils.DataHoarder(species_name, mode='QP', allowed_variants=['4D'])
+        dh = snp_data_utils.DataHoarder(species_name, mode='QP', allowed_variants=['4D'])
         pi, clade_pi = typical_pair_utils.get_sitewise_polymorphism(dh, clade_cutoff=0.03)
         np.savetxt(os.path.join(config.plotting_intermediate_directory, 'B_vulgatus_polymorphism.csv'),
                    np.vstack([pi, clade_pi]).transpose())

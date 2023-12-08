@@ -37,7 +37,7 @@ def plot_example_genomes(axes):
             snp_vec = np.loadtxt(cache_file).astype(bool)
         else:
             if dh is None:
-                dh = parallel_utils.DataHoarder(species_name, mode='QP', allowed_variants=['4D'])
+                dh = snp_data_utils.DataHoarder(species_name, mode='QP', allowed_variants=['4D'])
             snp_vec, _ = dh.get_snp_vector(pair)
             np.savetxt(cache_file, snp_vec)
         window_size = 300
@@ -106,6 +106,7 @@ def plot_cf_pd_joint(axes):
     scatter_ax.set_yticklabels(['0', '0.5', '1', '1.5', '2', '2.5'])
     scatter_ax.legend()
     scatter_ax.set_title(figure_utils.get_pretty_species_name(species_name))
+    return x, y
 
 
 def plot_neutral_joint(scatter_ax, marg_ax):
@@ -129,6 +130,8 @@ def plot_neutral_joint(scatter_ax, marg_ax):
     ys = -np.log(xs) / config.first_pass_block_size
     scatter_ax.plot(xs, ys, '--', color='grey', zorder=1, label='random mut\'s', linewidth=0.8)
     F, alpha = partial_recombination_curve(x, y, theta=None, return_alpha=True)
+    x_save = x
+    y_save = y
     xs = np.linspace(0., 1, 100)
     ys = F(xs)
     scatter_ax.plot(xs, ys, '--', color='tab:red', zorder=2, label='partial recomb.', linewidth=0.8)
@@ -146,6 +149,7 @@ def plot_neutral_joint(scatter_ax, marg_ax):
     scatter_ax.set_title("Neutral simulation")
     scatter_ax.set_ylabel('Pairwise divergence (%)')
     scatter_ax.set_xlabel('Fraction of identical blocks')
+    return x_save, y_save
 
 
 #
@@ -185,21 +189,21 @@ example_ax3 = fig.add_subplot(example_grid[2])
 var_exp_ax1 = fig.add_subplot(bottom_grid[0])
 var_exp_ax2 = fig.add_subplot(bottom_grid[1])
 
-plot_cf_pd_joint([scatter_ax, marg_ax])
+# panel c
+x, y = plot_cf_pd_joint([scatter_ax, marg_ax])
+figure_utils.save_figure_data([x, y], ['x', 'y'], config.figure_data_directory, 'fig1/1c')
+
+# panel d
 plot_example_genomes([example_ax1, example_ax2, example_ax3])
-# bottom panel
+
+# panel e
+x, y = plot_neutral_joint(neutral_scatter_ax, neutral_marg_ax)
+figure_utils.save_figure_data([x, y], ['x', 'y'], config.figure_data_directory, 'fig1/1e')
+
+# panel f
 # plot_var_exaplained([var_exp_ax1, var_exp_ax2], plot_only_y=True)
 plot_effective_rbym_from_alpha(var_exp_ax1)
 
-plot_neutral_joint(neutral_scatter_ax, neutral_marg_ax)
 fig.delaxes(var_exp_ax2)
-
-
-# scatter_ax.text(-0.1, 1.12, "B", transform=scatter_ax.transAxes,
-#          fontsize=9, fontweight='bold', va='top', ha='left')
-# example_ax1.text(-0.1, 1.45, "C", transform=example_ax1.transAxes,
-#          fontsize=9, fontweight='bold', va='top', ha='left')
-# var_exp_ax1.text(-0.1, 1.12, "D", transform=var_exp_ax1.transAxes,
-#          fontsize=9, fontweight='bold', va='top', ha='left')
 
 fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig1.pdf'), bbox_inches='tight', dpi=1200)

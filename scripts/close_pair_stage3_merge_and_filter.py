@@ -60,7 +60,7 @@ for filename in os.listdir(ckpt_path):
     third_pass_df['naive clonal divs'] = clonal_divs[:, 0]
     third_pass_df['expected clonal snps'] = third_pass_df['clonal divs'] * third_pass_df['genome lengths']
     third_pass_df['transfer counts'] = transfer_counts
-    core_genome_len = parallel_utils.get_genome_length(species_name)
+    core_genome_len = snp_data_utils.get_genome_length(species_name)
     third_pass_df['normalized transfer counts'] = transfer_counts * 1e6 / core_genome_len # simple normalization by total core genome len
     third_pass_df['total transfer lengths'] = full_lengths
 

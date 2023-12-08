@@ -141,7 +141,7 @@ Bv_ax.set_xticklabels([])
 
 data_dir = os.path.join(config.data_directory, 'zarr_snps', species_name, 'site_info.txt')
 
-res = parallel_utils.parse_snp_info(data_dir)
+res = snp_data_utils.parse_snp_info(data_dir)
 chromosomes = res[0]
 gene_names = res[2]
 variants = res[3]
@@ -162,7 +162,7 @@ if os.path.exists(polymorphism_dir):
     pi = pis[:, 0]
     clade_pi = pis[:, 1]
 else:
-    dh = parallel_utils.DataHoarder(species_name, mode='QP', allowed_variants=['4D'])
+    dh = snp_data_utils.DataHoarder(species_name, mode='QP', allowed_variants=['4D'])
     pi, clade_pi = typical_pair_utils.get_sitewise_polymorphism(dh, clade_cutoff=0.03)
     np.savetxt(os.path.join(config.plotting_intermediate_directory, 'B_vulgatus_polymorphism.csv'),
                np.vstack([pi, clade_pi]).transpose())

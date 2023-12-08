@@ -17,7 +17,7 @@ variants = res[3]
 pvalues = res[4]
 
 core_genes = core_gene_utils.get_sorted_core_genes(species_name)
-general_mask = parallel_utils._get_general_site_mask(
+general_mask = snp_data_utils._get_general_site_mask(
     gene_names, variants, pvalues, core_genes, allowed_variants=['4D'])
 
 good_genes = gene_names[general_mask]

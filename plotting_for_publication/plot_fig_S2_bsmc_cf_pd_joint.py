@@ -20,6 +20,7 @@ outer_grid = gridspec.GridSpec(3, 3, width_ratios=[1,1,1],wspace=0.35,figure=fig
 plt.subplots_adjust(wspace=0.25, hspace=0.35)
 
 data_dir = os.path.join(config.analysis_directory, 'fastsimbac_data', 'for_pileup')
+# using experiment that matches B.vulgatus parameters
 exp_df = pd.read_csv(os.path.join(data_dir, 'b_vulgatus', 'experiments.txt'), sep=' ')
 exp_df = exp_df.set_index(['rbymu', 'lambda', 'rep'])
 
@@ -67,4 +68,4 @@ for i in range(3):
         # scatter_ax.legend()
 
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_joint_bsmc.pdf'), bbox_inches='tight', dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S2_supp_joint_bsmc.pdf'), bbox_inches='tight', dpi=600)

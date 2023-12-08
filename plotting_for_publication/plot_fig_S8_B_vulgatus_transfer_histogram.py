@@ -10,7 +10,9 @@ from utils.close_pair_utils import sample_blocks
 species_name = 'Bacteroides_vulgatus_57955'
 block_size = 1000
 num_samples = 50000
-dh = parallel_utils.DataHoarder(species_name, mode="QP")
+dh = snp_data_utils.DataHoarder(species_name, mode="QP")
+
+# this step is slow
 local_divs, genome_divs = sample_blocks(dh, num_samples=num_samples, block_size=block_size)
 
 between_mean = np.mean(local_divs[genome_divs > 0.03])
@@ -30,4 +32,4 @@ ax[1].set_xlim(ax[0].get_xlim())
 ax[0].legend()
 ax[1].legend()
 ax[1].set_xlabel('simulated transfer block divergence')
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_B_vulgatus_empirical_histogram.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S8_supp_B_vulgatus_empirical_histogram.pdf'), bbox_inches='tight')

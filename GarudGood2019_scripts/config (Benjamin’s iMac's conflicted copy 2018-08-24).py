@@ -10,7 +10,7 @@ from math import log10
 data_directory = os.path.expanduser("~/ben_nandita_hmp_data_071518/")
 #data_directory = os.path.expanduser("~/ben_nandita_hmp_data/")
 analysis_directory = os.path.expanduser("~/ben_nandita_hmp_analysis/")
-scripts_directory = os.path.expanduser("~/ben_nandita_hmp_scripts/")
+metadata_directory = os.path.expanduser("~/ben_nandita_hmp_scripts/")
 patric_directory = os.path.expanduser("~/patric_db/")
 midas_directory = os.path.expanduser("~/midas_db/")
 

@@ -360,7 +360,7 @@ def calculate_phylogenetic_inconsistency_from_sfs(ktotals, ntotals, clade_ks, cl
     pfs = (pfs+pfs[::-1])/2
     
 def load_manual_clade_divergence_threshold(species_name):
-    file = open(parse_midas_data.scripts_directory + "manual_clade_thresholds.txt", "r")
+    file = open(parse_midas_data.metadata_directory + "manual_clade_thresholds.txt", "r")
     file.readline()
     divergence_threshold = 1e-02
     for line in file:
@@ -374,7 +374,7 @@ def load_manual_clade_divergence_threshold(species_name):
     return divergence_threshold
     
 def load_manual_clades(species_name):
-    file = open(parse_midas_data.scripts_directory + "manual_clade_definitions.txt", "r")
+    file = open(parse_midas_data.metadata_directory + "manual_clade_definitions.txt", "r")
     
     line = file.readline().strip()
     

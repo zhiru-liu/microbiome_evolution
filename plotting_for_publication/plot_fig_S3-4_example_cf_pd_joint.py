@@ -70,7 +70,7 @@ for i in range(3):
         scatter_ax.legend()
         scatter_ax.set_title(figure_utils.get_pretty_species_name(species_name))
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_joint_examples.pdf'), bbox_inches='tight', dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S3_supp_joint_examples.pdf'), bbox_inches='tight', dpi=600)
 
 # now plot all other species
 fig = plt.figure(figsize=(18, 12.))
@@ -129,4 +129,4 @@ for i in range(6):
         scatter_ax.set_title(figure_utils.get_pretty_species_name(species_name))
         count += 1
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_all_joint_plots.pdf'), bbox_inches='tight', dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S4_supp_all_joint_plots.pdf'), bbox_inches='tight', dpi=600)

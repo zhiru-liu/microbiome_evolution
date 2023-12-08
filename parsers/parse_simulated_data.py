@@ -6,7 +6,7 @@ def parse_sample_metadata_map():
     isolate_metadata_map = {}
     
     # load simulations
-    file = open(parse_midas_data.scripts_directory + "isolates_genome_list.txt", "r")
+    file = open(parse_midas_data.metadata_directory + "isolates_genome_list.txt", "r")
     file.readline() # 
     for line in file:
         items = line.strip().split("\t")
@@ -19,7 +19,7 @@ def parse_sample_metadata_map():
         
         isolate_metadata_map[sample_id] = (subject_id, sample_id, accession_id, country, continent, order)
         
-    file = open(parse_midas_data.scripts_directory + "mixture_labels.txt", "r")
+    file = open(parse_midas_data.metadata_directory + "mixture_labels.txt", "r")
     file.readline() # header
     for line in file:
         items = line.strip().split("\t")

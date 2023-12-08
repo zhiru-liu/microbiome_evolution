@@ -15,9 +15,9 @@ from utils import snp_data_utils, core_gene_utils, close_pair_utils
 mpl_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 # loading necessary data
 species_name = "Bacteroides_vulgatus_57955"
-# dh = parallel_utils.DataHoarder(species_name, mode="within")
+# dh = snp_data_utils.DataHoarder(species_name, mode="within")
 
-general_mask = parallel_utils.get_general_site_mask(species_name)
+general_mask = snp_data_utils.get_general_site_mask(species_name)
 snp_info = snp_data_utils.get_snp_info(species_name)
 core_genes = core_gene_utils.get_sorted_core_genes(species_name)
 base_dir = os.path.join(config.data_directory, 'zarr_snps', species_name)
@@ -43,8 +43,8 @@ def filter_raw_data(sample_idx):
 
 
 def plot_local_polymorphism(axes, sample_pair):
-    idx1 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
-    idx2 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[1])
+    idx1 = snp_data_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
+    idx2 = snp_data_utils.get_raw_data_idx_for_sample(species_name, sample_pair[1])
 
     a_before, d_before = filter_raw_data(idx1)
     freq_before = np.nan_to_num(a_before / d_before.astype(float))
@@ -68,7 +68,7 @@ def plot_local_polymorphism(axes, sample_pair):
 
 
 def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, plot_locations=True):
-    idx1 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
+    idx1 = snp_data_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
     idx2 = snp_data_utils.get_raw_data_idx_for_sample(species_name, sample_pair[1])
 
     # core site idx to all site idx
@@ -213,7 +213,7 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
     histo_axes[1].set_ylim([0, axes[1].get_ylim()[1]])
     histo_axes[1].set_yticks([0, 0.5, 1])
 
-    sample1_freq = 1 - 0.7109375  # hard coded; freq from parallel_utils.get_single_peak_sample_mask
+    sample1_freq = 1 - 0.7109375  # hard coded; freq from snp_data_utils.get_single_peak_sample_mask
     sample2_freq = 0.67283951
     dic = {'linewidth': 1, 'color': 'grey', 'linestyle': '--', 'alpha': 1}
     #     axes[0].axhline(sample1_freq, label='Strain frequency', **dic)

@@ -17,7 +17,7 @@ import config
 
 data_directory = config.data_directory
 analysis_directory = config.analysis_directory
-scripts_directory = config.scripts_directory
+metadata_directory = config.metadata_directory
 patric_directory = config.patric_directory
 midas_directory = config.midas_directory
 

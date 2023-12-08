@@ -22,7 +22,7 @@ def plot_for_one_species(ax, species_name, num_to_plot, normalization=True, mode
         print('No data found for {}'.format(species_name))
         return
 
-    dh = parallel_utils.DataHoarder(species_name, mode)
+    dh = snp_data_utils.DataHoarder(species_name, mode)
     # filtering the arrays
     good_chromo = dh.chromosomes[dh.general_mask] # will be used in contig-wise run computation
 
@@ -71,7 +71,7 @@ def plot_for_one_species(ax, species_name, num_to_plot, normalization=True, mode
             div = snp_count / float(len(snp_vec))
         else:
             div = 1
-        runs = parallel_utils.compute_runs_all_chromosomes(snp_vec, good_chromo[snp_mask])
+        runs = snp_data_utils.compute_runs_all_chromosomes(snp_vec, good_chromo[snp_mask])
         if len(runs) == 0:
             print("Divergence is %f, for a total of %d snps" % (div, snp_count))
             continue

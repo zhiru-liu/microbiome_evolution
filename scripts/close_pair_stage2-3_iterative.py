@@ -141,7 +141,7 @@ def decode_one_pass(dh, init_transfer_len, prev_second_pass_path, next_second_pa
 
 def process_one_species(species_name, init_mean, separate_clades):
     logging.info("Processing {}".format(species_name))
-    dh = parallel_utils.DataHoarder(species_name, mode='QP')
+    dh = snp_data_utils.DataHoarder(species_name, mode='QP')
     final_path = os.path.join(config.analysis_directory, 'closely_related', 'iter_second_third_passes', 'converged_pass')
     for i in range(3):
         prev_path = os.path.join(config.analysis_directory, 'closely_related', 'iter_second_third_passes', 'iter{}'.format(i), 'second_pass')

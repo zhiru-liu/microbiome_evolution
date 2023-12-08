@@ -9,15 +9,15 @@ import pickle
 import dask.array as da
 sys.path.append("..")
 import config
-from utils import snp_data_utils, core_gene_utils, close_pair_utils
+from utils import snp_data_utils, core_gene_utils, close_pair_utils, figure_utils
 
 
 mpl_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 # loading necessary data
 species_name = "Bacteroides_vulgatus_57955"
-# dh = parallel_utils.DataHoarder(species_name, mode="within")
+# dh = snp_data_utils.DataHoarder(species_name, mode="within")
 
-general_mask = parallel_utils.get_general_site_mask(species_name)
+general_mask = snp_data_utils.get_general_site_mask(species_name)
 snp_info = snp_data_utils.get_snp_info(species_name)
 core_genes = core_gene_utils.get_sorted_core_genes(species_name)
 base_dir = os.path.join(config.data_directory, 'zarr_snps', species_name)
@@ -44,7 +44,7 @@ def filter_raw_data(sample_idx):
 
 def plot_local_polymorphism(axes, sample_pair):
     idx1 = snp_data_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
-    idx2 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[1])
+    idx2 = snp_data_utils.get_raw_data_idx_for_sample(species_name, sample_pair[1])
 
     a_before, d_before = filter_raw_data(idx1)
     freq_before = np.nan_to_num(a_before / d_before.astype(float))
@@ -152,6 +152,12 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
                  label='SNV frequency', rasterized=True, color=mpl_colors[0])
     axes[1].plot(xs[freq_after > 0.1], freq_after[freq_after > 0.1], '.', markersize=2, color=mpl_colors[0])
 
+    x1 = xs
+    y1 = freq_before
+    x2 = xs
+    y2 = freq_after
+    figure_utils.save_figure_data([x1, y1, x2, y2], ['loc0', 'freq0', 'loc1', 'freq1'], config.figure_data_directory, 'fig5/5c')
+
     non_core = np.invert(np.isin(snp_info[2][start:end][good_sites], core_genes)).astype(int)
     non_core_starts = np.nonzero((non_core[1:] - non_core[:-1]) > 0)[0]
     non_core_starts = xs[non_core_starts]
@@ -213,7 +219,7 @@ def plot_allele_freq_zoomin(axes, histo_axes, copy_axes, bar_axes, sample_pair, 
     histo_axes[1].set_ylim([0, axes[1].get_ylim()[1]])
     histo_axes[1].set_yticks([0, 0.5, 1])
 
-    sample1_freq = 1 - 0.7109375  # hard coded; freq from parallel_utils.get_single_peak_sample_mask
+    sample1_freq = 1 - 0.7109375  # hard coded; freq from snp_data_utils.get_single_peak_sample_mask
     sample2_freq = 0.67283951
     dic = {'linewidth': 1, 'color': 'grey', 'linestyle': '--', 'alpha': 1}
     #     axes[0].axhline(sample1_freq, label='Strain frequency', **dic)
@@ -290,13 +296,13 @@ def plot_max_run_histo(ax, species_name):
 
 
 def plot_example_snps(axes):
-    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_within_snp1.csv")
+    cache_file = os.path.join(config.plotting_intermediate_directory, "fig5_within_snp1.csv")
     within_snp_vec1 = np.loadtxt(cache_file).astype(bool)
-    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_within_snp2.csv")
+    cache_file = os.path.join(config.plotting_intermediate_directory, "fig5_within_snp2.csv")
     within_snp_vec2 = np.loadtxt(cache_file).astype(bool)
-    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_between_snp1.csv")
+    cache_file = os.path.join(config.plotting_intermediate_directory, "fig5_between_snp1.csv")
     between_snp_vec1 = np.loadtxt(cache_file).astype(bool)
-    cache_file = os.path.join(config.plotting_intermediate_directory, "fig4_between_snp2.csv")
+    cache_file = os.path.join(config.plotting_intermediate_directory, "fig5_between_snp2.csv")
     between_snp_vec2 = np.loadtxt(cache_file).astype(bool)
 
     blk_size = 1000

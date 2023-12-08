@@ -7,7 +7,7 @@ sys.path.append("..")
 from utils import snp_data_utils, typical_pair_utils
 import config
 
-sample_df = parallel_utils.compute_good_sample_stats()
+sample_df = snp_data_utils.compute_good_sample_stats()
 
 close_pair_frac_20 = []
 close_pair_frac_50 = []

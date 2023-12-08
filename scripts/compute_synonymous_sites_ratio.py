@@ -18,7 +18,7 @@ for species_name in os.listdir(os.path.join(config.data_directory, base_dir)):
     syn_site_count = np.sum(mask)
 
     allowed_variants = ['1D', '2D', '3D', '4D']
-    mask = parallel_utils._get_general_site_mask(snp_info[2], snp_info[3], snp_info[4], core_genes, allowed_variants=allowed_variants)
+    mask = snp_data_utils._get_general_site_mask(snp_info[2], snp_info[3], snp_info[4], core_genes, allowed_variants=allowed_variants)
     all_site_count = np.sum(mask)
     all_species.append(species_name)
     all_syn_counts.append(syn_site_count)

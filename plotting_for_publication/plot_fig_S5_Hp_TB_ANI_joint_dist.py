@@ -110,4 +110,4 @@ axes[0, 1].text(-0.1, 1.12, "B", transform=axes[0, 1].transAxes, fontsize=9, fon
 axes[1, 0].text(-0.1, 1.12, "C", transform=axes[1, 0].transAxes, fontsize=9, fontweight='bold', va='top', ha='left')
 axes[1, 1].text(-0.1, 1.12, "D", transform=axes[1, 1].transAxes, fontsize=9, fontweight='bold', va='top', ha='left')
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_Hp_TB_joint.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S5_supp_Hp_TB_joint.pdf'), bbox_inches='tight')

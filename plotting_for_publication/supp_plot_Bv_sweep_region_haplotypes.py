@@ -33,8 +33,8 @@ def load_highlight_samples(start, end):
 
 def prepare_and_plot_haplotypes(highlight_pairs, allowed_variants=['1D', '2D', '3D', '4D']):
     species_name = 'Bacteroides_vulgatus_57955'
-    within_dh = parallel_utils.DataHoarder(species_name, mode='within', allowed_variants=allowed_variants)
-    between_dh = parallel_utils.DataHoarder(species_name, allowed_variants=allowed_variants)
+    within_dh = snp_data_utils.DataHoarder(species_name, mode='within', allowed_variants=allowed_variants)
+    between_dh = snp_data_utils.DataHoarder(species_name, allowed_variants=allowed_variants)
 
     genes_to_plot = ['435590.9.peg.1739', '435590.9.peg.1740', '435590.9.peg.1741']  # only the efflux pumps
     region_mask = np.isin(within_dh.gene_names[within_dh.general_mask], genes_to_plot)

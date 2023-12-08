@@ -1,7 +1,7 @@
 from parsers import parse_midas_data
 import sys
 
-file = open(parse_midas_data.scripts_directory + "manual_clade_definitions.txt", "r")
+file = open(parse_midas_data.metadata_directory + "manual_clade_definitions.txt", "r")
     
 line = file.readline().strip()
     

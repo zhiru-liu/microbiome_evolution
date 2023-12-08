@@ -15,8 +15,8 @@ from utils import snp_data_utils, close_pair_utils
 run_data_dir = os.path.join(config.analysis_directory, 'typical_pairs', 'runs_data')
 
 species_name = 'Bacteroides_vulgatus_57955'
-dh_wt = parallel_utils.DataHoarder(species_name, mode='within')
-dh_bt = parallel_utils.DataHoarder(species_name, mode='QP')
+dh_wt = snp_data_utils.DataHoarder(species_name, mode='within')
+dh_bt = snp_data_utils.DataHoarder(species_name, mode='QP')
 
 save_path = os.path.join(run_data_dir, 'within_hosts', '{}_same_clade.pickle'.format(species_name))
 within_runs_data = pickle.load(open(save_path, 'rb'))

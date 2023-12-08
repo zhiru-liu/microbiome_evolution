@@ -9,7 +9,7 @@ import matplotlib.gridspec as gridspec
 import pandas as pd
 sys.path.append("..")
 import config
-from utils import close_pair_utils, snp_data_utils
+from utils import close_pair_utils, snp_data_utils, figure_utils
 
 # plotting functions
 pi_color = 'tab:grey'
@@ -144,6 +144,7 @@ def plot_scatter(ax, x, y1, y2, mask, if_trend_line=True):
     ax.set_xlabel("Clonal divergence ($\\times 10^{-4}$)")
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
+    return x[mask], y1[mask], y2[mask]
 
 
 def plot_distributions(fig, ax, within_lens, between_lens, inset_location=[0.7, 0.18, 0.15, 0.15]):
@@ -177,6 +178,7 @@ def plot_distributions(fig, ax, within_lens, between_lens, inset_location=[0.7, 
     ax.yaxis.set_label_coords(-.1, .5)
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
+    return within_lens, between_lens
 
 
 
@@ -190,7 +192,7 @@ if __name__ == "__main__":
     mpl.rcParams['legend.fontsize'] = 'small'
 
     species_name = 'Bacteroides_vulgatus_57955'
-    # dh = parallel_utils.DataHoarder(species_name, mode="QP")
+    # dh = snp_data_utils.DataHoarder(species_name, mode="QP")
     dh = None
 
     save_path = config.B_vulgatus_data_path
@@ -274,12 +276,14 @@ if __name__ == "__main__":
     # s1 = within_ct_ax.scatter(T_approxs, within_counts, s=1, c=plt_colors[0])
     # s2 = between_ct_ax.scatter(T_approxs, between_counts, s=1, c=plt_colors[1])
 
-    plot_scatter(ct_ax, clonal_divs, y1=within_counts, y2=between_counts, mask=cf_mask, if_trend_line=True)
+    x,y1,y2 = plot_scatter(ct_ax, clonal_divs, y1=within_counts, y2=between_counts, mask=cf_mask, if_trend_line=True)
+    figure_utils.save_figure_data([x, y1, y2], ['x', 'y1', 'y2'], config.figure_data_directory, 'fig2/2c')
 
     ######################################################################
     # plot transfer length distribution
     ######################################################################
-    plot_distributions(fig, len_dist_ax, within_lens, between_lens)
+    l1, l2 = plot_distributions(fig, len_dist_ax, within_lens, between_lens)
+    figure_utils.save_figure_data([l1, l2], ['within', 'between'], config.figure_data_directory, 'fig2/2d')
     fig.patch.set_alpha(0.0)
 
     ex1_ax.text(-0.165, 1., "B", transform=ex1_ax.transAxes,
@@ -295,4 +299,4 @@ if __name__ == "__main__":
                 fontsize=6, backgroundcolor='white', va='top', ha='right',
                 bbox=dict(fc='w',boxstyle='square,pad=0.15', ec='white'))
 
-    fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig2_dedup.pdf'))
+    fig.savefig(os.path.join(config.figure_directory, 'final_fig', 'fig2.pdf'))

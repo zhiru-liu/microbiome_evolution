@@ -11,7 +11,7 @@ from utils import snp_data_utils, close_pair_utils, hmm
 
 
 def test_species(species_name, transfer_div=None, debug=False):
-    dh = parallel_utils.DataHoarder(
+    dh = snp_data_utils.DataHoarder(
         species_name, mode='QP', allowed_variants=['1D', '2D', '3D', '4D'])
     good_idxs = dh.get_single_subject_idxs()
 

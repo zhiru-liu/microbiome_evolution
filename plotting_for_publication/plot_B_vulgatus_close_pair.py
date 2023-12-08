@@ -157,7 +157,7 @@ if __name__ == "__main__":
     mpl.rcParams['lines.linewidth'] = 0.5
 
     species_name = 'Bacteroides_vulgatus_57955'
-    # dh = parallel_utils.DataHoarder(species_name, mode="QP")
+    # dh = snp_data_utils.DataHoarder(species_name, mode="QP")
     dh = None
 
     save_path = config.B_vulgatus_data_path

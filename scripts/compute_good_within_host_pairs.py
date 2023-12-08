@@ -18,8 +18,8 @@ for species_name in os.listdir(os.path.join(config.data_directory, 'zarr_snps'))
     if species_name.startswith('.'):
         continue
     print("processing %s" % species_name)
-    qp_mask, _ = parallel_utils.get_QP_sample_mask(species_name)
-    good_within_mask, _, _, _ = parallel_utils.get_single_peak_sample_mask(species_name)
+    qp_mask, _ = snp_data_utils.get_QP_sample_mask(species_name)
+    good_within_mask, _, _, _ = snp_data_utils.get_single_peak_sample_mask(species_name)
 
     writer.writerow([species_name, len(qp_mask), np.sum(qp_mask), np.sum(good_within_mask)])
 
