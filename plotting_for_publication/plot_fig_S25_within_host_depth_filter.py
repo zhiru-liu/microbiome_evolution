@@ -43,5 +43,6 @@ axes[2].set_xlabel('Core gene id')
 for i in range(3):
     axes[i].set_xlim([0, median_coverage.shape[0]])
     axes[i].legend(ncol=2, loc='upper right')
+median_coverage.to_csv(os.path.join(config.figure_data_directory, 'figS25', 'depth_data.csv'))
 plt.tight_layout()
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_within_host_depth_filter.pdf'))
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S25_supp_within_host_depth_filter.pdf'))

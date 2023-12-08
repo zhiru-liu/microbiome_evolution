@@ -22,7 +22,7 @@ plt.yscale('log')
 plt.xlabel("Genome location")
 plt.ylabel("$p$")
 plt.legend()
-fig.savefig(os.path.join(config.figure_directory, 'supp_E_rectale_pileup_p_values.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S37_supp_E_rectale_pileup_p_values.pdf'), bbox_inches='tight')
 
 # cache regions that are highly enriched
 bool_vec = averaged_p < 1e-3

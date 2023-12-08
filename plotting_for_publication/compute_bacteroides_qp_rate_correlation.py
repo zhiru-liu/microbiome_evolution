@@ -29,8 +29,7 @@ for species_full_name in bacteroides:
     data_dir = os.path.join(config.analysis_directory, "closely_related")
     raw_data = pd.read_pickle(os.path.join(data_dir, 'third_pass', species_full_name + '.pickle'))
     if 'vulgatus' in species_full_name:
-        x, y1, y2, _ = close_pair_utils.prepare_HMM_results_for_B_vulgatus(save_path=config.B_vulgatus_data_path,
-            cf_cutoff=config.clonal_fraction_cutoff, mode='count', cache_intermediate=False)
+        x, y1, y2, _, _ = close_pair_utils.prepare_HMM_results_for_B_vulgatus(save_path=config.B_vulgatus_data_path, cf_cutoff=config.clonal_fraction_cutoff, mode='count', cache_intermediate=False)
         x_ = x[x > 0]
         y_ = y1[x > 0] + y2[x > 0]
         rates = y_ / x_
@@ -79,4 +78,4 @@ axes.legend(loc='lower left')
 print("Correlation using only the mean is:")
 print(spearmanr(bacteroides_df['QP frac'], bacteroides_df['mean rates']))
 bacteroides_df.to_csv(os.path.join(config.analysis_directory, 'misc', 'bacteroides_QP_rate_statistics.csv'))
-plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_qp_frac_rate_corr.pdf'), bbox_inches='tight')
+plt.savefig(os.path.join(config.figure_directory, 'supp', 'S40_supp_qp_frac_rate_corr.pdf'), bbox_inches='tight')

@@ -9,7 +9,7 @@ from scipy.stats import gaussian_kde
 from utils import close_pair_utils, typical_pair_utils, figure_utils
 
 # process all species in figure 3
-# mostly the same as supp_plot_TmTc_estimation.py, but used identical fraction as cutoffs
+# mostly the same as plot_fig_S18_TmTc_estimation.py, but used identical fraction as cutoffs
 # instead of clonal fraction, so no inference is needed
 species_to_plot = json.load(open(os.path.join(config.plotting_intermediate_directory, 'fig3_species.json'), 'r'))
 plotted_species = []
@@ -67,4 +67,4 @@ xs = np.linspace(0, 100, 100)
 ax.plot(xs, xs, c='k', linestyle='--')
 ax.set_xlabel('$T_{mrca} / T_{mosaic}$ (original)')
 ax.set_ylabel('$T_{mrca} / T_{mosaic}$ (fraction of identical blocks cutoff)')
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_TcTm_different_cutoffs.pdf'), bbox_inches='tight', dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S20_supp_TcTm_different_cutoffs.pdf'), bbox_inches='tight', dpi=600)

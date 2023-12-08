@@ -16,10 +16,10 @@ mpl.rcParams['legend.frameon'] = False
 mpl.rcParams['legend.fontsize'] = 'small'
 
 def plot_example_run_length_dist(dist_ax, snp_vec_axes, between_pair1, between_pair2):
-    cache_file_wt1 = os.path.join(config.plotting_intermediate_directory, "fig4_within_snp1.csv")
-    cache_file_wt2 = os.path.join(config.plotting_intermediate_directory, "fig4_within_snp2.csv")
-    cache_file_bt1 = os.path.join(config.plotting_intermediate_directory, "fig4_between_snp1.csv")
-    cache_file_bt2 = os.path.join(config.plotting_intermediate_directory, "fig4_between_snp2.csv")
+    cache_file_wt1 = os.path.join(config.plotting_intermediate_directory, "fig5_within_snp1.csv")
+    cache_file_wt2 = os.path.join(config.plotting_intermediate_directory, "fig5_within_snp2.csv")
+    cache_file_bt1 = os.path.join(config.plotting_intermediate_directory, "fig5_between_snp1.csv")
+    cache_file_bt2 = os.path.join(config.plotting_intermediate_directory, "fig5_between_snp2.csv")
 
     if os.path.exists(cache_file_bt1):
         within_snp_vec1 = np.loadtxt(cache_file_wt1)
@@ -104,5 +104,5 @@ fig2, axes = plt.subplots(3, 1, figsize=(4, 2))
 plot_example_run_length_dist(ax, axes,
                              between_pair1=(152, 224), between_pair2=(42, 69))
 
-fig1.savefig(os.path.join(config.figure_directory, 'supp', "supp_example_run_length_distributions.pdf"), bbox_inches='tight')
+fig1.savefig(os.path.join(config.figure_directory, 'supp', "S26_supp_example_run_length_distributions.pdf"), bbox_inches='tight')
 # fig2.savefig("example_genomes.pdf", bbox_inches='tight')

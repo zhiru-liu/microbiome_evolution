@@ -64,4 +64,4 @@ axes[0].set_xticklabels([])
 axes[0].set_xlabel('')
 axes[1].set_xlabel("Genome locations (synonymous sites on core genome)")
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_pileup_double_bootstrap.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S37_supp_pileup_double_bootstrap.pdf'), bbox_inches='tight')

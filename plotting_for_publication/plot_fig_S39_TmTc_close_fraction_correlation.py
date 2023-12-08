@@ -47,4 +47,4 @@ for i in range(3):
     ax.text(-0.12, 1.02, text, transform=ax.transAxes,
                fontsize=9, fontweight='bold', va='top', ha='left')
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_TmTc_compare.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S39_supp_TmTc_compare.pdf'), bbox_inches='tight')

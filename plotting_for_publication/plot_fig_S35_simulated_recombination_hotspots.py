@@ -36,4 +36,4 @@ for i in range(4):
     pileup_ax.axvspan(region_starts[i+3], region_ends[i+3], alpha=0.2, color='tab:blue')
 pileup_ax.set_xlabel("Genome location")
 pileup_ax.set_ylabel('Sharing probability')
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_BSMC_hotcold.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S35_supp_BSMC_hotcold.pdf'), bbox_inches='tight')

@@ -56,7 +56,7 @@ ax.errorbar(mean_sim_cvs, np.zeros(mean_sim_cvs.shape) + np.random.uniform(-0.1,
 ax.set_yticks([0, 1])
 ax.set_yticklabels(['Neutral', 'Real'])
 ax.set_xlabel('CV')
-fig.savefig(os.path.join(config.figure_directory, 'pileup_fig', 'CV_comparison.pdf'), bbox_inches='tight')
+# fig.savefig(os.path.join(config.figure_directory, 'pileup_fig', 'CV_comparison.pdf'), bbox_inches='tight')
 
 ############# plot effect of varying rho
 # loading precomputed data for scanning a range of rho
@@ -107,4 +107,4 @@ ax = axes[1, 1]
 ax.text(-0.00, 1.12, "D", transform=ax.transAxes,
               fontsize=7, fontweight='bold', va='top', ha='left')
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_BSMC_pileup_CV_varying_rho.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S34_supp_BSMC_pileup_CV_varying_rho.pdf'), bbox_inches='tight')

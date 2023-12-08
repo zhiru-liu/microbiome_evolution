@@ -76,7 +76,10 @@ ks_df['delta div'] = map(lambda x: fit_params[x][2], ks_df.index)
 fig, axbottom = plt.subplots(1, 1, figsize=(5, 1.8), dpi=300)
 
 xs = np.arange(ks_df.shape[0])
-axbottom.bar(xs, np.exp(ks_df['beta1'].astype(float) * ks_df['delta div'].astype(float)), linewidth=0.7, facecolor='grey', edgecolor='k', fill=True, label=None)
+ys = np.exp(ks_df['beta1'].astype(float) * ks_df['delta div'].astype(float))
+ks_df['IQR_reduction'] = ys
+ks_df.to_csv(os.path.join(config.figure_data_directory, 'figS24', 'recombination_barrier_estimates.csv'))
+axbottom.bar(xs, ys, linewidth=0.7, facecolor='grey', edgecolor='k', fill=True, label=None)
 axbottom.axhline(1, color='k', linestyle='--')
 
 axbottom.set_xticks(xs)
@@ -88,4 +91,4 @@ axbottom.set_xticklabels(species_names,fontsize=5, rotation = 90)
 axbottom.set_xlim(xmin=xs[0]-1, xmax=xs[-1]+1)
 axbottom.set_ylabel('IQR recombination rate reduction', fontsize=6)
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_estimate_recombination_barrier.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S24_supp_estimate_recombination_barrier.pdf'), bbox_inches='tight')

@@ -81,8 +81,8 @@ axes[1, 2].legend(bbox_to_anchor=(1.8, 0.5), loc='center')
 fig.delaxes(axes[1, 3])
 
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_max_run_dist.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S28_supp_max_run_dist.pdf'), bbox_inches='tight')
 
 fig2, ax = plt.subplots(figsize=(4, 3))
 plot_long_run_histo(ax, 'Eubacterium_rectale_56927')
-fig2.savefig(os.path.join(config.figure_directory, 'supp', 'supp_long_run_dist.pdf'), bbox_inches='tight')
+fig2.savefig(os.path.join(config.figure_directory, 'supp', 'S27_supp_long_run_dist.pdf'), bbox_inches='tight')

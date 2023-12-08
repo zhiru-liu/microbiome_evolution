@@ -57,4 +57,4 @@ axes.legend()
 axes.set_xlabel('Within-clade divergence')
 axes.set_ylabel('Sharing probability')
 
-plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_pi_pileup_correlation.pdf'), bbox_inches='tight')
+plt.savefig(os.path.join(config.figure_directory, 'supp', 'S30_supp_pi_pileup_correlation.pdf'), bbox_inches='tight')

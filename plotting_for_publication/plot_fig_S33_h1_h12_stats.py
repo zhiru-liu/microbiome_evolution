@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import pickle
 import sys
-import networkx as nx
 import itertools
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -71,4 +70,4 @@ for i in range(3):
     axes[i].text(-0.05, 1.05, ['A', 'B', 'C'][i], transform=axes[i].transAxes,
          fontsize=9, fontweight='bold', va='top', ha='left')
 
-fig.savefig(os.path.join(config.figure_directory, 'supp_h1_h12_scan.pdf'))
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S33_supp_h1_h12_scan.pdf'))

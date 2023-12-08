@@ -1,5 +1,5 @@
 """ Use python3 to use updated scipy package that has ks_2samp"""
-""" old script; use supp_plot_long_run_statistics_within_between_host.py instead"""
+""" old script; use plot_fig_S27-28_long_run_statistics_within_between_host.py instead"""
 import numpy as np
 import os
 import sys

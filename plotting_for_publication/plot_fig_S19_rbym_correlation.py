@@ -50,4 +50,4 @@ plt.text(0, 85, '$R^2={:.2f}$\np-value = {:.3f}'.format(r2, p_val), fontsize=7, 
 
 plt.xlabel(r'$\frac{T_{mrca}}{T_{mosaic}}$, proxy for $r/m$')
 plt.ylabel(r'$\frac{\ell \cdot \theta}{1/\alpha - 1} \approx \frac{r}{m}$')
-plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_rbym_correlation.pdf'), bbox_inches='tight')
+plt.savefig(os.path.join(config.figure_directory, 'supp', 'S19_supp_rbym_correlation.pdf'), bbox_inches='tight')

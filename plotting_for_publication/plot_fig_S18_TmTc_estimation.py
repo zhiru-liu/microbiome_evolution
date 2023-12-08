@@ -49,8 +49,9 @@ all_close_frac = []
 all_total_pairs = []
 
 # set up figure
-fig, ax = plt.subplots(figsize=(6, 2.5))
-ax2 = ax.twinx()
+fig, axes = plt.subplots(nrows=2, figsize=(6, 3.7))
+ax = axes[0]
+ax2 = axes[1]
 # locs = np.arange(len(species_to_plot))
 locs = []
 debug=False
@@ -122,6 +123,8 @@ for i, species_name in enumerate(species_to_plot):
     # now plot the distribution of rates
 
     plot_jitters(ax, plot_idx, rates * Tc, width=0.3)
+    figure_utils.save_figure_data([rates * Tc], ['%s' % species_name], config.figure_data_directory, 'figS18/TcTm_dist')
+    plot_jitters(ax2, plot_idx, rates * Tc, width=0.3)
     locs.append(plot_idx)
     plotted_species.append(species_name)
     plot_idx += 1
@@ -130,13 +133,17 @@ for i, species_name in enumerate(species_to_plot):
         break
 
 _ = ax.set_xticks(locs)
+_ = ax2.set_xticks(locs)
 pretty_names = [figure_utils.get_pretty_species_name(name) for name in plotted_species]
-_ = ax.set_xticklabels(pretty_names, rotation=90, ha='center', fontsize=5)
+_ = ax2.set_xticklabels(pretty_names, rotation=90, ha='center', fontsize=5)
+ax.set_xticklabels([])
 ax.set_ylabel("$T_{mrca} / T_{mosaic}$ (pairwise est)")
-ax2.set_ylim(ax.get_ylim())
-ax2.set_yticks([])
+ax2.set_ylabel("$T_{mrca} / T_{mosaic}$ (pairwise est)")
+ax2.set_yscale('log')
+# ax2.set_ylim(ax.get_ylim())
+# ax2.set_yticks([])
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'S18_supp_TcTm_dist.pdf'), bbox_inches='tight', dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S18_supp_TcTm_dist_log.pdf'), bbox_inches='tight', dpi=600)
 df = pd.DataFrame({'Species':plotted_species})
 df['d(Tc)'] = all_Tc
 df['d(Tm)'] = all_Tm

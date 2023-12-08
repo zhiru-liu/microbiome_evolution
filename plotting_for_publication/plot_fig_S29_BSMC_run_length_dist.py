@@ -22,6 +22,7 @@ exp_df = exp_df.set_index(['rbymu', 'lambda', 'rep'])
 rbymus = [0.1, 0.5, 2]
 lambs = [500, 1000, 2000]
 sim_id = int(exp_df.loc[(rbymus[-1], lambs[-1], 1), 'sim_id'])
+print(sim_id)
 
 filename = os.path.join(data_dir, 'b_vulgatus', '%d.txt' % sim_id)
 
@@ -78,4 +79,4 @@ ax.set_yscale('log')
 ax.set_xscale('log')
 ax.legend()
 
-plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_BSMC_run_length_dist.pdf'), bbox_inches='tight')
+plt.savefig(os.path.join(config.figure_directory, 'supp', 'S29_supp_BSMC_run_length_dist.pdf'), bbox_inches='tight')

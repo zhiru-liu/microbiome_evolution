@@ -110,16 +110,17 @@ if __name__ == "__main__":
     plt.imshow(final_haplotype)
     plt.ylabel('Samples')
     plt.xlabel('SNVs')
-    plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_within_sweep_haplotype.pdf'),
-                bbox_inches='tight')
+    # plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_within_sweep_haplotype.pdf'),
+    #             bbox_inches='tight')
     plt.close()
 
     final_haplotype = prepare_and_plot_haplotypes(highlight_samples)
     final_haplotype = np.swapaxes(final_haplotype, 0, 1)
+    np.save(os.path.join(config.figure_data_directory, 'figS32', 'Bv_within_sweep_haplotype_all_sites'), final_haplotype, delimiter=',')
     plt.figure(dpi=600)
     plt.imshow(final_haplotype)
     plt.ylabel('Samples')
     plt.xlabel('SNVs')
-    plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_within_sweep_haplotype_all_sites.pdf'),
+    plt.savefig(os.path.join(config.figure_directory, 'supp', 'S32_supp_within_sweep_haplotype_all_sites.pdf'),
                 bbox_inches='tight')
     plt.close()

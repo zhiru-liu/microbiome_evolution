@@ -409,4 +409,4 @@ axd.text(0.03, 0.9, "C", transform=axd.transAxes,
          fontsize=9, fontweight='bold', va='top', ha='left')
 
 fig.tight_layout()
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_gc_content.pdf'), dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S21_supp_gc_content.pdf'), dpi=600)
