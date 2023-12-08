@@ -113,6 +113,6 @@ for ax in axes2[:, 0]:
 for ax in axes2[-1, :]:
     ax.set_xlabel("Syn clonal divergence")
 
-fig1.savefig(os.path.join(config.figure_directory, 'supp', 'supp_grid_counts.pdf'), bbox_inches='tight')
-fig2.savefig(os.path.join(config.figure_directory, 'supp', 'supp_grid_lengths.pdf'), bbox_inches='tight')
+fig1.savefig(os.path.join(config.figure_directory, 'supp', 'S16_supp_grid_counts.pdf'), bbox_inches='tight')
+fig2.savefig(os.path.join(config.figure_directory, 'supp', 'S17_supp_grid_lengths.pdf'), bbox_inches='tight')
 json.dump(species_cutoff_dict, open(os.path.join(config.plotting_intermediate_directory, 'clonal_div_cutoff.json'), 'w'))

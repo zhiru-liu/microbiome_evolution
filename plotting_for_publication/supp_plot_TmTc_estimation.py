@@ -136,7 +136,7 @@ ax.set_ylabel("$T_{mrca} / T_{mosaic}$ (pairwise est)")
 ax2.set_ylim(ax.get_ylim())
 ax2.set_yticks([])
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_TcTm_dist.pdf'), bbox_inches='tight', dpi=600)
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S18_supp_TcTm_dist.pdf'), bbox_inches='tight', dpi=600)
 df = pd.DataFrame({'Species':plotted_species})
 df['d(Tc)'] = all_Tc
 df['d(Tm)'] = all_Tm
