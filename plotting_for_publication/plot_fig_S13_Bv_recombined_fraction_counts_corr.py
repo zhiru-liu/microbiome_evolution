@@ -82,4 +82,4 @@ cbar.set_ticklabels(['0', '1', '2', '3'])
 ax.set_xlabel('Transfer counts')
 ax.set_ylabel('Recombined fraction')
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', 'supp_Bv_fraction_count_corr.pdf'), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', 'S13_supp_Bv_fraction_count_corr.pdf'), bbox_inches='tight')

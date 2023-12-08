@@ -41,4 +41,4 @@ ax[1].set_xlabel("Core genome synonymous location")
 ax[0].set_ylabel("SNV density")
 ax[1].set_ylabel("SNV density")
 
-fig.savefig(os.path.join(config.figure_directory, 'supp', "supp_long_transfers.pdf"), bbox_inches='tight')
+fig.savefig(os.path.join(config.figure_directory, 'supp', "S14_supp_long_transfers.pdf"), bbox_inches='tight')
