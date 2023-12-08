@@ -135,4 +135,4 @@ axes[2].legend(loc='upper left', bbox_to_anchor=(1, 1))
 
 bacteroides_df.to_csv(os.path.join(config.analysis_directory, 'misc', 'bacteroides_QP_rate_statistics.csv'))
 plt.tight_layout()
-plt.savefig(os.path.join(config.figure_directory, 'supp', 'supp_qp_frac_rate_corr.pdf'))
+plt.savefig(os.path.join(config.figure_directory, 'supp', 'S40_supp_qp_frac_rate_corr.pdf'))
