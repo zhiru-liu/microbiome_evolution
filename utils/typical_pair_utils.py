@@ -4,7 +4,7 @@ import random
 import os
 import collections
 import json
-from utils import close_pair_utils, parallel_utils
+from utils import close_pair_utils, snp_data_utils
 from parsers import parse_HMP_data
 import config
 
@@ -118,7 +118,7 @@ def compute_runs(dh, good_idxs):
         snp_vec, coverage_arr = dh.get_snp_vector(pair)
         if snp_vec is None:
             continue
-        runs = parallel_utils.compute_runs_all_chromosomes(snp_vec, good_chromo[coverage_arr])
+        runs = snp_data_utils.compute_runs_all_chromosomes(snp_vec, good_chromo[coverage_arr])
         run_data[pair] = runs
         num_qualified_data += 1
     print("%s %s has %d qualified pairs out of %d" % (dh.species_name, dh.mode, num_qualified_data, len(good_idxs)))

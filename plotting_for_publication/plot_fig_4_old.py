@@ -9,7 +9,7 @@ import pickle
 import dask.array as da
 sys.path.append("..")
 import config
-from utils import parallel_utils, core_gene_utils, close_pair_utils
+from utils import snp_data_utils, core_gene_utils, close_pair_utils
 
 
 mpl_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
@@ -17,8 +17,8 @@ mpl_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 species_name = "Bacteroides_vulgatus_57955"
 # dh = parallel_utils.DataHoarder(species_name, mode="within")
 
-general_mask = parallel_utils.get_general_site_mask(species_name)
-snp_info = parallel_utils.get_snp_info(species_name)
+general_mask = snp_data_utils.get_general_site_mask(species_name)
+snp_info = snp_data_utils.get_snp_info(species_name)
 core_genes = core_gene_utils.get_sorted_core_genes(species_name)
 base_dir = os.path.join(config.data_directory, 'zarr_snps', species_name)
 alt_arr = da.from_zarr('{}/full_alt.zarr'.format(base_dir))
@@ -43,7 +43,7 @@ def filter_raw_data(sample_idx):
 
 
 def plot_local_polymorphism(axes, sample_pair):
-    idx1 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
+    idx1 = snp_data_utils.get_raw_data_idx_for_sample(species_name, sample_pair[0])
     idx2 = parallel_utils.get_raw_data_idx_for_sample(species_name, sample_pair[1])
 
     a_before, d_before = filter_raw_data(idx1)

@@ -14,7 +14,7 @@ import itertools
 sys.path.append("..")
 import config
 from utils import close_pair_utils
-from HGT_scripts.close_pair_stage4_plot_trendline import prepare_trend_line
+from scripts.close_pair_stage4_plot_trendline import prepare_trend_line
 
 def preprocess_data(data):
     within_ct, between_ct, full_df = close_pair_utils.merge_and_filter_transfers(

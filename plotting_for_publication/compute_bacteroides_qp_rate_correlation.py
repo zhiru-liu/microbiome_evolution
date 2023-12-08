@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import spearmanr, pearsonr
 import config
-from utils import close_pair_utils, parallel_utils
+from utils import close_pair_utils, snp_data_utils
 from plotting_for_publication import default_fig_styles
 
 bacteroides = [

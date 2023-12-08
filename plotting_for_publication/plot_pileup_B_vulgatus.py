@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import numpy as np
 import config
-from utils import parallel_utils, core_gene_utils, typical_pair_utils, pileup_utils
+from utils import snp_data_utils, core_gene_utils, typical_pair_utils, pileup_utils
 import matplotlib.pyplot as plt
 from plotting_for_publication import plot_pileup_mirror
 

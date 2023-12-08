@@ -8,7 +8,7 @@ import pandas as pd
 from scipy.stats import ttest_ind
 sys.path.append("..")
 import config
-from utils import close_pair_utils, parallel_utils, core_gene_utils, typical_pair_utils
+from utils import close_pair_utils, snp_data_utils, core_gene_utils, typical_pair_utils
 from plotting_for_publication import plot_pileup_mirror
 
 mpl.rcParams['font.size'] = 7
@@ -113,7 +113,7 @@ def highlight_sweep_region(ax, genes):
     sweep_genes = [x.split('|')[-1] for x in sweep_df['PATRIC ID']]
     mask = np.isin(genes, sweep_genes)
     # using the run finding function to find the stretch
-    runs, starts, ends= parallel_utils._compute_runs_single_chromosome(~mask, return_locs=True)
+    runs, starts, ends= snp_data_utils._compute_runs_single_chromosome(~mask, return_locs=True)
     for start, end in zip(starts, ends):
         ax.axvspan(start, end, color='red', alpha=0.2, ymin=0.5, linewidth=1, zorder=3)
         xloc = (start + end) / 2
@@ -148,7 +148,7 @@ variants = res[3]
 pvalues = res[4]
 
 core_genes = core_gene_utils.get_sorted_core_genes(species_name)
-general_mask = parallel_utils._get_general_site_mask(
+general_mask = snp_data_utils._get_general_site_mask(
     gene_names, variants, pvalues, core_genes, allowed_variants=['4D'])
 good_genes = gene_names[general_mask]
 

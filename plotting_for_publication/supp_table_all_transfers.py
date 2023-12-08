@@ -3,7 +3,7 @@ import json
 import numpy as np
 import pandas as pd
 import config
-from utils import parallel_utils
+from utils import snp_data_utils
 
 fig3_species = json.load(open(os.path.join(config.plotting_intermediate_directory, 'fig3_species.json'), 'r'))
 species_cutoff_dict = json.load(open(os.path.join(config.plotting_intermediate_directory, 'clonal_div_cutoff.json'), 'r'))
@@ -19,7 +19,7 @@ for species_name in fig3_species:
     # transfer_df = transfer_df[transfer_df['clonal fraction >80%']]  # TODO: should not filter CF, but report all; instead, add a "shown in fig3?" column
 
     good_df = transfer_df
-    sample_mask, sample_names = parallel_utils.get_QP_sample_mask(species_name)
+    sample_mask, sample_names = snp_data_utils.get_QP_sample_mask(species_name)
     good_samples = sample_names[sample_mask]
     good_df['Species name'] = species_name
     good_df['Sample 1'] = [good_samples[pair[0]] for pair in good_df['pairs']]

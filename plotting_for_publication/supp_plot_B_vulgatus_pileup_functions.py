@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import numpy as np
 import config
-from utils import parallel_utils, core_gene_utils
+from utils import snp_data_utils, core_gene_utils
 import matplotlib.pyplot as plt
 from plotting_for_publication import plot_pileup_mirror
 
@@ -10,7 +10,7 @@ species_name = 'Bacteroides_vulgatus_57955'
 
 # loading the gene name array
 data_dir = os.path.join(config.data_directory, 'zarr_snps', species_name, 'site_info.txt')
-res = parallel_utils.parse_snp_info(data_dir)
+res = snp_data_utils.parse_snp_info(data_dir)
 chromosomes = res[0]
 gene_names = res[2]
 variants = res[3]

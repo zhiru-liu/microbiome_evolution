@@ -5,7 +5,7 @@ import itertools
 import os
 import config
 import json
-from utils import parallel_utils, close_pair_utils, pileup_utils
+from utils import snp_data_utils, close_pair_utils, pileup_utils
 
 
 def load_highlight_samples(start, end):

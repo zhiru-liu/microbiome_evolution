@@ -501,7 +501,7 @@ def pipe_snps(species_name, min_nonzero_median_coverage=config.pipe_snps_min_non
 ###############################################################################
 def parse_snps(species_name, debug=False, allowed_samples=[], allowed_genes=[], allowed_variant_types=['1D','2D','3D','4D'], initial_line_number=0, chunk_size=1000000000):
     
-    from plos_bio_scripts import calculate_snp_prevalences
+    from GarudGood2019_scripts import calculate_snp_prevalences
     # Load population freqs (for polarization purposes)    
     population_freqs = calculate_snp_prevalences.parse_population_freqs(species_name, polarize_by_consensus=False)
    

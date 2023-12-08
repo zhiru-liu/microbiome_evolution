@@ -9,7 +9,7 @@ import matplotlib.gridspec as gridspec
 import pandas as pd
 sys.path.append("..")
 import config
-from utils import close_pair_utils, parallel_utils
+from utils import close_pair_utils, snp_data_utils
 
 # plotting functions
 pi_color = 'tab:grey'

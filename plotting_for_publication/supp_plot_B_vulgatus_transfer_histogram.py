@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 sys.path.append("..")
 import config
-from utils import parallel_utils
+from utils import snp_data_utils
 from utils.close_pair_utils import sample_blocks
 
 species_name = 'Bacteroides_vulgatus_57955'

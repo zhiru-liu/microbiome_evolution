@@ -4,7 +4,7 @@ import numpy as np
 import sys
 import os
 sys.path.append("..")
-from utils import parallel_utils, typical_pair_utils
+from utils import snp_data_utils, typical_pair_utils
 import config
 
 sample_df = parallel_utils.compute_good_sample_stats()

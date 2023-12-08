@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 
 import config
-from utils import parallel_utils
+from utils import snp_data_utils
 
 species_name = 'Bacteroides_vulgatus_57955'
 dh = parallel_utils.DataHoarder(species_name, mode='within', allowed_variants=['4D'])

@@ -5,7 +5,7 @@ import json
 import itertools
 import os
 from collections import Counter
-from utils import close_pair_utils, parallel_utils, BSMC_utils, typical_pair_utils
+from utils import close_pair_utils, snp_data_utils, BSMC_utils, typical_pair_utils
 import config
 
 
@@ -312,7 +312,7 @@ class Pileup_Helper:
         :param clade_cutoff: Only for B vulgatus to select the major clade
         :param close_pair_cutoff: For reducing overcounting of sharing
         """
-        self.dh = parallel_utils.DataHoarder(species_name, mode='QP', allowed_variants=allowed_variants)
+        self.dh = snp_data_utils.DataHoarder(species_name, mode='QP', allowed_variants=allowed_variants)
         self.good_chromo = self.dh.chromosomes[self.dh.general_mask]
 
         div_dir = os.path.join(config.analysis_directory, 'pairwise_divergence', 'between_hosts',

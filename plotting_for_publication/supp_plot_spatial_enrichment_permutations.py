@@ -5,7 +5,7 @@ import json
 
 import config
 import plotting_for_publication.default_fig_styles
-from utils import parallel_utils
+from utils import snp_data_utils
 
 # loading saved permutation results
 dat = np.loadtxt(os.path.join(config.plotting_intermediate_directory, 'pileup_shuffle.txt'))
@@ -26,5 +26,5 @@ fig.savefig(os.path.join(config.figure_directory, 'supp_E_rectale_pileup_p_value
 
 # cache regions that are highly enriched
 bool_vec = averaged_p < 1e-3
-runs, starts, ends = parallel_utils._compute_runs_single_chromosome(~bool_vec, return_locs=True)
+runs, starts, ends = snp_data_utils._compute_runs_single_chromosome(~bool_vec, return_locs=True)
 json.dump(zip(starts, ends), open(os.path.join(config.plotting_intermediate_directory, 'E_rectale_p_values.json'), 'w'))

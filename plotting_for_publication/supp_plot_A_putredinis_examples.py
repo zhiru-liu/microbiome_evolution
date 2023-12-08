@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 sys.path.append("..")
 import config
-from utils import parallel_utils, close_pair_utils
+from utils import snp_data_utils, close_pair_utils
 
 species_name = 'Alistipes_putredinis_61533'
 dh = parallel_utils.DataHoarder(species_name, mode="QP", allowed_variants=['4D'])

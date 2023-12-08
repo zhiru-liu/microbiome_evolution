@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib as mpl
 import config
-from utils import parallel_utils
+from utils import snp_data_utils
 from plotting_for_publication import plot_pileup_mirror
 
 fig, axes = plt.subplots(2, 1, figsize=(6.5, 3), dpi=600)
@@ -54,7 +54,7 @@ pval_ax.set_yscale('log')
 p_val_threshold = np.percentile(min_pvals, 5)
 axes[1].axhline(p_val_threshold, linestyle='--', color='pink', label='significance threshold')
 bool_vec = average_p < p_val_threshold
-runs, starts, ends= parallel_utils._compute_runs_single_chromosome(~bool_vec, return_locs=True)
+runs, starts, ends= snp_data_utils._compute_runs_single_chromosome(~bool_vec, return_locs=True)
 for start, end in zip(starts, ends):
     mirror_ax.axvspan(start, end, color='red', alpha=0.2, linewidth=1, zorder=3)
     pval_ax.axvspan(start, end, color='red', alpha=0.2, linewidth=1, zorder=3)

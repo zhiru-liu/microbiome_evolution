@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import config
-from utils import figure_utils, typical_pair_utils, parallel_utils
+from utils import figure_utils, typical_pair_utils, snp_data_utils
 
 species_name = 'Bacteroides_vulgatus_57955'
 pd_mat = typical_pair_utils.load_pairwise_div_mat(species_name)

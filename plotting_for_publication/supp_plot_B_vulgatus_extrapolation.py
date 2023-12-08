@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 
 import config
-from utils import parallel_utils, close_pair_utils
+from utils import snp_data_utils, close_pair_utils
 
 fontsize = 6
 mpl.rcParams['font.size'] = fontsize
@@ -12,7 +12,7 @@ mpl.rcParams['lines.linewidth'] = 1.0
 mpl.rcParams['legend.frameon']  = False
 mpl.rcParams['legend.fontsize']  = 'small'
 
-dh = parallel_utils.DataHoarder('Bacteroides_vulgatus_57955', mode='QP', allowed_variants=['4D'])
+dh = snp_data_utils.DataHoarder('Bacteroides_vulgatus_57955', mode='QP', allowed_variants=['4D'])
 
 # getting the pairs
 clonal_frac_dir = os.path.join(config.analysis_directory, 'pairwise_clonal_fraction',

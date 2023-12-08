@@ -6,9 +6,9 @@ import os
 import pandas as pd
 import default_fig_styles
 import config
-from utils import parallel_utils, figure_utils
+from utils import snp_data_utils, figure_utils
 from utils.typical_pair_utils import get_joint_plot_x_y, load_precomputed_theta, partial_recombination_curve
-from HGT_scripts.compute_variance_explained_joint_dist import plot_var_exaplained, plot_effective_rbym_from_alpha
+from scripts.compute_variance_explained_joint_dist import plot_var_exaplained, plot_effective_rbym_from_alpha
 
 dh = None  # only useful when I accidentally deleted the cached snp vectors
 species_name = 'Alistipes_putredinis_61533'

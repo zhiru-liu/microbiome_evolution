@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import numpy as np
 import config
-from utils import parallel_utils, core_gene_utils, typical_pair_utils
+from utils import snp_data_utils, core_gene_utils, typical_pair_utils
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from plotting_for_publication import default_fig_styles

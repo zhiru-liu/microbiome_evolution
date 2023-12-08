@@ -10,7 +10,7 @@ import pandas as pd
 from scipy.stats import gamma
 sys.path.append("..")
 import config
-from utils import close_pair_utils, parallel_utils
+from utils import close_pair_utils, snp_data_utils
 
 
 dat = pickle.load(open(config.B_vulgatus_data_path, 'rb'))

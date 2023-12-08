@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 sys.path.append("..")
 import config
-from utils import parallel_utils
+from utils import snp_data_utils
 
 fontsize = 6
 mpl.rcParams['font.size'] = fontsize
@@ -48,7 +48,7 @@ def plot_example_run_length_dist(dist_ax, snp_vec_axes, between_pair1, between_p
         np.savetxt(cache_file_bt1, between_snp_vec1)
         np.savetxt(cache_file_bt2, between_snp_vec2)
 
-    within_example_runs = parallel_utils._compute_runs_single_chromosome(within_snp_vec2)
+    within_example_runs = snp_data_utils._compute_runs_single_chromosome(within_snp_vec2)
     within_example_runs0 = parallel_utils._compute_runs_single_chromosome(within_snp_vec1)
     between_example_runs1 = parallel_utils._compute_runs_single_chromosome(between_snp_vec1)
     between_example_runs2 = parallel_utils._compute_runs_single_chromosome(between_snp_vec2)

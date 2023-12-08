@@ -6,7 +6,7 @@ import sys
 import os
 sys.path.append("..")
 from parsers import parse_midas_data
-from utils import parallel_utils, sfs_utils, HGT_utils, stats_utils
+from utils import snp_data_utils, sfs_utils, HGT_utils, stats_utils
 import config
 
 

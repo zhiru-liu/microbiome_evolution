@@ -3,7 +3,7 @@ import os
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import config
-from utils import parallel_utils
+from utils import snp_data_utils
 
 fontsize = 6
 mpl.rcParams['font.size'] = fontsize
@@ -21,7 +21,7 @@ def get_snp_vec(pair):
     if os.path.exists(cache_file):
         return np.loadtxt(cache_file)
     elif dh is None:
-        dh = parallel_utils.DataHoarder("Bacteroides_vulgatus_57955")
+        dh = snp_data_utils.DataHoarder("Bacteroides_vulgatus_57955")
     snp_vec, _ = dh.get_snp_vector(pair)
     np.savetxt(cache_file, snp_vec)
     return snp_vec
